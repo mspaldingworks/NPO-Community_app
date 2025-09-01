@@ -1,4 +1,5 @@
 class Event {
+  final String uid;
   final String summary;
   final String? description;
   final DateTime start;
@@ -6,6 +7,7 @@ class Event {
   final String? location;
 
   Event({
+    required this.uid,
     required this.summary,
     this.description,
     required this.start,

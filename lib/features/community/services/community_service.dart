@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:transconnect/features/community/models/group_model.dart';
 
 class CommunityService {
-  final String _apiUrl = 'http://api.luxeahome.com/api/groups/';
-  final String _token = '0c1f2ae0cf16a8d15ad8d8aaad7f5e6a1c3e2a80'; // Maddie's token
+  final String _apiUrl = 'https://api.luxeahome.com/api/groups/';
+  final String _token = '0c12ae0d159bdd154d80a8aead755e5a1c2afe80'; // Maddie's new token
 
   Future<List<Group>> fetchGroups() async {
     try {

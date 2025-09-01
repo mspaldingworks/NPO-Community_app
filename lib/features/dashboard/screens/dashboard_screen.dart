@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
+import 'package:transconnect/core/services/saved_events_service.dart';
 import 'package:transconnect/features/dashboard/models/event_model.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -25,116 +26,114 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.go('/home/settings'),
-          ),
-        ],
+        title: const Text('Dashboard'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildSectionHeader(context, 'Upcoming Events'),
-          const SizedBox(height: 8.0),
-          _buildEventsCarousel(),
-          const SizedBox(height: 24.0),
-          _buildSectionHeader(context, 'Recent Activity'),
-          const SizedBox(height: 8.0),
-          _buildRecentActivityList(),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            _buildInfoCards(),
+            const SizedBox(height: 30),
+            _buildQuoteCard(),
+            const Spacer(),
+            _buildLogo(),
+            const SizedBox(height: 30),
+            _buildEditProfileButton(context),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildEventsCarousel() {
+  Widget _buildInfoCards() {
     return FutureBuilder<List<Event>>(
       future: _eventsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 150,
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-        if (snapshot.hasError) {
-          return SizedBox(
-            height: 150,
-            child: Center(child: Text('Error: ${snapshot.error}')),
-          );
-        }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox(
-            height: 150,
-            child: Center(child: Text('No upcoming events.')),
-          );
+        int eventCount = 0;
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+          eventCount = snapshot.data!.length;
         }
 
-        final events = snapshot.data!;
-        return SizedBox(
-          height: 150,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return Card(
-                margin: const EdgeInsets.only(right: 16.0),
-                child: SizedBox(
-                  width: 250,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          event.summary,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const Spacer(),
-                        Text(
-                          DateFormat.yMMMd().add_jm().format(event.start),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        if (event.location != null)
-                          Text(
-                            event.location!,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildInfoCard(Icons.email_outlined, 'No unread messages'),
+            _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
+            _buildInfoCard(Icons.calendar_today_outlined, '$eventCount upcoming events'),
+          ],
         );
       },
     );
   }
 
-  Widget _buildRecentActivityList() {
-    // Placeholder for a vertical list of recent messages or resources
-    return Column(
-      children: List.generate(3, (index) {
-        return const ListTile(
-          leading: Icon(Icons.message),
-          title: Text('New message in #general'),
-          subtitle: Text('User: Hey everyone!'),
-        );
-      }),
+  Widget _buildInfoCard(IconData icon, String text) {
+    return Container(
+      width: 110,
+      height: 90,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 30, color: Colors.grey[600]),
+          const SizedBox(height: 8),
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuoteCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9E6FF),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Text(
+        '"Equality means more than passing laws. The struggle is really won in the hearts and minds of the community, where it really counts." – Barbara Gittings',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Color(0xFF333333)),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    // In a real app, this would be an Image.asset widget.
+    // Using an icon as a placeholder for now.
+    return const Icon(Icons.flutter_dash, size: 80, color: Colors.deepPurple);
+  }
+
+  Widget _buildEditProfileButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          context.go('/home/profile');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF6A5AE0),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: const Text(
+          'Edit Profile',
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+      ),
     );
   }
 }

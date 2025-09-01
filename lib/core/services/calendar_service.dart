@@ -16,6 +16,7 @@ class CalendarService {
             .where((event) => event['dtstart']?.toDateTime()?.isAfter(now) ?? false)
             .map((eventData) {
           return Event(
+            uid: eventData['uid'] ?? '',
             summary: eventData['summary'] ?? 'No Title',
             description: eventData['description'],
             start: eventData['dtstart'].toDateTime()!,
