@@ -1,28 +1,16 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:transconnect/features/community/models/group_model.dart';
 
 class CommunityService {
-  final String _apiUrl = 'https://api.luxeahome.com/api/groups/';
-  final String _token = '0c12ae0d159bdd154d80a8aead755e5a1c2afe80'; // Maddie's new token
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<List<Group>> fetchGroups() async {
     try {
-      final response = await http.get(
-        Uri.parse(_apiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token $_token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Group.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load groups');
-      }
+      final snapshot = await _firestore.collection('communityUsers').get();
+      return snapshot.docs.map((doc) => Group.fromSnapshot(doc)).toList();
     } catch (e) {
+      // It's a good practice to handle potential errors, e.g., permissions.
+      print('Error fetching groups: $e');
       throw Exception('Error fetching groups: $e');
     }
   }

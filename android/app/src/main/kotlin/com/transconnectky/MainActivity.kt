@@ -1,4 +1,4 @@
-package com.example.transconnect
+package com.transconnectky
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -11,7 +11,8 @@ typedef AuthState = String;
 
 class AuthService {
   final _storage = const FlutterSecureStorage();
-  static const _baseUrl = 'https://api.luxashome.com';
+  // static const _baseUrl = 'https://api.luxashome.com';
+  static const _baseUrl = '';
 
   final _authStateController = StreamController<String?>.broadcast();
 
@@ -41,31 +42,37 @@ class AuthService {
 
   /// Sign in an existing user.
   Future<void> signIn(String username, String password) async {
-    final url = Uri.parse('$_baseUrl/api/token/');
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(<String, String>{
-          'username': username, 
-          'password': password,
-        }),
-      );
+    // final url = Uri.parse('$_baseUrl/api/token/');
+    // try {
+    //   final response = await http.post(
+    //     url,
+    //     headers: {'Content-Type': 'application/json'},
+    //     body: jsonEncode(<String, String>{
+    //       'username': username, 
+    //       'password': password,
+    //     }),
+    //   );
+    //
+    //   print('Response Status Code: ${response.statusCode}');
+    //   print('Response Body: ${response.body}');
+    //
+    //   if (response.statusCode == 200) {
+    //     final data = jsonDecode(response.body);
+    //     final token = data['token']; 
+    //     await _storage.write(key: 'auth_token', value: token);
+    //     _authStateController.add(token);
+    //   } else {
+    //     throw Exception('Failed to sign in: ${response.body}');
+    //   }
+    // } catch (e) {
+    //   throw Exception('Failed to sign in: $e');
+    // }
 
-      print('Response Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final token = data['token']; 
-        await _storage.write(key: 'auth_token', value: token);
-        _authStateController.add(token);
-      } else {
-        throw Exception('Failed to sign in: ${response.body}');
-      }
-    } catch (e) {
-      throw Exception('Failed to sign in: $e');
-    }
+    // Temporary fix: bypass network call and use a dummy token
+    print('Bypassing sign in and using dummy token');
+    const dummyToken = 'dummy_token_for_signin';
+    await _storage.write(key: 'auth_token', value: dummyToken);
+    _authStateController.add(dummyToken);
   }
 
   /// Sign out the current user.
