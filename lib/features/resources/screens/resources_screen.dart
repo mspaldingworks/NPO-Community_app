@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/resource_service.dart';
-import 'package:transconnect/features/resources/dialogs/add_resource_dialog.dart';
-import 'package:transconnect/features/resources/models/resource_model.dart';
+import 'package:transconnect/features/resources/models/resource.dart';
+import 'package:transconnect/features/resources/services/resource_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ResourcesScreen extends StatefulWidget {
@@ -49,28 +48,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
       _filteredResources = _allResources.where((resource) {
         final nameMatches = resource.name.toLowerCase().contains(query);
         final descriptionMatches = resource.description.toLowerCase().contains(query);
-        return nameMatches || descriptionMatches;
+        final tagsMatch = resource.tags.any((tag) => tag.toLowerCase().contains(query));
+        return nameMatches || descriptionMatches || tagsMatch;
       }).toList();
-    });
-  }
-
-  void _refreshResources() {
-    setState(() {
-      _resourcesFuture = _fetchAndSetResources();
-    });
-  }
-
-  void _showAddResourceDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return const AddResourceDialog();
-      },
-    ).then((value) {
-      // Refresh the list if a resource was added
-      if (value == true) {
-        _refreshResources();
-      }
     });
   }
 
@@ -96,9 +76,11 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 decoration: const InputDecoration(
                   hintText: 'Search resources...',
                   border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
                 ),
+                style: const TextStyle(color: Colors.white),
               )
-            : const Text('Resource Guide'),
+            : const Text('Resources'),
         actions: [
           IconButton(
             icon: Icon(_isSearching ? Icons.close : Icons.search),
@@ -118,36 +100,28 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
+          } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (_filteredResources.isEmpty) {
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No resources found.'));
+          } else {
+            return ListView.builder(
+              itemCount: _filteredResources.length,
+              itemBuilder: (context, index) {
+                final resource = _filteredResources[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ListTile(
+                    title: Text(resource.name),
+                    subtitle: Text(resource.description),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () => _launchURL(resource.url),
+                  ),
+                );
+              },
+            );
           }
-
-          return ListView.builder(
-            itemCount: _filteredResources.length,
-            itemBuilder: (context, index) {
-              final resource = _filteredResources[index];
-              return ListTile(
-                title: Text(resource.name),
-                subtitle: Text(resource.description),
-                trailing: resource.website != null && resource.website!.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.open_in_new),
-                        onPressed: () => _launchURL(resource.website!),
-                      )
-                    : null,
-              );
-            },
-          );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddResourceDialog,
-        child: const Icon(Icons.add),
-        tooltip: 'Add a Resource',
       ),
     );
   }

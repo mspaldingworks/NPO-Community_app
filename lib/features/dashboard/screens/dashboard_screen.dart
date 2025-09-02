@@ -27,6 +27,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              context.go('/profile/settings');
+            },
+          ),
+        ],
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,

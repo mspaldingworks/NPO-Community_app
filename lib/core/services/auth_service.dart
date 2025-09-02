@@ -1,83 +1,48 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
-
-// TODO: Replace with your own User model if needed.
-typedef User = String; 
-// TODO: Replace with your own AuthState model if needed.
-typedef AuthState = String;
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
-  final _storage = const FlutterSecureStorage();
-  // static const _baseUrl = 'https://api.luxashome.com';
-  static const _baseUrl = '';
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  final _authStateController = StreamController<String?>.broadcast();
+  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
-  /// Stream of authentication state changes.
-  Stream<String?> get authStateChanges => _authStateController.stream;
+  User? get currentUser => _firebaseAuth.currentUser;
 
-  /// Get the current user.
-  Future<String?> get currentUser async {
-    return await _storage.read(key: 'auth_token');
-  }
-
-  /// Sign up a new user.
   Future<void> signUp({
     required String email,
     required String password,
-    required String username,
   }) async {
-    // TODO: Implement with api.luxashome.com
-    // You'll need the registration endpoint and expected request body.
-    print('Sign up with $email');
-    await Future.delayed(const Duration(seconds: 1));
-    // For now, we'll just log the user in with a dummy token after 'signing up'
-    const dummyToken = 'dummy_token_for_signup';
-    await _storage.write(key: 'auth_token', value: dummyToken);
-    _authStateController.add(dummyToken);
+    try {
+      await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      // It's good practice to handle specific errors like 'weak-password' 
+      // or 'email-already-in-use' in the UI.
+      throw Exception('Failed to sign up: ${e.message}');
+    } catch (e) {
+      throw Exception('An unknown error occurred during sign up.');
+    }
   }
 
-  /// Sign in an existing user.
-  Future<void> signIn(String username, String password) async {
-    // final url = Uri.parse('$_baseUrl/api/token/');
-    // try {
-    //   final response = await http.post(
-    //     url,
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: jsonEncode(<String, String>{
-    //       'username': username, 
-    //       'password': password,
-    //     }),
-    //   );
-    //
-    //   print('Response Status Code: ${response.statusCode}');
-    //   print('Response Body: ${response.body}');
-    //
-    //   if (response.statusCode == 200) {
-    //     final data = jsonDecode(response.body);
-    //     final token = data['token']; 
-    //     await _storage.write(key: 'auth_token', value: token);
-    //     _authStateController.add(token);
-    //   } else {
-    //     throw Exception('Failed to sign in: ${response.body}');
-    //   }
-    // } catch (e) {
-    //   throw Exception('Failed to sign in: $e');
-    // }
-
-    // Temporary fix: bypass network call and use a dummy token
-    print('Bypassing sign in and using dummy token');
-    const dummyToken = 'dummy_token_for_signin';
-    await _storage.write(key: 'auth_token', value: dummyToken);
-    _authStateController.add(dummyToken);
+  Future<void> signIn(String email, String password) async {
+    try {
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      // It's good practice to handle specific errors like 'user-not-found' 
+      // or 'wrong-password' in the UI.
+      throw Exception('Failed to sign in: ${e.message}');
+    } catch (e) {
+      throw Exception('An unknown error occurred during sign in.');
+    }
   }
 
-  /// Sign out the current user.
   Future<void> signOut() async {
-    await _storage.delete(key: 'auth_token');
-    _authStateController.add(null);
+    await _firebaseAuth.signOut();
   }
 }

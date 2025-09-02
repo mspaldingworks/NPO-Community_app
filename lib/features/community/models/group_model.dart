@@ -12,12 +12,4 @@ class Group {
       name: json['name'],
     );
   }
-
-  factory Group.fromSnapshot(DocumentSnapshot snapshot) {
-    final data = snapshot.data() as Map<String, dynamic>;
-    return Group(
-      id: snapshot.id,
-      name: data['name'] ?? 'Unnamed Group',
-    );
-  }
 }

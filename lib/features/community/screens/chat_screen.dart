@@ -37,8 +37,8 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _loadCurrentUser() async {
-    _currentUserId = await _authService.currentUser;
+  void _loadCurrentUser() {
+    _currentUserId = _authService.currentUser?.uid;
     setState(() {});
   }
 

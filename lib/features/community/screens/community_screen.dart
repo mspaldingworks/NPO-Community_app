@@ -24,7 +24,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community'),
+        title: const Text('Community Groups'),
       ),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
@@ -41,11 +41,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
               itemCount: groups.length,
               itemBuilder: (context, index) {
                 final group = groups[index];
-                return ListTile(
-                  title: Text('# ${group.name}'),
-                  onTap: () {
-                    context.go('/community/${group.name.toLowerCase()}');
-                  },
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ListTile(
+                    title: Text('# ${group.name}'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      // Navigate to the chat screen for the selected group
+                      // The channelId should be a unique identifier, like group.id
+                      context.go('/community/${group.id}');
+                    },
+                  ),
                 );
               },
             );

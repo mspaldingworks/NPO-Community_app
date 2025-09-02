@@ -4,7 +4,8 @@
     <application
         android:label="TransConnect"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name="com.transconnectky.MainActivity"
             android:exported="true"

@@ -93,16 +93,6 @@ final goRouter = GoRouter(
             GoRoute(
               path: '/home',
               builder: (context, state) => const DashboardScreen(),
-              routes: [
-                GoRoute(
-                  path: 'settings',
-                  builder: (context, state) => const SettingsScreen(),
-                ),
-                GoRoute(
-                  path: 'profile',
-                  builder: (context, state) => const ProfileScreen(),
-                ),
-              ],
             ),
           ],
         ),
@@ -111,6 +101,20 @@ final goRouter = GoRouter(
             GoRoute(
               path: '/resources',
               builder: (context, state) => const ResourcesScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+              routes: [
+                GoRoute(
+                  path: 'settings',
+                  builder: (context, state) => const SettingsScreen(),
+                ),
+              ],
             ),
           ],
         ),
