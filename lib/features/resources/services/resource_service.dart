@@ -7,13 +7,13 @@ import 'package:transconnect/features/resources/models/messaging_guide.dart';
 import 'package:transconnect/features/resources/models/resource.dart';
 
 class ResourceService {
-  final String _baseUrl = 'http://api.lunashome.com/api';
+  final String _baseUrl = 'http://54.243.117.197/api';
 
   Future<List<Resource>> fetchResources() async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/resources/'));
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        List<dynamic> data = json.decode(response.body);
         return data.map((json) => Resource.fromJson(json)).toList();
       } else {
         log('Failed to load resources. Status code: ${response.statusCode}');
@@ -22,16 +22,16 @@ class ResourceService {
       }
     } catch (e) {
       log('An error occurred while fetching resources: $e');
-      rethrow;
+      throw Exception('An error occurred while fetching resources: $e');
     }
   }
 
   Future<List<MessagingGuide>> fetchMessagingGuides() async {
     try {
-      final response =
-      await http.get(Uri.parse('$_baseUrl/messaging-guides/'));
+      final response = await http.get(Uri.parse('$_baseUrl/messaging-guides/'));
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        List<dynamic> data = json.decode(response.body);
         return data.map((json) => MessagingGuide.fromJson(json)).toList();
       } else {
         log('Failed to load messaging guides. Status code: ${response.statusCode}');
@@ -40,15 +40,16 @@ class ResourceService {
       }
     } catch (e) {
       log('An error occurred while fetching messaging guides: $e');
-      rethrow;
+      throw Exception('An error occurred while fetching messaging guides: $e');
     }
   }
 
   Future<List<Issue>> fetchIssues() async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/issues/'));
+
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
+        List<dynamic> data = json.decode(response.body);
         return data.map((json) => Issue.fromJson(json)).toList();
       } else {
         log('Failed to load issues. Status code: ${response.statusCode}');
@@ -57,7 +58,7 @@ class ResourceService {
       }
     } catch (e) {
       log('An error occurred while fetching issues: $e');
-      rethrow;
+      throw Exception('An error occurred while fetching issues: $e');
     }
   }
 }
