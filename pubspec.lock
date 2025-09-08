@@ -432,6 +432,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
+  scoped_model:
+    dependency: "direct main"
+    description:
+      name: scoped_model
+      sha256: "8dacc77cb5de78d5e159d54cab883847491a73dfaa3d28c52f4ec8b0be32645b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   shared_preferences:
     dependency: "direct main"
     description:
@@ -625,10 +633,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: "45caa6c5917fa127b5dbcfbd1fa60b14e583afdc08bfc96dda38886ca252eb60"
+      sha256: ddfa8d30d89985b96407efce8acbdd124701f96741f2d981ca860662f1c0dc02
       url: "https://pub.dev"
     source: hosted
-    version: "15.0.2"
+    version: "15.0.0"
   web:
     dependency: transitive
     description:

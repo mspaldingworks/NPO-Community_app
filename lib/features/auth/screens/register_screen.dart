@@ -45,20 +45,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
+        password2: _passwordController.text.trim(),
+        username: _usernameController.text.trim(),
+        city: _zipCodeController.text.trim(),
+        identity: (_selectedIdentity ?? ''),
       );
-
-      // Step 2: Get the new user's ID
-      final user = _authService.currentUser;
-      if (user != null) {
-        // Step 3: Create a document in Firestore to store user data
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'username': _usernameController.text.trim(),
-          'email': _emailController.text.trim(),
-          'zipCode': _zipCodeController.text.trim(),
-          'identity': _selectedIdentity,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
-      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -161,22 +152,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: _selectedIdentity,
-                  hint: const Text('Identity (for flair)'),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedIdentity = newValue;
-                    });
-                  },
-                  items: _identities.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  validator: (value) => value == null ? 'Please select an identity' : null,
-                ),
+                // DropdownButtonFormField<String>(
+                //   value: _selectedIdentity,
+                //   hint: const Text('Identity (for flair)'),
+                //   onChanged: (String? newValue) {
+                //     setState(() {
+                //       _selectedIdentity = newValue;
+                //     });
+                //   },
+                //   items: _identities.map<DropdownMenuItem<String>>((String value) {
+                //     return DropdownMenuItem<String>(
+                //       value: value,
+                //       child: Text(value),
+                //     );
+                //   }).toList(),
+                //   validator: (value) => value == null ? 'Please select an identity' : null,
+                // ),
                 const SizedBox(height: 32),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())

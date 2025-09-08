@@ -26,11 +26,10 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() {
       _isLoading = true;
     });
-
     try {
       await _authService.signIn(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
+        username: _emailController.text.trim(),
+        password: _passwordController.text.trim()
       );
       // Navigate to home on success
       if (mounted) {
