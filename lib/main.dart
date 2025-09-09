@@ -1,14 +1,13 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/http_overrides.dart';
 import 'dart:io';
-
 import 'package:transconnect/navigation/app_router.dart';
+import 'package:transconnect/core/services/shared_preferences_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await SharedPreferencesService().init();
   HttpOverrides.global = MyHttpOverrides();
   final savedThemeMode = await AdaptiveTheme.getThemeMode();
   runApp(MyApp(savedThemeMode: savedThemeMode));

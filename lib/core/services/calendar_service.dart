@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:icalendar_parser/icalendar_parser.dart';
-import 'package:transconnect/features/dashboard/models/event_model.dart';
+import 'package:transconnect/models/event.dart';
 
 class CalendarService {
   final String _calenderUrl = 'https://calendar.google.com/calendar/ical/c_5e1fb913d97c3279485d1cb25013c8947232eed0bbc5068ed003be9cebf4c58a%40group.calendar.google.com/public/basic.ics';

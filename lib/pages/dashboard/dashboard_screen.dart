@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
-import 'package:transconnect/core/services/saved_events_service.dart';
-import 'package:transconnect/features/dashboard/models/event_model.dart';
+import 'package:transconnect/models/event.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

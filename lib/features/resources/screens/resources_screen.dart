@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/resources/models/resource.dart';
-import 'package:transconnect/features/resources/services/resource_service.dart';
+import 'package:transconnect/models/resource.dart';
+import 'package:transconnect/core/services/resource_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ResourcesScreen extends StatefulWidget {
@@ -47,9 +47,8 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
     setState(() {
       _filteredResources = _allResources.where((resource) {
         final nameMatches = resource.name.toLowerCase().contains(query);
-        final descriptionMatches = resource.description.toLowerCase().contains(query);
-        final tagsMatch = resource.tags.any((tag) => tag.toLowerCase().contains(query));
-        return nameMatches || descriptionMatches || tagsMatch;
+        final descriptionMatches = resource.url.toLowerCase().contains(query);
+        return nameMatches || descriptionMatches;
       }).toList();
     });
   }
@@ -113,7 +112,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
                     title: Text(resource.name),
-                    subtitle: Text(resource.description),
+                    subtitle: Text(resource.url),
                     trailing: const Icon(Icons.arrow_forward),
                     onTap: () => _launchURL(resource.url),
                   ),

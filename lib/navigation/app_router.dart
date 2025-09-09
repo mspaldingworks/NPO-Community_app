@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/auth/screens/register_screen.dart';
-import 'package:transconnect/features/auth/screens/signin_screen.dart';
-import 'package:transconnect/features/auth/screens/welcome_screen.dart';
+import 'package:transconnect/pages/auth/register_screen.dart';
+import 'package:transconnect/pages/auth/signin_screen.dart';
+import 'package:transconnect/pages/auth/welcome_screen.dart';
 import 'package:transconnect/features/community/screens/chat_screen.dart';
 import 'package:transconnect/features/community/screens/community_screen.dart';
-import 'package:transconnect/features/dashboard/screens/dashboard_screen.dart';
+import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/features/profile/screens/profile_screen.dart';
 import 'package:transconnect/features/resources/screens/resources_screen.dart';
 import 'package:transconnect/features/settings/screens/settings_screen.dart';
@@ -36,8 +36,8 @@ final goRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   // refreshListenable: GoRouterRefreshStream(AuthService().authStateChanges),
   redirect: (context, state) {
-    final authService = AuthService();
-    final isLoggedIn = false;
+    final authService = AuthService();    
+    final isLoggedIn = authService.isUserAuthenticated();
     final location = state.matchedLocation;
 
     final isAuthRoute =

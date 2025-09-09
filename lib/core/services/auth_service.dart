@@ -1,12 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:transconnect/core/services/shared_preferences_service.dart';
 
-class AuthService {
+class AuthService extends ApiClient {
 
   // Use a StreamController to broadcast user state changes.
   final _authStateController = StreamController<User?>.broadcast();
+  final SharedPreferencesService _prefsService = SharedPreferencesService();
   
   // A private variable to hold the current user.
   User? _currentUser;
@@ -17,21 +22,22 @@ class AuthService {
   // Expose the current user.
   User? get currentUser => _currentUser;
   
-  // Base URL for your API.
-  final String _baseUrl = 'http://api.luxashome.com';
-
   // Private method to save user data.
-  void _saveUser(User user) {
+  Future<void> _saveUser(User user) async {
     _currentUser = user;
     _authStateController.add(user);
-    // You can also add logic here to save the token securely, e.g., using flutter_secure_storage.
+    await _prefsService.saveData('user_token', user.token);
   }
-  
+
   // Private method to clear user data on logout.
-  void _clearUser() {
+  Future<void> _clearUser() async {
     _currentUser = null;
     _authStateController.add(null);
-    // Add logic to delete the token here.
+    await _prefsService.clearData('user_token');
+  }
+
+  bool isUserAuthenticated(){
+    return (_prefsService.getData('user_token') != null);
   }
 
   Future<void> signUp({
@@ -44,10 +50,9 @@ class AuthService {
     String? statusMessage,
 }) async {
     try {
-        final response = await http.post(
-            Uri.parse('$_baseUrl/api/signup/'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
+        String urlPath = 'api/signup/';
+        final jsonHeaders = {'Content-Type': 'application/json'};
+        final jsonPayload = {
                 'username': username,
                 'password': password,
                 'password2': password2,
@@ -55,8 +60,8 @@ class AuthService {
                 'city': city,
                 'flair': identity,
                 'status_message': statusMessage,
-            }),
-        );
+            };
+        final response = await create(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
 
         print(response.body);
 
@@ -86,11 +91,9 @@ class AuthService {
 
   Future<void> fetchUserFromToken(String token) async {
     try {
-        final response = await http.get(
-            // This is a placeholder; you'll need to use your actual endpoint.
-            Uri.parse('$_baseUrl/api/profile/'),
-            headers: {'Authorization': 'Token $token'},
-        );
+        String urlPath = '/api/profile/';
+        final jsonHeaders = {'Authorization': 'Token $token'};
+        final response = await read(urlPath: urlPath, jsonHeaders: jsonHeaders);
 
         if (response.statusCode == 200) {
             final Map<String, dynamic> userData = jsonDecode(response.body);
@@ -116,11 +119,10 @@ class AuthService {
     required String password
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/login/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
-      );
+      String urlPath = '/api/login/';
+      final jsonHeaders = {'Content-Type': 'application/json'};
+      final jsonPayload = {'username': username, 'password': password};
+      final response = await create(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
       print(response.statusCode);
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -138,7 +140,8 @@ class AuthService {
         );
 
         _saveUser(user);
-        print('Login successful!');
+
+        print('Login successful!');        
       } else {
         // Handle login errors (e.g., wrong credentials).
         throw Exception('Failed to log in: ${response.body}');
