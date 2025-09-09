@@ -35,9 +35,9 @@ final goRouter = GoRouter(
   initialLocation: '/home',
   navigatorKey: _rootNavigatorKey,
   // refreshListenable: GoRouterRefreshStream(AuthService().authStateChanges),
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final authService = AuthService();    
-    final isLoggedIn = authService.isUserAuthenticated();
+    final isLoggedIn = await authService.isUserAuthenticated();
     final location = state.matchedLocation;
 
     final isAuthRoute =

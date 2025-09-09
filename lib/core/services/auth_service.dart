@@ -36,8 +36,12 @@ class AuthService extends ApiClient {
     await _prefsService.clearData('user_token');
   }
 
-  bool isUserAuthenticated(){
-    return (_prefsService.getData('user_token') != null);
+  Future<bool> isUserAuthenticated() async {
+    String? token = _prefsService.getData('user_token');
+    if(token != null){
+      return fetchUserFromToken(token);
+    }    
+    return false;
   }
 
   Future<void> signUp({
@@ -89,7 +93,7 @@ class AuthService extends ApiClient {
     }
   }
 
-  Future<void> fetchUserFromToken(String token) async {
+  Future<bool> fetchUserFromToken(String token) async {
     try {
         String urlPath = '/api/profile/';
         final jsonHeaders = {'Authorization': 'Token $token'};
@@ -105,12 +109,13 @@ class AuthService extends ApiClient {
             });
             _saveUser(user);
             print('User data fetched successfully!');
+            return true;
         } else {
-            throw Exception('Failed to fetch user data with token: ${response.body}');
+            throw Exception('Failed to fetch user data with token: ${response.body}');            
         }
     } catch (e) {
         print('Error fetching user data: $e');
-        throw e;
+        return false;
     }
   }
 
