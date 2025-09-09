@@ -18,7 +18,7 @@ class AuthService {
   User? get currentUser => _currentUser;
   
   // Base URL for your API.
-  final String _baseUrl = 'http://api.luxashome.com';
+  final String _baseUrl = 'http://api.luxashome.com'; //
 
   // Private method to save user data.
   void _saveUser(User user) {

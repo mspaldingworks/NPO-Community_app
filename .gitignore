@@ -64,3 +64,10 @@
 
 # Windows
 /windows/flutter/ephemeral/
+
+# Firebase
+firebase.json
+*GoogleService-Info.plist
+
+# Gradle
+.gradle/
