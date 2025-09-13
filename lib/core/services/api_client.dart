@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-
 /// A parent class for making generic API calls.
 /// Other services can extend this class to inherit CRUD functionality.
 class ApiClient {
@@ -22,7 +21,7 @@ class ApiClient {
   /// - `jsonPayload`: The data to be sent in the request body.
   ///
   /// Returns a `http.Response` on success or throws an `Exception` on error.
-  Future<http.Response> create({
+  Future<http.Response> post({
     required String urlPath,
     required Map<String, String> jsonHeaders,
     required Map<String, dynamic> jsonPayload,

@@ -5,7 +5,6 @@ import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/models/resource.dart';
 
-
 class ResourceService extends ApiClient {
 
   final SharedPreferencesService _prefsService = SharedPreferencesService();

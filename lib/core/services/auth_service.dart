@@ -65,7 +65,7 @@ class AuthService extends ApiClient {
                 'flair': identity,
                 'status_message': statusMessage,
             };
-        final response = await create(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
+        final response = await post(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
 
         print(response.body);
 
@@ -127,7 +127,7 @@ class AuthService extends ApiClient {
       String urlPath = '/api/login/';
       final jsonHeaders = {'Content-Type': 'application/json'};
       final jsonPayload = {'username': username, 'password': password};
-      final response = await create(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
+      final response = await post(urlPath: urlPath, jsonHeaders: jsonHeaders, jsonPayload: jsonPayload);
       print(response.statusCode);
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -158,6 +158,6 @@ class AuthService extends ApiClient {
   }
 
   Future<void> signOut() async {
-   //TODO: Add later
+    _clearUser();
   }
 }

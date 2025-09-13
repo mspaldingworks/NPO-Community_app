@@ -10,7 +10,7 @@ import 'package:transconnect/features/community/screens/chat_screen.dart';
 import 'package:transconnect/features/community/screens/community_screen.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/features/profile/screens/profile_screen.dart';
-import 'package:transconnect/features/resources/screens/resources_screen.dart';
+import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/settings/screens/settings_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 
