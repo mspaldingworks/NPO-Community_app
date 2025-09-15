@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'package:flutter/widgets.dart';
 
 class Comment {
@@ -8,11 +7,21 @@ class Comment {
   final String content;
   final String pubDate;
 
-  Comment(
-      {required this.id,
-      required this.user,
-      required this.post,
-      required this.content,
-      required this.pubDate
-      });
+  Comment({
+    required this.id,
+    required this.user,
+    required this.post,
+    required this.content,
+    required this.pubDate,
+  });
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+      id: json['id'],
+      user: json['user'],
+      post: json['post'],
+      content: json['content'],
+      pubDate: json['pub_date'],
+    );
+  }
 }

@@ -35,11 +35,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
             activeIcon: Icon(Icons.menu_book),
             label: 'Resources',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
         ],
         onTap: (index) {
           navigationShell.goBranch(

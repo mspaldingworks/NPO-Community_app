@@ -13,6 +13,7 @@ import 'package:transconnect/features/profile/screens/profile_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/settings/screens/settings_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
+import 'package:transconnect/features/events/screens/calendar_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -36,6 +37,10 @@ final goRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   // refreshListenable: GoRouterRefreshStream(AuthService().authStateChanges),
   redirect: (context, state) async {
+    if (state.matchedLocation == '/') {
+      return '/home';
+    }
+
     final authService = AuthService();    
     final isLoggedIn = await authService.isUserAuthenticated();
     final location = state.matchedLocation;
@@ -76,15 +81,6 @@ final goRouter = GoRouter(
             GoRoute(
               path: '/community',
               builder: (context, state) => const CommunityScreen(),
-              routes: [
-                GoRoute(
-                  path: ':channelId',
-                  builder: (context, state) {
-                    final channelId = state.pathParameters['channelId']!;
-                    return ChatScreen(channelId: channelId);
-                  },
-                ),
-              ],
             ),
           ],
         ),
@@ -104,21 +100,21 @@ final goRouter = GoRouter(
             ),
           ],
         ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/profile',
-              builder: (context, state) => const ProfileScreen(),
-              routes: [
-                GoRoute(
-                  path: 'settings',
-                  builder: (context, state) => const SettingsScreen(),
-                ),
-              ],
-            ),
-          ],
+      ],
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+      routes: [
+        GoRoute(
+          path: 'settings',
+          builder: (context, state) => const SettingsScreen(),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/calendar',
+      builder: (context, state) => const CalendarScreen(),
     ),
   ],
 );

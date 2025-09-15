@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 
 /// A parent class for making generic API calls.
@@ -10,7 +11,10 @@ class ApiClient {
 
   /// Builds the full URL for the API request by combining baseUri and urlPath.
   Uri _buildUri(String urlPath) {
-    return Uri.parse('$baseUri/$urlPath');
+    final path = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
+    final uri = Uri.parse('$baseUri/$path');
+    log('Requesting URL: $uri');
+    return uri;
   }
 
   /// Makes a POST request to create a new resource.

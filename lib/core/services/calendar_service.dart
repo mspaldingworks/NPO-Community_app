@@ -10,10 +10,10 @@ class CalendarService {
       final response = await http.get(Uri.parse(_calenderUrl));
       if (response.statusCode == 200) {
         final iCalendar = ICalendar.fromString(response.body);
-        final now = DateTime.now();
 
         return iCalendar.data
-            .where((event) => event['dtstart']?.toDateTime()?.isAfter(now) ?? false)
+            .where((eventData) =>
+                eventData['dtstart'] != null && eventData['dtend'] != null)
             .map((eventData) {
           return Event(
             uid: eventData['uid'] ?? '',
