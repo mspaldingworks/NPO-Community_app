@@ -96,7 +96,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 return ListTile(
                   title: Text(user.username),
                   trailing: IconButton(
-                    icon: const Icon(Icons.person_add),
+                    icon: const Icon(Icons.favorite_border),
+                    tooltip: 'Add Friend',
                     onPressed: () => _sendFriendRequest(user.uid),
                   ),
                 );

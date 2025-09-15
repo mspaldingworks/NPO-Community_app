@@ -46,11 +46,30 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        if (!snapshot.hasData) { 
           return const Center(child: Text('You have no friends yet.'));
         }
 
         final friends = snapshot.data!;
+
+        // Create a placeholder for Mad.e
+        final madeUser = User(
+          uid: 'made_user_id', // A unique, static ID for Mad.e
+          username: 'Mad.e',
+          email: '', // Placeholder
+          city: '', // Placeholder
+          token: '', // Placeholder
+        );
+
+        // Add Mad.e to the list if they aren't already there and isn't the current user
+        if (_currentUserId != madeUser.uid && !friends.any((f) => f.uid == madeUser.uid)) {
+          friends.insert(0, madeUser);
+        }
+
+        if (friends.isEmpty) {
+          return const Center(child: Text('You have no friends yet.'));
+        }
+
         return ListView.builder(
           itemCount: friends.length,
           itemBuilder: (context, index) {
