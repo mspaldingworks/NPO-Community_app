@@ -6,6 +6,12 @@ import 'package:transconnect/models/user.dart';
 class FriendService extends ApiClient {
   // TODO: Implement with api.luxashome.com
 
+  /// Searches for users by username.
+  Future<List<User>> searchUsers(String query) async {
+    // TODO: Implement GET /api/users/search/?q={query}
+    return [];
+  }
+
   /// Fetches the list of friends for the current user.
   Future<List<User>> fetchFriends() async {
     // TODO: Implement GET /api/friends/

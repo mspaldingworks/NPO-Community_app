@@ -23,6 +23,9 @@ class _CommunityScreenState extends State<CommunityScreen>
     super.initState();
     _postsFuture = _communityService.fetchPosts();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Rebuilds the widget to show/hide the FAB
+    });
   }
 
   @override
@@ -85,6 +88,14 @@ class _CommunityScreenState extends State<CommunityScreen>
           const FriendRequestsScreen(),
         ],
       ),
+      floatingActionButton: _tabController.index == 1
+          ? FloatingActionButton(
+              onPressed: () {
+                GoRouter.of(context).push('/user-search');
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

@@ -14,6 +14,7 @@ import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/settings/screens/settings_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/features/events/screens/calendar_screen.dart';
+import 'package:transconnect/features/friends/screens/user_search_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -77,6 +78,10 @@ final goRouter = GoRouter(
         final channelId = state.pathParameters['channelId']!;
         return ChatScreen(channelId: channelId);
       },
+    ),
+    GoRoute(
+      path: '/user-search',
+      builder: (context, state) => const UserSearchScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
