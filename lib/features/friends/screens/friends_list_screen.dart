@@ -46,11 +46,9 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-        if (!snapshot.hasData) { 
-          return const Center(child: Text('You have no friends yet.'));
-        }
 
-        final friends = snapshot.data!;
+        // Create a new list from the snapshot data, or an empty list if null.
+        final friends = List<User>.from(snapshot.data ?? []);
 
         // Create a placeholder for Mad.e
         final madeUser = User(
