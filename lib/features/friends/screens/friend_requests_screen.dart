@@ -41,56 +41,51 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-      ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _requestsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('You have no friend requests.'));
-          }
+    return FutureBuilder<List<dynamic>>(
+      future: _requestsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('You have no friend requests.'));
+        }
 
-          final requests = snapshot.data!;
-          return ListView.builder(
-            itemCount: requests.length,
-            itemBuilder: (context, index) {
-              final request = requests[index];
-              // Assuming the request object has user info and an ID.
-              // You might need to adjust this based on your actual data model.
-              final username = request['from_user']['username'] ?? 'Unknown User';
-              final requestId = request['id'] ?? '';
+        final requests = snapshot.data!;
+        return ListView.builder(
+          itemCount: requests.length,
+          itemBuilder: (context, index) {
+            final request = requests[index];
+            // Assuming the request object has user info and an ID.
+            // You might need to adjust this based on your actual data model.
+            final username = request['from_user']['username'] ?? 'Unknown User';
+            final requestId = request['id'] ?? '';
 
-              return ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person_add),
-                ),
-                title: Text('$username wants to be your friend'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.check),
-                      onPressed: () => _respondToRequest(requestId, 'accept'),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => _respondToRequest(requestId, 'decline'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
+            return ListTile(
+              leading: const CircleAvatar(
+                child: Icon(Icons.person_add),
+              ),
+              title: Text('$username wants to be your friend'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.check),
+                    onPressed: () => _respondToRequest(requestId, 'accept'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => _respondToRequest(requestId, 'decline'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

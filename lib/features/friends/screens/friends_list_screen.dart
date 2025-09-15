@@ -37,44 +37,39 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friends'),
-      ),
-      body: FutureBuilder<List<User>>(
-        future: _friendsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('You have no friends yet.'));
-          }
+    return FutureBuilder<List<User>>(
+      future: _friendsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('You have no friends yet.'));
+        }
 
-          final friends = snapshot.data!;
-          return ListView.builder(
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              final friend = friends[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  // TODO: Use friend's profile picture
-                  child: Icon(Icons.person),
-                ),
-                title: Text(friend.username), // Assuming User model has a 'username' field
-                subtitle: Text('Offline'), // TODO: Implement real-time status
-                onTap: () {
-                  final channelId = _createChannelId(friend.uid);
-                  GoRouter.of(context).push('/chat/$channelId');
-                },
-              );
-            },
-          );
-        },
-      ),
+        final friends = snapshot.data!;
+        return ListView.builder(
+          itemCount: friends.length,
+          itemBuilder: (context, index) {
+            final friend = friends[index];
+            return ListTile(
+              leading: const CircleAvatar(
+                // TODO: Use friend's profile picture
+                child: Icon(Icons.person),
+              ),
+              title: Text(friend.username), // Assuming User model has a 'username' field
+              subtitle: Text('Offline'), // TODO: Implement real-time status
+              onTap: () {
+                final channelId = _createChannelId(friend.uid);
+                GoRouter.of(context).push('/chat/$channelId');
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

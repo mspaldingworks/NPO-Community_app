@@ -14,8 +14,6 @@ import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/settings/screens/settings_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/features/events/screens/calendar_screen.dart';
-import 'package:transconnect/features/friends/screens/friends_list_screen.dart';
-import 'package:transconnect/features/friends/screens/friend_requests_screen.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
@@ -72,14 +70,6 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
-    ),
-    GoRoute(
-      path: '/friends',
-      builder: (context, state) => const FriendsListScreen(),
-    ),
-    GoRoute(
-      path: '/friend-requests',
-      builder: (context, state) => const FriendRequestsScreen(),
     ),
     GoRoute(
       path: '/chat/:channelId',

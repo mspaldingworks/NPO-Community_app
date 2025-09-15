@@ -128,26 +128,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: const Text('Save'),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  GoRouter.of(context).push('/friends');
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Friends'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  GoRouter.of(context).push('/friend-requests');
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Friend Requests'),
-              ),
             ],
           ),
         ),
