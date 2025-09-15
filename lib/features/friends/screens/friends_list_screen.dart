@@ -78,7 +78,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                 child: Icon(Icons.person),
               ),
               title: Text(friend.username), // Assuming User model has a 'username' field
-              subtitle: Text('Offline'), // TODO: Implement real-time status
               onTap: () {
                 final channelId = _createChannelId(friend.uid);
                 GoRouter.of(context).push('/chat/$channelId');
