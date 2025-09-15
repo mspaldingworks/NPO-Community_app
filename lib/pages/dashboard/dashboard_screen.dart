@@ -60,7 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              context.go('/profile/settings');
+              context.push('/profile/settings');
             },
           ),
         ],
@@ -212,7 +212,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Center(
       child: ElevatedButton(
         onPressed: () {
-          context.go('/profile');
+          context.push('/profile');
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF5E4A59),
