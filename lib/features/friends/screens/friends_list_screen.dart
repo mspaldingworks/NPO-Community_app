@@ -78,6 +78,9 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                 child: Icon(Icons.person),
               ),
               title: Text(friend.username), // Assuming User model has a 'username' field
+              subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
+                  ? Text(friend.statusMessage!)
+                  : null,
               onTap: () {
                 final channelId = _createChannelId(friend.uid);
                 GoRouter.of(context).push('/chat/$channelId');
