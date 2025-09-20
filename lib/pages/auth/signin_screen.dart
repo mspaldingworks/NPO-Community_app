@@ -11,13 +11,13 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final AuthService _authService = AuthService();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -26,15 +26,13 @@ class _SignInScreenState extends State<SignInScreen> {
     setState(() {
       _isLoading = true;
     });
+
     try {
       await _authService.signIn(
-        username: _emailController.text.trim(),
-        password: _passwordController.text.trim()
+        username: _usernameController.text.trim(),
+        password: _passwordController.text.trim(),
       );
-      // Navigate to home on success
-      if (mounted) {
-        context.go('/home');
-      }
+      // The router's refreshListenable will handle navigation on auth state change.
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,7 +55,7 @@ class _SignInScreenState extends State<SignInScreen> {
         title: const Text('Sign In'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/welcome'), // Navigate to welcome screen
         ),
       ),
       body: Padding(
@@ -66,9 +64,9 @@ class _SignInScreenState extends State<SignInScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: 'Username'),
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 16),
             TextFormField(

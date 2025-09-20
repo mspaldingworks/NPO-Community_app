@@ -1,19 +1,21 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
+import 'package:transconnect/core/config.dart';
 
 /// A parent class for making generic API calls.
 /// Other services can extend this class to inherit CRUD functionality.
 class ApiClient {
   // Base URI for your API.
   // Example: 'https://api.myendpoint.com/v1'
-  final String baseUri = 'http://api.luxashome.com';  
+  final String _baseUrl = AppConfig.baseUrl;  
+  final Logger _logger = Logger();
 
   /// Builds the full URL for the API request by combining baseUri and urlPath.
   Uri _buildUri(String urlPath) {
     final path = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
-    final uri = Uri.parse('$baseUri/$path');
-    log('Requesting URL: $uri');
+    final uri = Uri.parse('$_baseUrl/$path');
+    _logger.i('Requesting URL: $uri');
     return uri;
   }
 
@@ -32,11 +34,13 @@ class ApiClient {
   }) async {
     final uri = _buildUri(urlPath);    
     try {
+      _logger.i('POST Requesting URL: $uri');
       final response = await http.post(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
       );
+      _logger.i('POST Response: ${response.statusCode} ${response.body}');
       return response;
     } catch (e) {
       throw Exception('Failed to create resource: $e');
@@ -56,10 +60,12 @@ class ApiClient {
   }) async {
     final uri = _buildUri(urlPath);
     try {
+      _logger.i('GET Requesting URL: $uri');
       final response = await http.get(
         uri,
         headers: jsonHeaders,
       );
+      _logger.i('GET Response: ${response.statusCode} ${response.body}');
       return response;
     } catch (e) {
       throw Exception('Failed to read resource: $e');
@@ -81,11 +87,13 @@ class ApiClient {
   }) async {
     final uri = _buildUri(urlPath);
     try {
+      _logger.i('PATCH Requesting URL: $uri');
       final response = await http.patch(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
       );
+      _logger.i('PATCH Response: ${response.statusCode} ${response.body}');
       return response;
     } catch (e) {
       throw Exception('Failed to update resource: $e');
@@ -105,10 +113,12 @@ class ApiClient {
   }) async {
     final uri = _buildUri(urlPath);
     try {
+      _logger.i('DELETE Requesting URL: $uri');
       final response = await http.delete(
         uri,
         headers: jsonHeaders,
       );
+      _logger.i('DELETE Response: ${response.statusCode} ${response.body}');
       return response;
     } catch (e) {
       throw Exception('Failed to delete resource: $e');

@@ -3,17 +3,24 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/features/community/services/community_service.dart';
-import 'package:transconnect/models/group.dart';
+import 'package:transconnect/models/post.dart';
 
-class CommunityScreen extends StatefulWidget {
-  const CommunityScreen({super.key});
+class PostListScreen extends StatefulWidget {
+  final int groupId;
+  final String groupName;
+
+  const PostListScreen({
+    super.key,
+    required this.groupId,
+    required this.groupName,
+  });
 
   @override
-  State<CommunityScreen> createState() => _CommunityScreenState();
+  State<PostListScreen> createState() => _PostListScreenState();
 }
 
-class _CommunityScreenState extends State<CommunityScreen> {
-  late Future<List<Group>> _groupsFuture;
+class _PostListScreenState extends State<PostListScreen> {
+  late Future<List<Post>> _postsFuture;
   late final CommunityService _communityService;
 
   @override
@@ -21,37 +28,45 @@ class _CommunityScreenState extends State<CommunityScreen> {
     super.initState();
     final authService = Provider.of<AuthService>(context, listen: false);
     _communityService = CommunityService(authService: authService);
-    _groupsFuture = _communityService.fetchGroups();
+    _postsFuture = _communityService.fetchPostsForGroup(widget.groupId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community Groups'),
+        title: Text(widget.groupName),
       ),
-      body: FutureBuilder<List<Group>>(
-        future: _groupsFuture,
+      body: FutureBuilder<List<Post>>(
+        future: _postsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No groups found.'));
+            return const Center(child: Text('No posts found in this group.'));
           } else {
-            final groups = snapshot.data!;
+            final posts = snapshot.data!;
             return ListView.builder(
-              itemCount: groups.length,
+              itemCount: posts.length,
               itemBuilder: (context, index) {
-                final group = groups[index];
+                final post = posts[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
-                    title: Text(group.name),
+                    title: Text(post.title ?? '[No Title]'),
+                    subtitle: Text(
+                      post.body ?? '[No Content]',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      GoRouter.of(context).push('/community/${group.id}', extra: group.name);
+                      GoRouter.of(context).push(
+                        '/community/${widget.groupId}/posts/${post.id}',
+                        extra: post,
+                      );
                     },
                   ),
                 );

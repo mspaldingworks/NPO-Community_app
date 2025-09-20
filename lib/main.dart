@@ -1,39 +1,35 @@
-import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/http_overrides.dart';
-import 'dart:io';
-import 'package:transconnect/navigation/app_router.dart';
+import 'package:provider/provider.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:transconnect/navigation/app_router.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferencesService().init();
-  HttpOverrides.global = MyHttpOverrides();
-  final savedThemeMode = await AdaptiveTheme.getThemeMode();
-  runApp(MyApp(savedThemeMode: savedThemeMode));
+  final authService = AuthService();
+  await authService.init(); // Initialize the auth service
+  runApp(MyApp(authService: authService));
 }
 
 class MyApp extends StatelessWidget {
-  final AdaptiveThemeMode? savedThemeMode;
-  const MyApp({super.key, this.savedThemeMode});
+  final AuthService authService;
+  const MyApp({super.key, required this.authService});
 
   @override
   Widget build(BuildContext context) {
-    return AdaptiveTheme(
-      light: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.blue,
-      ),
-      dark: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-      ),
-      initial: savedThemeMode ?? AdaptiveThemeMode.light,
-      builder: (theme, darkTheme) => MaterialApp.router(
+    final appRouter = AppRouter(authService: authService);
+
+    return MultiProvider(
+      providers: [
+        Provider<AuthService>.value(value: authService),
+      ],
+      child: MaterialApp.router(
+        routerConfig: appRouter.router,
         title: 'TransConnect',
-        theme: theme,
-        darkTheme: darkTheme,
-        routerConfig: goRouter,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
       ),
     );
   }

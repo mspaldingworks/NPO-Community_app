@@ -1,37 +1,81 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:transconnect/core/services/api_client.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/models/comment.dart';
+import 'package:transconnect/models/group.dart';
 import 'package:transconnect/models/post.dart';
 
 class CommunityService extends ApiClient {
-  final SharedPreferencesService _prefsService = SharedPreferencesService();
+  final AuthService authService;
 
-  Future<List<Post>> fetchPosts() async {
-    try {
-      String? token = _prefsService.getData('user_token');
-      if (token == null) {
-        throw Exception('Authentication token not found.');
-      }
+  CommunityService({required this.authService});
 
-      final response = await read(
-        urlPath: 'api/posts/', 
-        jsonHeaders: {'Authorization': 'Token $token'},
-      );
+  Future<List<Group>> fetchGroups() async {
+    final token = authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Post.fromJson(json)).toList();
-      } else {
-        log('Failed to load posts. Status code: ${response.statusCode}');
-        log('Response body: ${response.body}');
-        throw Exception('Failed to load posts');
-      }
-    } catch (e) {
-      log('An error occurred while fetching posts: $e');
-      throw Exception('An error occurred while fetching posts: $e');
+    final response = await read(
+      urlPath: '/api/groups/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => Group.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load groups');
+    }
+  }
+
+  // Fetches all posts for a given group by its ID.
+  Future<List<Post>> fetchPostsForGroup(int groupId) async {
+    final token = authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await read(
+      urlPath: '/api/posts/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> allPostsJson = json.decode(response.body);
+      final List<Post> allPosts = allPostsJson.map((json) => Post.fromJson(json)).toList();
+
+      // Filter posts on the client-side by group ID
+      return allPosts.where((post) => post.groupId == groupId).toList();
+    } else {
+      throw Exception('Failed to load posts');
+    }
+  }
+
+  Future<Comment> addComment({required int postId, required String content}) async {
+    final token = authService.currentUser?.token;
+    final username = authService.currentUser?.username;
+
+    if (token == null || username == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await post(
+      urlPath: '/api/comments/',
+      jsonHeaders: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
+      jsonPayload: {
+        'post': postId,
+        'user': username,
+        'content': content
+      },
+    );
+
+    if (response.statusCode == 201) {
+      return Comment.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to add comment. Status code: ${response.statusCode}');
     }
   }
 }

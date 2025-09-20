@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
@@ -22,25 +21,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final CalendarService _calendarService = CalendarService();
   File? _profileImage;
-  late Future<List<Event>> _favoriteEventsFuture;
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
-    _favoriteEventsFuture = _fetchFavoriteEvents();
-  }
-
-  Future<List<Event>> _fetchFavoriteEvents() async {
-    final allEvents = await _calendarService.fetchEvents();
-    final favoriteEventIds = await _favoritesService.getFavorites();
-    return allEvents.where((event) => favoriteEventIds.contains(event.uid)).toList();
-  }
-
-  @override
-  void dispose() {
-    _statusController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadProfileData() async {
@@ -75,6 +60,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SnackBar(content: Text('Profile saved!')),
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _statusController.dispose();
+    super.dispose();
   }
 
   @override

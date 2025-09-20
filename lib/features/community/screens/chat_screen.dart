@@ -20,7 +20,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Message> _messages = [];
   late StreamSubscription<Message> _messageSubscription;
   final _authService = AuthService();
-  String? _currentUserId;
+  int? _currentUserId;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _loadCurrentUser() {
-    _currentUserId = _authService.currentUser?.uid;
+    _currentUserId = _authService.currentUser?.id;
     setState(() {});
   }
 
@@ -85,7 +85,7 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                final isMe = message.userId == _currentUserId;
+                final isMe = message.userId == _currentUserId.toString();
                 final username = message.profile?.username ?? '...';
 
                 return ListTile(

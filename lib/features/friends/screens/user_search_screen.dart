@@ -56,9 +56,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     });
   }
 
-  void _sendFriendRequest(String userId) async {
+  void _sendFriendRequest(int userId) async {
     try {
-      await _friendService.sendFriendRequest(userId);
+      await _friendService.sendFriendRequest(userId.toString());
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Friend request sent!')),
@@ -98,7 +98,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.favorite_border),
                     tooltip: 'Add Friend',
-                    onPressed: () => _sendFriendRequest(user.uid),
+                    onPressed: () => _sendFriendRequest(user.id),
                   ),
                 );
               },

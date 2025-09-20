@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/features/community/screens/chat_screen.dart';
 import 'package:transconnect/models/user.dart';
 
 class FriendsListScreen extends StatefulWidget {
@@ -50,22 +49,8 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
         // Create a new list from the snapshot data, or an empty list if null.
         final friends = List<User>.from(snapshot.data ?? []);
 
-        // Create a placeholder for Mad.e
-        final madeUser = User(
-          uid: 'made_user_id', // A unique, static ID for Mad.e
-          username: 'Mad.e',
-          email: '', // Placeholder
-          city: '', // Placeholder
-          token: '', // Placeholder
-        );
-
-        // Add Mad.e to the list if they aren't already there and isn't the current user
-        if (_currentUserId != madeUser.uid && !friends.any((f) => f.uid == madeUser.uid)) {
-          friends.insert(0, madeUser);
-        }
-
         if (friends.isEmpty) {
-          return const Center(child: Text('You have no friends yet.'));
+          return const Center(child: Text('Use the search to find friends!'));
         }
 
         return ListView.builder(
@@ -73,9 +58,13 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
           itemBuilder: (context, index) {
             final friend = friends[index];
             return ListTile(
-              leading: const CircleAvatar(
-                // TODO: Use friend's profile picture
-                child: Icon(Icons.person),
+              leading: CircleAvatar(
+                backgroundImage: friend.profilePic != null
+                    ? NetworkImage(friend.profilePic!)
+                    : null,
+                child: friend.profilePic == null
+                    ? const Icon(Icons.person)
+                    : null,
               ),
               title: Text(friend.username), // Assuming User model has a 'username' field
               subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty

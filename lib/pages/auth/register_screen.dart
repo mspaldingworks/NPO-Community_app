@@ -17,9 +17,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _zipCodeController = TextEditingController();
   final _authService = AuthService();
   String? _selectedIdentity;
+  String _selectedUserType = 'individual'; // Default value
   bool _isLoading = false;
 
   final List<String> _identities = ['Nonbinary', 'Woman', 'Man', 'Other'];
+  final List<String> _userTypes = ['individual', 'organization'];
 
   @override
   void dispose() {
@@ -48,6 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
         identity: (_selectedIdentity ?? ''),
+        userType: _selectedUserType,
       );
 
       if (mounted) {
@@ -77,9 +80,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: TextButton(
-          onPressed: () => context.pop(),
-          child: const Text('Back'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/welcome'), // Navigate to welcome screen
         ),
       ),
       body: SingleChildScrollView(
@@ -151,22 +154,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // DropdownButtonFormField<String>(
-                //   value: _selectedIdentity,
-                //   hint: const Text('Identity (for flair)'),
-                //   onChanged: (String? newValue) {
-                //     setState(() {
-                //       _selectedIdentity = newValue;
-                //     });
-                //   },
-                //   items: _identities.map<DropdownMenuItem<String>>((String value) {
-                //     return DropdownMenuItem<String>(
-                //       value: value,
-                //       child: Text(value),
-                //     );
-                //   }).toList(),
-                //   validator: (value) => value == null ? 'Please select an identity' : null,
-                // ),
+                DropdownButtonFormField<String>(
+                  value: _selectedIdentity,
+                  hint: const Text('Identity (for flair)'),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedIdentity = newValue;
+                    });
+                  },
+                  items: _identities.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  validator: (value) => value == null ? 'Please select an identity' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedUserType,
+                  hint: const Text('Account Type'),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedUserType = newValue!;
+                    });
+                  },
+                  items: _userTypes.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  validator: (value) => value == null ? 'Please select an account type' : null,
+                ),
                 const SizedBox(height: 32),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
