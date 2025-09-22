@@ -21,7 +21,7 @@ class ChatService extends ApiClient {
     }
 
     final response = await read(
-      urlPath: '/api/chat/conversations/',
+      urlPath: '/api/messages/',
       jsonHeaders: {'Authorization': 'Token $token'},
     );
 
@@ -33,6 +33,25 @@ class ChatService extends ApiClient {
     }
   }
 
+  Future<List<ChatMessage>> fetchMessages(String conversationId) async {
+    final token = _authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await read(
+      urlPath: '/api/messages/$conversationId/messages/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      return data.map((json) => ChatMessage.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load messages');
+    }
+  }
+
   void connect(String conversationId) {
     final token = _authService.currentUser?.token;
     if (token == null) {
@@ -40,9 +59,9 @@ class ChatService extends ApiClient {
     }
 
     // Construct the WebSocket URL
-    // Assumes the WebSocket endpoint is at /ws/chat/{conversationId}/
+    // Assumes the WebSocket endpoint is at /ws/messages/{conversationId}/
     // and accepts the token as a query parameter.
-    final uri = Uri.parse('ws://api.luxashome.com/ws/chat/$conversationId/?token=$token');
+    final uri = Uri.parse('wss://api.luxashome.com/ws/messages/$conversationId/?token=$token');
 
     _channel = WebSocketChannel.connect(uri);
 
@@ -68,6 +87,7 @@ class ChatService extends ApiClient {
     );
   }
 
+  // Sends a message via WebSocket for real-time communication
   void sendMessage(String content) {
     if (_channel != null) {
       // This format is more typical for a Django Channels consumer,
@@ -77,6 +97,52 @@ class ChatService extends ApiClient {
         'message': content,
       };
       _channel!.sink.add(jsonEncode(message));
+    }
+  }
+
+  // Sends a message via POST request
+  Future<ChatMessage> sendMessageWithPost(
+      {required String conversationId, required String content}) async {
+    final token = _authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await post(
+      urlPath: '/api/messages/$conversationId/messages/',
+      jsonHeaders: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token'
+      },
+      jsonPayload: {'content': content},
+    );
+
+    if (response.statusCode == 201) {
+      return ChatMessage.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to send message. Status code: ${response.statusCode}');
+    }
+  }
+
+  Future<Conversation> createConversation({required List<int> userIds}) async {
+    final token = _authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await post(
+      urlPath: '/api/messages/',
+      jsonHeaders: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $token'
+      },
+      jsonPayload: {'participants': userIds},
+    );
+
+    if (response.statusCode == 201) {
+      return Conversation.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to create conversation. Status code: ${response.statusCode}');
     }
   }
 

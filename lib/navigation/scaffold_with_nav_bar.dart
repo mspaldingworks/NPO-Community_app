@@ -9,68 +9,25 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
+  void _goBranch(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    int _selectedIndex = navigationShell.currentIndex;
-
-    void _onItemTapped(int index, BuildContext context) {
-      switch (index) {
-        case 0:
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-          break;
-        case 1:
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-          break;
-        case 2:
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-          break;
-        case 3:
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-          break;
-      }
-    }
-
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        currentIndex: _selectedIndex,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group),
-            label: 'Community',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book),
-            label: 'Resources',
-          ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        destinations: const [
+          NavigationDestination(label: 'Community', icon: Icon(Icons.group)),
+          NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
+          NavigationDestination(label: 'Resources', icon: Icon(Icons.book)),
         ],
-        onTap: (index) {
-          _onItemTapped(index, context);
-        },
+        onDestinationSelected: _goBranch,
       ),
     );
   }

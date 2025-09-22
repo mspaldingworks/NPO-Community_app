@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 
-class AuthService extends ApiClient {
+class AuthService extends ApiClient with ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
   AuthService._internal();
@@ -35,7 +36,13 @@ class AuthService extends ApiClient {
   Future<void> _saveUser(User user) async {
     _currentUser = user;
     _authStateController.add(user);
-    await _prefsService.saveData('user_token', user.token);
+    if (user.token != null) {
+      await _prefsService.saveData('user_token', user.token!);
+    } else {
+      // This case should not happen for a newly authenticated user.
+      // Handle error or log if necessary.
+    }
+    notifyListeners(); // Notify listeners of the change
   }
 
   // Private method to clear user data on logout.
@@ -43,6 +50,7 @@ class AuthService extends ApiClient {
     _currentUser = null;
     _authStateController.add(null);
     await _prefsService.clearData('user_token');
+    notifyListeners(); // Notify listeners of the change
   }
 
   Future<bool> isUserAuthenticated() async {

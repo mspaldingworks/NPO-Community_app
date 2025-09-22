@@ -16,6 +16,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   final _urlController = TextEditingController();
   final _tagsController = TextEditingController();
   final _resourceService = ResourceService();
+  String? _selectedType;
   bool _isLoading = false;
 
   @override
@@ -30,6 +31,13 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedType == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a resource type')),
+        );
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
@@ -40,6 +48,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
         await _resourceService.addResource(
           name: _nameController.text,
           description: _descriptionController.text,
+          type: _selectedType!,
           provider: _providerController.text,
           website: _urlController.text,
           tags: tags,
@@ -95,6 +104,25 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
+              ),
+              const SizedBox(height: 16.0),
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                hint: const Text('Select Resource Type'),
+                isExpanded: true,
+                items: ['Blog', 'Website', 'Video', 'Article', 'Other']
+                    .map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedType = newValue;
+                  });
+                },
+                validator: (value) => value == null ? 'Please select a type' : null,
               ),
               const SizedBox(height: 16.0),
               TextFormField(

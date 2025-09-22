@@ -47,6 +47,7 @@ class ResourceService extends ApiClient {
   Future<Resource> addResource({
     required String name,
     required String description,
+    required String type,
     String? website,
     String? provider,
     required List<String> tags,
@@ -62,6 +63,7 @@ class ResourceService extends ApiClient {
       jsonPayload: {
         'name': name,
         'description': description,
+        'type': type,
         'url': website,
         'provider': provider,
         'tags': tags,

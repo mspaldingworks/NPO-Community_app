@@ -54,11 +54,29 @@ class CommunityService extends ApiClient {
     }
   }
 
+  Future<Post> fetchPostById(int postId) async {
+    final token = authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await read(
+      urlPath: '/api/posts/$postId/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return Post.fromJson(json.decode(response.body));
+    } else {
+      throw Exception('Failed to load post');
+    }
+  }
+
   Future<Comment> addComment({required int postId, required String content}) async {
     final token = authService.currentUser?.token;
-    final username = authService.currentUser?.username;
+    final user = authService.currentUser;
 
-    if (token == null || username == null) {
+    if (token == null || user == null) {
       throw Exception('User not authenticated');
     }
 
@@ -67,7 +85,6 @@ class CommunityService extends ApiClient {
       jsonHeaders: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
       jsonPayload: {
         'post': postId,
-        'user': username,
         'content': content
       },
     );

@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
@@ -70,6 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentUser = authService.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
@@ -102,7 +108,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              if (currentUser != null)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      currentUser.username,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    if (currentUser.isStaff) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Admin',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _statusController,
                 decoration: const InputDecoration(

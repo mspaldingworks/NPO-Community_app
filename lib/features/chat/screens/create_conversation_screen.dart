@@ -1,18 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/friend_service.dart';
+import 'package:transconnect/features/chat/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
-class UserSearchScreen extends StatefulWidget {
-  const UserSearchScreen({super.key});
+class CreateConversationScreen extends StatefulWidget {
+  const CreateConversationScreen({super.key});
 
   @override
-  State<UserSearchScreen> createState() => _UserSearchScreenState();
+  State<CreateConversationScreen> createState() => _CreateConversationScreenState();
 }
 
-class _UserSearchScreenState extends State<UserSearchScreen> {
+class _CreateConversationScreenState extends State<CreateConversationScreen> {
   final FriendService _friendService = FriendService();
+  final ChatService _chatService = ChatService();
   final TextEditingController _searchController = TextEditingController();
   List<User> _searchResults = [];
   bool _isLoading = false;
@@ -29,14 +32,18 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       if (query.isEmpty) {
-        setState(() {
-          _searchResults = [];
-        });
+        if (mounted) {
+          setState(() {
+            _searchResults = [];
+          });
+        }
         return;
       }
-      setState(() {
-        _isLoading = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
       try {
         final results = await _friendService.searchUsers(query);
         if (mounted) {
@@ -45,11 +52,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           });
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to search users: $e')),
-          );
-        }
+        // Handle error
       } finally {
         if (mounted) {
           setState(() {
@@ -60,18 +63,17 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     });
   }
 
-  void _sendFriendRequest(int userId) async {
+  void _startConversation(User user) async {
     try {
-      await _friendService.sendFriendRequest(userId.toString());
+      final conversation = await _chatService.createConversation(userIds: [user.id]);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request sent!')),
-        );
+        // Navigate to the new chat screen, replacing the current screen
+        GoRouter.of(context).pushReplacement('/chat/${conversation.id}');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send request: $e')),
+          SnackBar(content: Text('Failed to create conversation: $e')),
         );
       }
     }
@@ -85,7 +87,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           controller: _searchController,
           autofocus: true,
           decoration: const InputDecoration(
-            hintText: 'Search for users...',
+            hintText: 'Search for a user to chat with...',
             border: InputBorder.none,
           ),
           onChanged: _searchUsers,
@@ -99,11 +101,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 final user = _searchResults[index];
                 return ListTile(
                   title: Text(user.username),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.favorite_border),
-                    tooltip: 'Add Friend',
-                    onPressed: () => _sendFriendRequest(user.id),
-                  ),
+                  onTap: () => _startConversation(user),
                 );
               },
             ),

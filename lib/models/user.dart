@@ -6,7 +6,9 @@ class User {
   final String? statusMessage;
   final String? flair;
   final String? profilePic;
-  final String token;
+  final String? token;
+  final List<User> friends;
+  final bool isStaff;
 
   User({
     required this.id,
@@ -16,7 +18,9 @@ class User {
     this.statusMessage,
     this.flair,
     this.profilePic,
-    required this.token,
+    this.token,
+    this.friends = const [],
+    this.isStaff = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -31,6 +35,12 @@ class User {
       throw const FormatException('Invalid ID format');
     }
 
+    // Safely handle the 'friends' list
+    final friendsData = json['friends'] as List?;
+    final friendsList = friendsData != null
+        ? friendsData.map((friendJson) => User.fromJson(friendJson)).toList()
+        : <User>[];
+
     return User(
       id: parsedId,
       username: json['username'] as String,
@@ -39,7 +49,9 @@ class User {
       statusMessage: json['status_message'] as String?,
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
-      token: json['token'] as String,
+      token: json['token'] as String?,
+      friends: friendsList,
+      isStaff: json['is_staff'] as bool? ?? false,
     );
   }
 }

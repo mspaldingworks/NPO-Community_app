@@ -4,32 +4,40 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/navigation/app_router.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize services
   await SharedPreferencesService().init();
   final authService = AuthService();
-  await authService.init(); // Initialize the auth service
-  runApp(MyApp(authService: authService));
+  await authService.init();
+
+  // Initialize AppRouter
+  final appRouter = AppRouter(authService: authService);
+
+  runApp(MyApp(appRouter: appRouter, authService: authService));
 }
 
 class MyApp extends StatelessWidget {
+  final AppRouter appRouter;
   final AuthService authService;
-  const MyApp({super.key, required this.authService});
+
+  const MyApp({super.key, required this.appRouter, required this.authService});
 
   @override
   Widget build(BuildContext context) {
-    final appRouter = AppRouter(authService: authService);
-
     return MultiProvider(
       providers: [
-        Provider<AuthService>.value(value: authService),
+        ChangeNotifierProvider.value(value: authService),
+        Provider(create: (_) => appRouter),
       ],
       child: MaterialApp.router(
-        routerConfig: appRouter.router,
         title: 'TransConnect',
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
+        routerConfig: appRouter.router,
       ),
     );
   }

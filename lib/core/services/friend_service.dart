@@ -16,7 +16,7 @@ class FriendService extends ApiClient {
     }
 
     final response = await read(
-      urlPath: 'api/users/search/?q=$query',
+      urlPath: 'api/users/?search=$query',
       jsonHeaders: {'Authorization': 'Token $token'},
     );
 
@@ -28,7 +28,7 @@ class FriendService extends ApiClient {
     }
   }
 
-  /// Fetches the list of friends for the current user.
+  /// Fetches the list of friends for the current user from their profile.
   Future<List<User>> fetchFriends() async {
     final token = _authService.currentUser?.token;
     if (token == null) {
@@ -36,13 +36,14 @@ class FriendService extends ApiClient {
     }
 
     final response = await read(
-      urlPath: 'api/friends/',
+      urlPath: 'api/profile/', 
       jsonHeaders: {'Authorization': 'Token $token'},
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => User.fromJson(json)).toList();
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final User user = User.fromJson(data);
+      return user.friends;
     } else {
       throw Exception('Failed to fetch friends: ${response.body}');
     }

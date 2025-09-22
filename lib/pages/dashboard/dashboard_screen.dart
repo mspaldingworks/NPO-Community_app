@@ -55,10 +55,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text('Home'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icon(Icons.settings_outlined),
             onPressed: () {
               context.push('/profile/settings');
             },
@@ -68,37 +68,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: ListView(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           children: [
-            _buildInfoCards(),
-            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    context.push('/chat');
+                  },
+                  child: Container(
+                    width: 110,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat, size: 30, color: Colors.grey[600]),
+                        SizedBox(height: 8),
+                        Text(
+                          'Chat',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
+                _buildInfoCard(
+                  Icons.calendar_today_outlined,
+                  _isLoading ? '...' : '${_upcomingFavoritedEvents.length} upcoming events',
+                  onTap: () {
+                    context.push('/calendar');
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 24),
             _buildQuoteCard(),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _buildUpcomingFavoritedEvents(),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             _buildProfileAvatar(),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildEditProfileButton(),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildInfoCards() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildInfoCard(Icons.email_outlined, 'No unread messages'),
-        _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
-        _buildInfoCard(
-          Icons.calendar_today_outlined,
-          _isLoading ? '...' : '${_upcomingFavoritedEvents.length} upcoming events',
-          onTap: () {
-            context.push('/calendar');
-          },
-        ),
-      ],
     );
   }
 
@@ -116,7 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 30, color: Colors.grey[600]),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               text,
               textAlign: TextAlign.center,
@@ -130,12 +150,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildQuoteCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.deepPurple.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -157,11 +177,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildUpcomingFavoritedEvents() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(child: CircularProgressIndicator());
     }
 
     if (_upcomingFavoritedEvents.isEmpty) {
-      return const Center(
+      return Center(
         child: Text('No upcoming favorited events.'),
       );
     }
@@ -169,19 +189,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Your Upcoming Events',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         ListView.builder(
           shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+          physics: NeverScrollableScrollPhysics(),
           itemCount: _upcomingFavoritedEvents.length,
           itemBuilder: (context, index) {
             final event = _upcomingFavoritedEvents[index];
             return Card(
-              margin: const EdgeInsets.only(bottom: 8.0),
+              margin: EdgeInsets.only(bottom: 8.0),
               child: ListTile(
                 title: Text(event.summary),
                 subtitle: Text('${event.start.toLocal()}'),
@@ -199,7 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         radius: 40,
         backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
         child: _profileImage == null
-            ? const Icon(
+            ? Icon(
                 Icons.person,
                 size: 40,
               )
@@ -215,11 +235,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           context.push('/profile');
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF5E4A59),
+          backgroundColor: Color(0xFF5E4A59),
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
         ),
-        child: const Text('Edit Profile'),
+        child: Text('Edit Profile'),
       ),
     );
   }
