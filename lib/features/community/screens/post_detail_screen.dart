@@ -46,11 +46,48 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
+  Future<void> _showAddCommentDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add a Comment'),
+          content: TextField(
+            controller: _commentController,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Your comment'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _commentController.clear(); // Clear text on cancel
+              },
+            ),
+            TextButton(
+              child: const Text('Submit'),
+              onPressed: () {
+                _addComment();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Post'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddCommentDialog,
+        child: const Icon(Icons.add),
+        tooltip: 'Add Comment',
       ),
       body: FutureBuilder<Post>(
         future: _postFuture,
@@ -91,22 +128,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _commentController,
-                        decoration: const InputDecoration(
-                          hintText: 'Add a comment...',
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: _addComment,
-                    ),
-                  ],
-                ),
               ],
             ),
           );

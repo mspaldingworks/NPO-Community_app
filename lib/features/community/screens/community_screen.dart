@@ -51,7 +51,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     title: Text(group.name),
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      GoRouter.of(context).push('/community/${group.id}', extra: group.name);
+                      GoRouter.of(context).push('/community/group/${group.id}', extra: group.name);
                     },
                   ),
                 );

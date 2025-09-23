@@ -47,6 +47,37 @@ class ApiClient {
     }
   }
 
+  /// Makes a PUT request to update a resource.
+  ///
+  /// Parameters:
+  /// - `urlPath`: The specific endpoint path (e.g., 'users/123').
+  /// - `jsonHeaders`: A map of headers.
+  /// - `jsonPayload`: The data to be updated in the request body.
+  ///
+  /// Returns a `http.Response` on success or throws an `Exception` on error.
+  Future<http.Response> put({
+    required String urlPath,
+    Map<String, String>? jsonHeaders,
+    Map<String, dynamic>? jsonPayload,
+  }) async {
+    final url = _buildUri(urlPath);
+    _logger.i('PUT Requesting URL: $url');
+
+    final response = await http.put(
+      url,
+      headers: jsonHeaders,
+      body: jsonPayload != null ? jsonEncode(jsonPayload) : null,
+    );
+
+    _logger.i('PUT Response: ${response.statusCode} ${response.body}');
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response;
+    } else {
+      throw Exception('Failed to put data. Status code: ${response.statusCode}');
+    }
+  }
+
   /// Makes a GET request to read a resource.
   ///
   /// Parameters:
@@ -56,7 +87,7 @@ class ApiClient {
   /// Returns a `http.Response` on success or throws an `Exception` on error.
   Future<http.Response> read({
     required String urlPath,
-    required Map<String, String> jsonHeaders,
+    Map<String, String>? jsonHeaders,
   }) async {
     final uri = _buildUri(urlPath);
     try {

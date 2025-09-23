@@ -9,6 +9,7 @@ class User {
   final String? token;
   final List<User> friends;
   final bool isStaff;
+  final String userType;
 
   User({
     required this.id,
@@ -21,6 +22,7 @@ class User {
     this.token,
     this.friends = const [],
     this.isStaff = false,
+    this.userType = 'user',
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,7 @@ class User {
       token: json['token'] as String?,
       friends: friendsList,
       isStaff: json['is_staff'] as bool? ?? false,
+      userType: json['user_type'] as String? ?? 'user',
     );
   }
 }

@@ -64,7 +64,7 @@ class _PostListScreenState extends State<PostListScreen> {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       GoRouter.of(context).push(
-                        '/community/${widget.groupId}/posts/${post.id}',
+                        '/community/group/${widget.groupId}/post/${post.id}',
                         extra: post,
                       );
                     },

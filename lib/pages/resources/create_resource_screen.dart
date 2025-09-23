@@ -12,7 +12,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _providerController = TextEditingController();
+  final _phoneNumberController = TextEditingController();
   final _urlController = TextEditingController();
   final _tagsController = TextEditingController();
   final _resourceService = ResourceService();
@@ -23,7 +23,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _providerController.dispose();
+    _phoneNumberController.dispose();
     _urlController.dispose();
     _tagsController.dispose();
     super.dispose();
@@ -49,7 +49,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
           name: _nameController.text,
           description: _descriptionController.text,
           type: _selectedType!,
-          provider: _providerController.text,
+          phoneNumber: _phoneNumberController.text,
           website: _urlController.text,
           tags: tags,
         );
@@ -126,8 +126,8 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 16.0),
               TextFormField(
-                controller: _providerController,
-                decoration: const InputDecoration(labelText: 'Provider'),
+                controller: _phoneNumberController,
+                decoration: const InputDecoration(labelText: 'Phone Number'),
               ),
               const SizedBox(height: 16.0),
               TextFormField(

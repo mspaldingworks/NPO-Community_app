@@ -27,17 +27,29 @@ class AuthService extends ApiClient with ChangeNotifier {
   /// Initializes the service, loading the user session from storage.
   Future<void> init() async {
     String? token = _prefsService.getData('user_token');
-    if (token != null) {
-      await fetchUserFromToken(token);
+    String? username = _prefsService.getData('username');
+    String? password = _prefsService.getData('password'); // NOTE: Storing password is not recommended
+
+    if (token != null && username != null && password != null) {
+      try {
+        await signIn(username: username, password: password);
+      } catch (e) {
+        // If sign-in fails (e.g., token expired, password changed), clear session.
+        await signOut();
+      }
     }
   }
   
   // Private method to save user data.
-  Future<void> _saveUser(User user) async {
+  Future<void> _saveUser(User user, {String? password}) async {
     _currentUser = user;
     _authStateController.add(user);
     if (user.token != null) {
       await _prefsService.saveData('user_token', user.token!);
+      await _prefsService.saveData('username', user.username);
+      if (password != null) {
+        await _prefsService.saveData('password', password); // NOTE: Storing password is not recommended
+      }
     } else {
       // This case should not happen for a newly authenticated user.
       // Handle error or log if necessary.
@@ -50,6 +62,8 @@ class AuthService extends ApiClient with ChangeNotifier {
     _currentUser = null;
     _authStateController.add(null);
     await _prefsService.clearData('user_token');
+    await _prefsService.clearData('username');
+    await _prefsService.clearData('password');
     notifyListeners(); // Notify listeners of the change
   }
 
@@ -100,7 +114,8 @@ class AuthService extends ApiClient with ChangeNotifier {
       if (response.statusCode == 200) {
         final Map<String, dynamic> userData = jsonDecode(response.body);
         
-        // Add the token to the user data before parsing
+        // This method is now unused, but kept for reference.
+        // The correct approach is to use the login endpoint to get the full user object.
         userData['token'] = token;
         final user = User.fromJson({...userData});
 
@@ -126,13 +141,12 @@ class AuthService extends ApiClient with ChangeNotifier {
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         
-        // The user data is nested under the 'user' key.
         // We need to extract it and add the token before creating the User object.
         if (data.containsKey('user') && data.containsKey('token')) {
           final Map<String, dynamic> userData = data['user'];
           userData['token'] = data['token'];
           final user = User.fromJson(userData);
-          _saveUser(user);
+          _saveUser(user, password: password);
         } else {
           throw Exception('Invalid response format from login API.');
         }

@@ -49,7 +49,7 @@ class ResourceService extends ApiClient {
     required String description,
     required String type,
     String? website,
-    String? provider,
+    String? phoneNumber,
     required List<String> tags,
   }) async {
     final token = _prefsService.getData('user_token');
@@ -65,7 +65,7 @@ class ResourceService extends ApiClient {
         'description': description,
         'type': type,
         'url': website,
-        'provider': provider,
+        'phone_number': phoneNumber,
         'tags': tags,
       },
     );
@@ -74,6 +74,50 @@ class ResourceService extends ApiClient {
       return Resource.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to add resource. Status code: ${response.statusCode}');
+    }
+  }
+
+  // Updates an existing resource.
+  Future<Resource> updateResource(Resource resource) async {
+    final token = _prefsService.getData('user_token');
+    if (token == null) {
+      throw Exception('Authentication token not found.');
+    }
+
+    final response = await put(
+      urlPath: 'api/resources/${resource.id}/',
+      jsonHeaders: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
+      jsonPayload: {
+        'name': resource.name,
+        'description': resource.description,
+        'type': resource.type,
+        'url': resource.url,
+        'phone_number': resource.phoneNumber,
+        'tags': resource.tags,
+      },
+    );
+
+    if (response.statusCode == 200) { // 200 OK for a successful update
+      return Resource.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to update resource. Status code: ${response.statusCode}');
+    }
+  }
+
+  // Deletes a resource.
+  Future<void> deleteResource(int resourceId) async {
+    final token = _prefsService.getData('user_token');
+    if (token == null) {
+      throw Exception('Authentication token not found.');
+    }
+
+    final response = await delete(
+      urlPath: 'api/resources/$resourceId/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode != 204) { // 204 No Content is the typical success code for a DELETE request
+      throw Exception('Failed to delete resource. Status code: ${response.statusCode}');
     }
   }
 }

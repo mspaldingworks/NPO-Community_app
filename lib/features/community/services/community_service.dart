@@ -84,8 +84,8 @@ class CommunityService extends ApiClient {
       urlPath: '/api/comments/',
       jsonHeaders: {'Content-Type': 'application/json', 'Authorization': 'Token $token'},
       jsonPayload: {
+        'content': content,
         'post': postId,
-        'content': content
       },
     );
 

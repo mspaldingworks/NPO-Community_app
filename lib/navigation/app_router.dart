@@ -16,8 +16,10 @@ import 'package:transconnect/features/friends/screens/user_search_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/pages/resources/create_resource_screen.dart';
+import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/profile/screens/profile_screen.dart';
+import 'package:transconnect/models/resource.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -119,6 +121,13 @@ class AppRouter {
                   GoRoute(
                     path: 'create',
                     builder: (context, state) => const CreateResourceScreen(),
+                  ),
+                  GoRoute(
+                    path: 'edit',
+                    builder: (context, state) {
+                      final resource = state.extra as Resource;
+                      return EditResourceScreen(resource: resource);
+                    },
                   ),
                 ],
               ),

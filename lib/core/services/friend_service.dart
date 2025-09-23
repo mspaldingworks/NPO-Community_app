@@ -70,6 +70,26 @@ class FriendService extends ApiClient {
     }
   }
 
+  /// Fetches a list of all users.
+  Future<List<User>> fetchAllUsers() async {
+    final token = _authService.currentUser?.token;
+    if (token == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final response = await read(
+      urlPath: 'api/users/',
+      jsonHeaders: {'Authorization': 'Token $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => User.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to fetch all users: ${response.body}');
+    }
+  }
+
   /// Fetches pending friend requests.
   Future<List<dynamic>> fetchFriendRequests() async {
     // TODO: Implement GET /api/friend-requests/

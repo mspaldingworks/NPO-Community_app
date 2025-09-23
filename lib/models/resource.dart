@@ -3,7 +3,7 @@ class Resource {
   final String? user;
   final String? name;
   final String? description;
-  final String? provider;
+  final String? phoneNumber;
   final String? type;
   final String? url;
   final String? pubDate;
@@ -15,7 +15,7 @@ class Resource {
     this.user,
     this.name,
     this.description,
-    this.provider,
+    this.phoneNumber,
     this.type,
     this.url,
     this.pubDate,
@@ -33,7 +33,7 @@ class Resource {
       user: json['user'] as String?,
       name: json['name'] as String?,
       description: json['description'] as String?,
-      provider: json['provider'] as String?,
+      phoneNumber: json['phone_number'] as String?,
       type: json['type'] as String?,
       url: json['url'] as String?,
       pubDate: json['pub_date'] as String?,
