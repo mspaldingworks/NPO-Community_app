@@ -1,3 +1,5 @@
+// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
+
 /// Represents the nested user object within a ChatMessage.
 class MessageUser {
   final int id;

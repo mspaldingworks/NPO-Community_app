@@ -1,3 +1,5 @@
+// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
+
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
 
