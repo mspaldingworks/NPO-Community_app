@@ -1,11 +1,13 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/chat_message.dart';
 
 class ChatMessageScreen extends StatefulWidget {
-  final String conversationId;
+  final int conversationId;
 
   const ChatMessageScreen({super.key, required this.conversationId});
 
@@ -19,16 +21,16 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   final ScrollController _scrollController = ScrollController();
   late Future<List<ChatMessage>> _messagesFuture;
   final List<ChatMessage> _messages = [];
-  String? _currentUserId;
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     final authService = Provider.of<AuthService>(context, listen: false);
-    _currentUserId = authService.currentUser?.id.toString();
+    _currentUserId = authService.currentUser?.id;
 
     // Fetch initial messages
-    _messagesFuture = _chatService.fetchMessages(widget.conversationId);
+    _messagesFuture = _chatService.getConversation(widget.conversationId);
     _messagesFuture.then((initialMessages) {
       if (mounted) {
         setState(() {
@@ -37,24 +39,23 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       }
     });
 
-    // Connect to WebSocket for real-time messages
-    _chatService.connect(widget.conversationId);
-    _chatService.messages.listen((message) {
-      if (mounted) {
-        setState(() {
-          // Avoid adding duplicates if the message is already in the list
-          if (!_messages.any((m) => m.id == message.id)) {
-            _messages.add(message);
-          }
-        });
-        _scrollToBottom();
-      }
-    });
+    // // Connect to WebSocket for real-time messages
+    // _chatService.connect(widget.conversationId);
+    // _chatService.messages.listen((message) {
+    //   if (mounted) {
+    //     setState(() {
+    //       // Avoid adding duplicates if the message is already in the list
+    //       if (!_messages.any((m) => m.id == message.id)) {
+    //         _messages.add(message);
+    //       }
+    //     });
+    //     _scrollToBottom();
+    //   }
+    // });
   }
 
   @override
   void dispose() {
-    _chatService.dispose();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -62,8 +63,8 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
 
   void _sendMessage() {
     if (_messageController.text.isNotEmpty) {
-      _chatService.sendMessageWithPost(
-        conversationId: widget.conversationId,
+      _chatService.sendMessage(
+        recipientId: widget.conversationId,
         content: _messageController.text,
       );
       _messageController.clear();
@@ -105,7 +106,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages.reversed.toList()[index];
-                      final isCurrentUser = message.senderId == _currentUserId;
+                      final isCurrentUser = message.sender.id == _currentUserId;
                       return _buildMessage(message, isCurrentUser);
                     },
                   );

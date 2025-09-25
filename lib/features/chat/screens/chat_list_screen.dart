@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/features/friends/screens/friends_screen.dart';
-import 'package:transconnect/models/conversation.dart';
+import 'package:transconnect/models/chat_message.dart';
 
 class ChatListScreen extends StatefulWidget {
   ChatListScreen({super.key});
@@ -98,19 +98,19 @@ class ConversationList extends StatefulWidget {
 }
 
 class _ConversationListState extends State<ConversationList> {
-  late Future<List<Conversation>> _conversationsFuture;
+  late Future<List<ConversationPreview>> _conversationsFuture;
   late final ChatService _chatService;
 
   @override
   void initState() {
     super.initState();
     _chatService = ChatService();
-    _conversationsFuture = _chatService.fetchConversations();
+    _conversationsFuture = _chatService.getAllConversations();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Conversation>>(
+    return FutureBuilder<List<ConversationPreview>>(
       future: _conversationsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -128,9 +128,9 @@ class _ConversationListState extends State<ConversationList> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
-                  title: Text(conversation.participants.join(', ')),
+                  title: Text(conversation.username),
                   subtitle: Text(
-                    conversation.lastMessage?.content ?? 'No messages yet',
+                    'Not Implemented yet',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

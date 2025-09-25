@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/features/community/models/message_model.dart';
+import 'package:transconnect/models/chat_message.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String channelId;
+  final int channelId;
 
   const ChatScreen({super.key, required this.channelId});
 
@@ -17,7 +18,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
-  final List<Message> _messages = [];
+  final List<ChatMessage> _messages = [];
   late StreamSubscription<Message> _messageSubscription;
   final _authService = AuthService();
   int? _currentUserId;
@@ -27,7 +28,7 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadCurrentUser();
     _loadMessages();
-    _subscribeToMessages();
+    // _subscribeToMessages();
   }
 
   @override
@@ -43,7 +44,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    final messages = await _chatService.fetchMessages(widget.channelId);
+    final messages = await _chatService.getConversation(widget.channelId);
     if (mounted) {
       setState(() {
         _messages.addAll(messages);
@@ -51,22 +52,22 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _subscribeToMessages() {
-    _messageSubscription = _chatService.subscribeToNewMessages(widget.channelId).listen((newMessage) {
-      if (mounted) {
-        setState(() {
-          _messages.add(newMessage);
-        });
-      }
-    });
-  }
+  // void _subscribeToMessages() {
+  //   _messageSubscription = _chatService.subscribeToNewMessages(widget.channelId).listen((newMessage) {
+  //     if (mounted) {
+  //       setState(() {
+  //         _messages.add(newMessage);
+  //       });
+  //     }
+  //   });
+  // }
 
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty) {
       return;
     }
     await _chatService.sendMessage(
-      channelId: widget.channelId,
+      recipientId: widget.channelId,
       content: _messageController.text.trim(),
     );
     _messageController.clear();
@@ -85,8 +86,8 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
-                final isMe = message.userId == _currentUserId.toString();
-                final username = message.profile?.username ?? '...';
+                final isMe = message.sender.id == _currentUserId;
+                final username = message.sender.username ?? '...';
 
                 return ListTile(
                   title: Text(

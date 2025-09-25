@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
 class SelectFriendsForChatScreen extends StatefulWidget {
@@ -40,9 +40,9 @@ class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen>
     try {
       final participantIds = _selectedFriends.map((user) => user.id).toList();
       // We'll need to update createConversation to handle a list of participants
-      final conversation = await _chatService.createConversation(userIds: participantIds);
+      final conversation = await _chatService.sendMessage(recipientId: participantIds[0], content: 'New Chat');
       if (mounted) {
-        context.go('/chat/${conversation.id}');
+        // context.go('/chat/${conversation.id}'); TODO Fix start chat
       }
     } catch (e) {
       if (mounted) {

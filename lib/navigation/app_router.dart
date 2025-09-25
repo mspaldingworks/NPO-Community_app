@@ -53,7 +53,7 @@ class AppRouter {
           GoRoute(
             path: ':id',
             builder: (context, state) {
-              final id = state.pathParameters['id']!;
+              int id = int.tryParse(state.pathParameters['id']!) ?? 0;
               return ChatMessageScreen(conversationId: id);
             },
           ),

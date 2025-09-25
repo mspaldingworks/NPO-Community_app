@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
 class CreateConversationScreen extends StatefulWidget {
@@ -63,12 +63,12 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
     });
   }
 
-  void _startConversation(User user) async {
+  void _startConversation(User user, String content) async {
     try {
-      final conversation = await _chatService.createConversation(userIds: [user.id]);
+      final conversation = await _chatService.sendMessage(recipientId: user.id, content: content);
       if (mounted) {
         // Navigate to the new chat screen, replacing the current screen
-        GoRouter.of(context).pushReplacement('/chat/${conversation.id}');
+        // GoRouter.of(context).pushReplacement('/chat/${conversation.id}'); TODO Fix chat
       }
     } catch (e) {
       if (mounted) {
@@ -101,7 +101,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
                 final user = _searchResults[index];
                 return ListTile(
                   title: Text(user.username),
-                  onTap: () => _startConversation(user),
+                  onTap: () => _startConversation(user, user.username),
                 );
               },
             ),

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
 class FriendsListScreen extends StatefulWidget {
@@ -15,7 +14,6 @@ class FriendsListScreen extends StatefulWidget {
 
 class _FriendsListScreenState extends State<FriendsListScreen> {
   final FriendService _friendService = FriendService();
-  final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   late Future<List<User>> _friendsFuture;
   int? _currentUserId;
