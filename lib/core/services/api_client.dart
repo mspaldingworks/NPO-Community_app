@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
-import 'package:transconnect/core/config.dart';
 
 /// A parent class for making generic API calls.
 /// Other services can extend this class to inherit CRUD functionality.
 class ApiClient {
   // Base URI for your API.
   // Example: 'https://api.myendpoint.com/v1'
-  final String _baseUrl = AppConfig.baseUrl;  
+  final String _baseUrl = 'https://api.luxashome.com';  
   final Logger _logger = Logger();
 
   /// Builds the full URL for the API request by combining baseUri and urlPath.

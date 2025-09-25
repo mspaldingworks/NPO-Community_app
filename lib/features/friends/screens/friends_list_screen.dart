@@ -17,13 +17,13 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
   final FriendService _friendService = FriendService();
   final ChatService _chatService = ChatService();
   late Future<List<User>> _friendsFuture;
-  String? _currentUserId;
+  int? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _friendsFuture = _friendService.fetchFriends();
-    _currentUserId = Provider.of<AuthService>(context, listen: false).currentUser?.uid;
+    _currentUserId = _authService.currentUser?.id;
   }
 
   // Generates a unique channel ID for a 1-on-1 chat.
@@ -66,56 +66,31 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             return const Center(child: Text('Use the search to find friends!'));
           }
 
-          return ListView.builder(
-            itemCount: friends.length,
-            itemBuilder: (context, index) {
-              final friend = friends[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: friend.profilePic != null
-                      ? NetworkImage(friend.profilePic!)
-                      : null,
-                  child: friend.profilePic == null
-                      ? const Icon(Icons.person)
-                      : null,
-                ),
-                title: Row(
-                  children: [
-                    Text(friend.username),
-                    if (friend.userType == 'org') ...[
-                      const SizedBox(width: 8),
-                      const Icon(Icons.corporate_fare, size: 16, color: Colors.grey),
-                    ],
-                  ],
-                ), // Assuming User model has a 'username' field
-                subtitle: Text(friend.statusMessage ?? ''),
-                onTap: () async {
-                  try {
-                    final currentUser = Provider.of<AuthService>(context, listen: false).currentUser;
-                    if (currentUser == null) {
-                      throw Exception('Current user not found');
-                    }
-
-                    final conversation = await _chatService.createConversation(
-                      userIds: [currentUser.id, friend.id],
-                    );
-
-                    if (mounted) {
-                      GoRouter.of(context).push('/chat/${conversation.id}');
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to start chat: $e')),
-                      );
-                    }
-                  }
-                },
-              );
-            },
-          );
-        },
-      ),
+        return ListView.builder(
+          itemCount: friends.length,
+          itemBuilder: (context, index) {
+            final friend = friends[index];
+            return ListTile(
+              leading: CircleAvatar(
+                backgroundImage: friend.profilePic != null
+                    ? NetworkImage(friend.profilePic!)
+                    : null,
+                child: friend.profilePic == null
+                    ? const Icon(Icons.person)
+                    : null,
+              ),
+              title: Text(friend.username), // Assuming User model has a 'username' field
+              subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
+                  ? Text(friend.statusMessage!)
+                  : null,
+              onTap: () {
+                final channelId = _createChannelId(friend.uid);
+                GoRouter.of(context).push('/chat/$channelId');
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
