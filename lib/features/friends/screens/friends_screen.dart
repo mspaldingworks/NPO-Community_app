@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/models/user.dart';
 
@@ -11,25 +13,19 @@ class FriendsList extends StatefulWidget {
 }
 
 class _FriendsListState extends State<FriendsList> {
-  final FriendService _friendService = FriendService();
-  late Future<List<User>> _friendsFuture;
-  List<User> _allFriends = [];
-  List<User> _filteredFriends = [];
+  List<Friend> _allFriends = [];
+  List<Friend> _filteredFriends = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // _friendsFuture = _friendService.fetchFriends(); MADDIE TODO Friends are returned as a list within the user use that instead
-    _friendsFuture.then((friends) {
-      if (mounted) {
-        setState(() {
-          _allFriends = friends;
-          _filteredFriends = friends;
-        });
-      }
-    });
-    _searchController.addListener(_filterFriends);
+    final user = AuthService().currentUser;
+    if (user != null) {
+      // If the user is NOT null, initialize lists with the user's friends
+      _allFriends = user.friends;
+      _filteredFriends = user.friends;
+    }
   }
 
   @override
@@ -64,17 +60,10 @@ class _FriendsListState extends State<FriendsList> {
           ),
         ),
         Expanded(
-          child: FutureBuilder<List<User>>(
-            future: _friendsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('You have no friends yet.'));
-              } else {
-                return ListView.builder(
+          // Remove FutureBuilder and use a direct check on the list
+          child: _filteredFriends.isEmpty
+              ? const Center(child: Text('You have no friends yet, or the list is empty.'))
+              : ListView.builder(
                   itemCount: _filteredFriends.length,
                   itemBuilder: (context, index) {
                     final friend = _filteredFriends[index];
@@ -83,10 +72,7 @@ class _FriendsListState extends State<FriendsList> {
                       subtitle: Text(friend.statusMessage ?? 'No status'),
                     );
                   },
-                );
-              }
-            },
-          ),
+                ),
         ),
       ],
     );
