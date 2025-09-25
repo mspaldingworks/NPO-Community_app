@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/features/community/services/community_service.dart';
+import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/post.dart';
 
 class PostDetailScreen extends StatefulWidget {

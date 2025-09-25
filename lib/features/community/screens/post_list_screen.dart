@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/community/services/community_service.dart';
+import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/post.dart';
 
 class PostListScreen extends StatefulWidget {
@@ -26,8 +26,7 @@ class _PostListScreenState extends State<PostListScreen> {
   @override
   void initState() {
     super.initState();
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _communityService = CommunityService(authService: authService);
+    _communityService = CommunityService();
     _postsFuture = _communityService.fetchPostsForGroup(widget.groupId);
   }
 

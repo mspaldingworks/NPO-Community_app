@@ -45,7 +45,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
         });
       }
       try {
-        final results = await _friendService.searchUsers(query);
+        final results = await _friendService.searchFriends(query);
         if (mounted) {
           setState(() {
             _searchResults = results;

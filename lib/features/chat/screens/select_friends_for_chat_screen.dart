@@ -20,7 +20,7 @@ class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen>
   @override
   void initState() {
     super.initState();
-    _friendsFuture = _friendService.fetchFriends();
+    // _friendsFuture = _friendService.fetchFriends(); MADDIE TODO Friends are returned as a list within the user use that instead
   }
 
   void _onFriendSelected(User friend, bool isSelected) {

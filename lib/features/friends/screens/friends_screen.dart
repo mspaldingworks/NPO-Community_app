@@ -20,7 +20,7 @@ class _FriendsListState extends State<FriendsList> {
   @override
   void initState() {
     super.initState();
-    _friendsFuture = _friendService.fetchFriends();
+    // _friendsFuture = _friendService.fetchFriends(); MADDIE TODO Friends are returned as a list within the user use that instead
     _friendsFuture.then((friends) {
       if (mounted) {
         setState(() {

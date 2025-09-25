@@ -35,7 +35,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _loadAllUsers() async {
     try {
-      final users = await _friendService.fetchAllUsers();
+      final users = await _friendService.getAllUsers();
       if (mounted) {
         setState(() {
           _allUsers = users;

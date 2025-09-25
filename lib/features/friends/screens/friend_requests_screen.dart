@@ -13,30 +13,31 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   late Future<List<dynamic>> _requestsFuture;
 
   void _respondToRequest(String requestId, String action) async {
-    try {
-      await _friendService.respondToFriendRequest(requestId, action);
-      // Refresh the list after responding
-      setState(() {
-        _requestsFuture = _friendService.fetchFriendRequests();
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request ${action}ed!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to respond to request: $e')),
-        );
-      }
-    }
+    // MADDIE TODO There is now a acceptFriendRequest and declineFriendRequest function that use a username 
+    // try {
+    //   await _friendService.respondToFriendRequest(requestId, action);
+    //   // Refresh the list after responding
+    //   setState(() {
+    //     _requestsFuture = _friendService.fetchFriendRequests();
+    //   });
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('Request ${action}ed!')),
+    //     );
+    //   }
+    // } catch (e) {
+    //   if (mounted) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(content: Text('Failed to respond to request: $e')),
+    //     );
+    //   }
+    // }
   }
 
   @override
   void initState() {
     super.initState();
-    _requestsFuture = _friendService.fetchFriendRequests();
+    _requestsFuture = _friendService.listPendingRequests();
   }
 
   @override

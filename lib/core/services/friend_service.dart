@@ -1,108 +1,125 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:transconnect/core/services/api_client.dart';
-import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/models/user.dart';
 
+/// A service class to manage all friend-related API requests.
+/// It inherits authentication and response processing from ApiClient.
 class FriendService extends ApiClient {
-  final AuthService _authService = AuthService();
+  static const String _friendsBasePath = 'api/friends';
+  static const String _requestsPath = 'requests/';
+  static const String _searchPath = 'search/';
+  static const String _usersPath = 'api/users/';
 
-  /// Searches for users by username.
-  Future<List<User>> searchUsers(String query) async {
-    final token = _authService.currentUser?.token;
-    if (token == null) {
-      throw Exception('User not authenticated');
+  FriendService(); 
+
+  // --- Friends Endpoints ---
+
+  /// Searches for users who are not currently friends and not involved in a pending request.
+  /// Returns a list of user maps.
+  Future<List<User>> searchFriends(String query) async {
+    try {
+      final urlPath = '$_friendsBasePath/$_searchPath?q=$query';
+      
+      // 1. Call the inherited read method. It returns the decoded body (List<dynamic>) or throws an exception.
+      final result = await read(
+        urlPath: urlPath,
+        jsonHeaders: authHeaders, // Inherited from ApiClient
+      );
+  
+      // 2. Validate the result is a list.
+      if (result is List) {
+        // 3. Map the decoded list of dynamic objects to a List<User>.
+        final List<User> users = result
+            .map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
+            .toList();
+            
+        return users;
+      } else {
+        // Return an empty list if the successful response was not a list.
+        return []; 
+      }
+    } catch (e) {
+      // Catch any exceptions thrown by read() (network errors, API errors)
+      // and return an empty list on failure, as requested.
+      // print('Error searching for friends: $e');
+      return []; 
     }
+  }
 
-    final response = await read(
-      urlPath: 'api/users/?search=$query',
-      jsonHeaders: {'Authorization': 'Token $token'},
+  /// Sends a friend request to a user by their username.
+  /// Returns a map with the success detail.
+  Future<Map<String, dynamic>> sendFriendRequest(String username) async {
+    final urlPath = '$_friendsBasePath/$_requestsPath';
+    final payload = {'username': username};
+
+    final result = await post(
+      urlPath: urlPath,
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
     );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => User.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to search for users: ${response.body}');
-    }
+    return result as Map<String, dynamic>;
   }
 
-  /// Fetches the list of friends for the current user from their profile.
-  Future<List<User>> fetchFriends() async {
-    final token = _authService.currentUser?.token;
-    if (token == null) {
-      throw Exception('User not authenticated');
-    }
-
-    final response = await read(
-      urlPath: 'api/profile/', 
-      jsonHeaders: {'Authorization': 'Token $token'},
+  /// Retrieves a list of all pending friend requests received by the current user.
+  /// Returns a list of friend request maps.
+  Future<List<Map<String, dynamic>>> listPendingRequests() async {
+    final urlPath = '$_friendsBasePath/$_requestsPath';
+    final result = await read(
+      urlPath: urlPath,
+      jsonHeaders: authHeaders,
     );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final User user = User.fromJson(data);
-      return user.friends;
-    } else {
-      throw Exception('Failed to fetch friends: ${response.body}');
-    }
+    return result as List<Map<String, dynamic>>;
   }
 
-  /// Sends a friend request to another user.
-  Future<void> sendFriendRequest(String toUserId) async {
-    final token = _authService.currentUser?.token;
-    if (token == null) {
-      throw Exception('User not authenticated');
-    }
+  /// Accepts a pending friend request from a specified username.
+  /// Returns a map with the success detail.
+  Future<Map<String, dynamic>> acceptFriendRequest(String username) async {
+    final urlPath = '$_friendsBasePath/$_requestsPath';
+    final payload = {'username': username, 'action': 'accept'};
 
-    final response = await post(
-      urlPath: 'api/friend-requests/',
-      jsonHeaders: {
-        'Authorization': 'Token $token',
-        'Content-Type': 'application/json',
-      },
-      jsonPayload: {'to_user_id': toUserId},
+    final result = await update(
+      urlPath: urlPath,
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
     );
-
-    if (response.statusCode != 201) {
-      throw Exception('Failed to send friend request: ${response.body}');
-    }
+    return result as Map<String, dynamic>;
   }
 
-  /// Fetches a list of all users.
-  Future<List<User>> fetchAllUsers() async {
-    final token = _authService.currentUser?.token;
-    if (token == null) {
-      throw Exception('User not authenticated');
-    }
+  /// Declines a pending friend request from a specified username.
+  /// Completes successfully if the 204 No Content status is received.
+  Future<void> declineFriendRequest(String username) async {
+    final urlPath = '$_friendsBasePath/$_requestsPath';
+    final payload = {'username': username, 'action': 'decline'};
 
-    final response = await read(
-      urlPath: 'api/users/',
-      jsonHeaders: {'Authorization': 'Token $token'},
+    // Explicitly set expectedStatusCode to 204 for the decline action.
+    await update( 
+      urlPath: urlPath,
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+      expectedStatusCode: 204, 
     );
+  }
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => User.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to fetch all users: ${response.body}');
+  /// Retrieves a basic list of all users or null if an error occurs.
+  Future<List<User>> getAllUsers() async {
+    try {
+      final result = await read(
+        urlPath: _usersPath, // Assuming _usersPath is correctly defined as 'api/users/'
+        jsonHeaders: authHeaders, // Inherited from ApiClient
+      );
+      if (result is List) {
+        if (result.isEmpty) {
+          return []; // Return an empty list if the API returns an empty array.
+        }
+        final List<User> users = result
+            .map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
+            .toList();
+
+        return users;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return []; // Return null as requested on failure
     }
-  }
-
-  /// Fetches pending friend requests.
-  Future<List<dynamic>> fetchFriendRequests() async {
-    // TODO: Implement GET /api/friend-requests/
-    return [];
-  }
-
-  /// Responds to a friend request.
-  Future<void> respondToFriendRequest(String requestId, String action) async {
-    // TODO: Implement PUT /api/friend-requests/{request_id}/
-  }
-
-  /// Removes a friend.
-  Future<void> removeFriend(String friendId) async {
-    // TODO: Implement DELETE /api/friends/{friend_id}/
   }
 }

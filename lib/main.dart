@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
-import 'package:transconnect/features/community/services/community_service.dart';
+import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/navigation/app_router.dart';
 
 void main() async {
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider.value(value: authService),
         Provider(create: (_) => appRouter),
-        Provider(create: (_) => CommunityService(authService: authService)),
+        Provider(create: (_) => CommunityService()),
       ],
       child: MaterialApp.router(
         title: 'TransConnect',
