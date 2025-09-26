@@ -11,6 +11,7 @@ import 'package:transconnect/features/chat/screens/create_conversation_screen.da
 import 'package:transconnect/features/chat/screens/select_friends_for_chat_screen.dart';
 import 'package:transconnect/features/community/screens/community_screen.dart';
 import 'package:transconnect/features/community/screens/post_list_screen.dart';
+import 'package:transconnect/features/community/screens/create_post_screen.dart';
 import 'package:transconnect/features/community/screens/post_detail_screen.dart';
 import 'package:transconnect/features/friends/screens/user_search_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
@@ -85,6 +86,13 @@ class AppRouter {
                       return PostListScreen(groupId: id, groupName: groupName);
                     },
                     routes: [
+                      GoRoute(
+                        path: 'create-post',
+                        builder: (context, state) {
+                          final groupId = int.parse(state.pathParameters['id']!);
+                          return CreatePostScreen(groupId: groupId);
+                        },
+                      ),
                       GoRoute(
                         path: 'post/:postId',
                         builder: (context, state) {

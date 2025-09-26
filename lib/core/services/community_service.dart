@@ -2,29 +2,31 @@ import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/group.dart';
 import 'package:transconnect/models/post.dart';
-// Removed: import 'package:http/http.dart' as http;
-// Removed: import 'dart:convert';
-// Removed: import 'package:transconnect/core/services/auth_service.dart';
 
 class CommunityService extends ApiClient {
-  // Removed: final AuthService authService;
-  // Removed: CommunityService({required this.authService});
-  
-  // Simple constructor, implicitly calls ApiClient()
   CommunityService();
 
   /// Fetches all groups.
   /// Uses inherited `authHeaders` and `read` method which handles response processing.
   Future<List<Group>> fetchGroups() async {
-    // The inherited `authHeaders` will throw an exception if the token is missing.
     final result = await read(
       urlPath: '/api/groups/',
       jsonHeaders: authHeaders,
     );
     
-    // The result is the decoded JSON body (List<dynamic> in this case).
     final List<dynamic> data = result as List<dynamic>;
     return data.map((json) => Group.fromJson(json)).toList();
+  }
+
+  /// Fetches all posts.
+  Future<List<Post>> fetchAllPosts() async {
+    final result = await read(
+      urlPath: '/api/posts/',
+      jsonHeaders: authHeaders,
+    );
+
+    final List<dynamic> allPostsJson = result as List<dynamic>;
+    return allPostsJson.map((json) => Post.fromJson(json)).toList();
   }
 
   /// Fetches all posts for a given group by its ID.
@@ -35,12 +37,33 @@ class CommunityService extends ApiClient {
       jsonHeaders: authHeaders,
     );
 
-    // The result is the decoded JSON body (List<dynamic> in this case).
     final List<dynamic> allPostsJson = result as List<dynamic>;
     final List<Post> allPosts = allPostsJson.map((json) => Post.fromJson(json)).toList();
 
-    // Filter posts on the client-side by group ID
     return allPosts.where((post) => post.groupId == groupId).toList();
+  }
+
+  /// Creates a new post.
+  Future<Post> createPost({
+    required String title,
+    required String body,
+    String? emoji,
+    String? statusMessage,
+    required bool public,
+  }) async {
+    final result = await post(
+      urlPath: '/api/posts/',
+      jsonHeaders: authHeaders,
+      jsonPayload: {
+        'title': title,
+        'body': body,
+        'emoji': emoji,
+        'status_message': statusMessage,
+        'public': public,
+      },
+      expectedStatusCode: 201,
+    );
+    return Post.fromJson(result as Map<String, dynamic>);
   }
 
   /// Fetches a single post by its ID.
@@ -50,8 +73,35 @@ class CommunityService extends ApiClient {
       jsonHeaders: authHeaders,
     );
     
-    // The result is the decoded JSON body (Map<String, dynamic> in this case).
     return Post.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Fetches a single group by its ID.
+  Future<Group> fetchGroupById(int groupId) async {
+    final result = await read(
+      urlPath: '/api/groups/$groupId/',
+      jsonHeaders: authHeaders,
+    );
+    return Group.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Creates a new group.
+  Future<Group> createGroup({
+    required String name,
+    required String description,
+    String? avatarUrl,
+  }) async {
+    final result = await post(
+      urlPath: '/api/groups/',
+      jsonHeaders: authHeaders,
+      jsonPayload: {
+        'name': name,
+        'description': description,
+        'avatarUrl': avatarUrl,
+      },
+      expectedStatusCode: 201,
+    );
+    return Group.fromJson(result as Map<String, dynamic>);
   }
 
   /// Adds a new comment to a post.
@@ -61,15 +111,50 @@ class CommunityService extends ApiClient {
       'post': postId,
     };
     
-    // The post method now handles Content-Type (via authHeaders) and checks for 201 Created.
     final result = await post(
       urlPath: '/api/comments/',
       jsonHeaders: authHeaders,
       jsonPayload: jsonPayload,
-      expectedStatusCode: 201, // Expect a 201 Created status
+      expectedStatusCode: 201, 
     );
 
-    // The result is the decoded JSON body (Map<String, dynamic> in this case).
     return Comment.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Fetches all comments.
+  Future<List<Comment>> fetchAllComments() async {
+    final result = await read(
+      urlPath: '/api/comments/',
+      jsonHeaders: authHeaders,
+    );
+    final List<dynamic> data = result as List<dynamic>;
+    return data.map((json) => Comment.fromJson(json)).toList();
+  }
+
+  /// Fetches a single comment by its ID.
+  Future<Comment> fetchCommentById(int commentId) async {
+    final result = await read(
+      urlPath: '/api/comments/$commentId/',
+      jsonHeaders: authHeaders,
+    );
+    return Comment.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Updates a comment.
+  Future<Comment> updateComment(int commentId, Map<String, dynamic> updates) async {
+    final result = await update(
+      urlPath: '/api/comments/$commentId/',
+      jsonHeaders: authHeaders,
+      jsonPayload: updates,
+    );
+    return Comment.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Deletes a comment.
+  Future<void> deleteComment(int commentId) async {
+    await delete(
+      urlPath: '/api/comments/$commentId/',
+      jsonHeaders: authHeaders,
+    );
   }
 }

@@ -49,8 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password2: _passwordController.text.trim(),
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
-        identity: (_selectedIdentity ?? ''),
-        userType: _selectedUserType,
+        flair: (_selectedIdentity ?? ''),
+        statusMessage: '', // Passing an empty string for now
       );
 
       if (mounted) {

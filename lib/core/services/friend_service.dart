@@ -1,5 +1,3 @@
-// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
-
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
 
@@ -99,29 +97,5 @@ class FriendService extends ApiClient {
       jsonPayload: payload,
       expectedStatusCode: 204, 
     );
-  }
-
-  /// Retrieves a basic list of all users or null if an error occurs.
-  Future<List<User>> getAllUsers() async {
-    try {
-      final result = await read(
-        urlPath: _usersPath, // Assuming _usersPath is correctly defined as 'api/users/'
-        jsonHeaders: authHeaders, // Inherited from ApiClient
-      );
-      if (result is List) {
-        if (result.isEmpty) {
-          return []; // Return an empty list if the API returns an empty array.
-        }
-        final List<User> users = result
-            .map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
-            .toList();
-
-        return users;
-      } else {
-        return [];
-      }
-    } catch (e) {
-      return []; // Return null as requested on failure
-    }
   }
 }

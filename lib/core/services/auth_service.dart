@@ -1,5 +1,3 @@
-// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -110,8 +108,8 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String password2,
     required String username,
     required String city,
-    required String identity,
-    required String userType,
+    required String flair,
+    required String statusMessage,
   }) async {
     // No headers required for a public endpoint (Content-Type is handled in the post method).
     final jsonHeaders = {'Content-Type': 'application/json'}; 
@@ -122,14 +120,14 @@ class AuthService extends ApiClient with ChangeNotifier {
       'password2': password2,
       'username': username,
       'city': city,
-      'identity': identity,
-      'user_type': userType,
+      'flair': flair,
+      'status_message': statusMessage,
     };
     
     // The post method now processes the response for us. 
     // We expect a 201 Created on success.
     await post(
-      urlPath: '/api/register/', 
+      urlPath: '/api/signup/', 
       jsonHeaders: jsonHeaders, 
       jsonPayload: jsonPayload, 
       expectedStatusCode: 201,
@@ -196,5 +194,40 @@ class AuthService extends ApiClient with ChangeNotifier {
 
   Future<void> signOut() async {
     await _clearUser();
+  }
+
+  Future<User> updateProfile(Map<String, dynamic> updates) async {
+    final data = await update(
+      urlPath: '/api/profile/',
+      jsonHeaders: authHeaders,
+      jsonPayload: updates,
+    ) as Map<String, dynamic>;
+
+    final user = User.fromJson(data);
+    await _saveUser(user);
+    return user;
+  }
+
+  Future<List<User>> getAllUsers() async {
+    try {
+      final result = await read(
+        urlPath: 'api/users/',
+        jsonHeaders: authHeaders,
+      );
+      if (result is List) {
+        if (result.isEmpty) {
+          return [];
+        }
+        final List<User> users = result
+            .map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
+            .toList();
+
+        return users;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
+    }
   }
 }

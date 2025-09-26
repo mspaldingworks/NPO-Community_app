@@ -44,7 +44,16 @@ class _PostListScreenState extends State<PostListScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No posts found in this group.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text('No posts found in this group.'),
+                  SizedBox(height: 16),
+                  Text('Be the first to post!'),
+                ],
+              ),
+            );
           } else {
             final posts = snapshot.data!;
             return ListView.builder(
@@ -73,6 +82,13 @@ class _PostListScreenState extends State<PostListScreen> {
             );
           }
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          GoRouter.of(context).push('/community/group/${widget.groupId}/create-post');
+        },
+        tooltip: 'Add Post',
+        child: const Icon(Icons.add),
       ),
     );
   }

@@ -12,18 +12,19 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
+  final _providerController = TextEditingController();
   final _urlController = TextEditingController();
   final _tagsController = TextEditingController();
   final _resourceService = ResourceService();
   String? _selectedType;
+  bool _isPublic = false;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _phoneNumberController.dispose();
+    _providerController.dispose();
     _urlController.dispose();
     _tagsController.dispose();
     super.dispose();
@@ -49,8 +50,9 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
           name: _nameController.text,
           description: _descriptionController.text,
           type: _selectedType!,
-          phoneNumber: _phoneNumberController.text,
-          website: _urlController.text,
+          url: _urlController.text,
+          public: _isPublic,
+          provider: _providerController.text,
           tags: tags,
         );
 
@@ -126,18 +128,40 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 16.0),
               TextFormField(
-                controller: _phoneNumberController,
-                decoration: const InputDecoration(labelText: 'Phone Number'),
+                controller: _providerController,
+                decoration: const InputDecoration(labelText: 'Provider'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a provider';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _urlController,
                 decoration: const InputDecoration(labelText: 'Website URL'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a URL';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _tagsController,
                 decoration: const InputDecoration(labelText: 'Tags (comma-separated)'),
+              ),
+              const SizedBox(height: 16.0),
+              SwitchListTile(
+                title: const Text('Make this resource public?'),
+                value: _isPublic,
+                onChanged: (bool value) {
+                  setState(() {
+                    _isPublic = value;
+                  });
+                },
               ),
               const SizedBox(height: 24.0),
               ElevatedButton(

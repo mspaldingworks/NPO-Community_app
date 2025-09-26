@@ -1,5 +1,5 @@
-// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
-
+// Removed: import 'dart:convert';
+// Removed: import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/resource.dart';
 
@@ -24,13 +24,23 @@ class ResourceService extends ApiClient {
     return createResourceListFromJson(result);
   }
 
+  // Fetches a single resource by its ID.
+  Future<Resource> fetchResourceById(int resourceId) async {
+    final result = await read(
+      urlPath: 'api/resources/$resourceId/',
+      jsonHeaders: authHeaders,
+    );
+    return Resource.fromJson(result as Map<String, dynamic>);
+  }
+
   // Adds a new resource.
   Future<Resource> addResource({
     required String name,
     required String description,
     required String type,
-    String? website,
-    String? phoneNumber,
+    required String url,
+    required bool public,
+    required String provider,
     required List<String> tags,
   }) async {
     final result = await post(
@@ -40,8 +50,9 @@ class ResourceService extends ApiClient {
         'name': name,
         'description': description,
         'type': type,
-        'url': website,
-        'phone_number': phoneNumber,
+        'url': url,
+        'public': public,
+        'provider': provider,
         'tags': tags,
       },
       expectedStatusCode: 201, // Explicitly set expected status code for POST
@@ -50,18 +61,11 @@ class ResourceService extends ApiClient {
   }
 
   // Updates an existing resource.
-  Future<Resource> updateResource(Resource resource) async {
+  Future<Resource> updateResource(int resourceId, Map<String, dynamic> updates) async {
     final result = await put(
-      urlPath: 'api/resources/${resource.id}/',
+      urlPath: 'api/resources/$resourceId/',
       jsonHeaders: authHeaders, // Uses inherited property
-      jsonPayload: {
-        'name': resource.name,
-        'description': resource.description,
-        'type': resource.type,
-        'url': resource.url,
-        'phone_number': resource.phoneNumber,
-        'tags': resource.tags,
-      },
+      jsonPayload: updates,
     );
     return Resource.fromJson(result as Map<String, dynamic>);
   }

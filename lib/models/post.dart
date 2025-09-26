@@ -1,5 +1,3 @@
-// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
-
 import 'package:transconnect/models/comment.dart';
 
 class Post {

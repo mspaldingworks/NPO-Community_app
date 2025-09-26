@@ -1,5 +1,3 @@
-// DO NOT CHANGE THIS FILE ANY CHANGE NEEDS A CORROSPONDING API CHANGE DONE BY PAIGE
-
 class Resource {
   final int id;
   final String? user;

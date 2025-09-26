@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/models/user.dart';
 
@@ -13,6 +14,7 @@ class UserSearchScreen extends StatefulWidget {
 
 class _UserSearchScreenState extends State<UserSearchScreen> {
   final FriendService _friendService = FriendService();
+  final AuthService _authService = AuthService();
   final TextEditingController _searchController = TextEditingController();
   List<User> _allUsers = [];
   List<User> _searchResults = [];
@@ -35,7 +37,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
 
   Future<void> _loadAllUsers() async {
     try {
-      final users = await _friendService.getAllUsers();
+      final users = await _authService.getAllUsers();
       if (mounted) {
         setState(() {
           _allUsers = users;
@@ -64,9 +66,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     });
   }
 
-  void _sendFriendRequest(int userId) async {
+  void _sendFriendRequest(String username) async {
     try {
-      await _friendService.sendFriendRequest(userId.toString());
+      await _friendService.sendFriendRequest(username);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Friend request sent!')),
@@ -113,7 +115,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.favorite_border),
                     tooltip: 'Add Friend',
-                    onPressed: () => _sendFriendRequest(user.id),
+                    onPressed: () => _sendFriendRequest(user.username),
                   ),
                 );
               },

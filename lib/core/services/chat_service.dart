@@ -63,6 +63,36 @@ class ChatService extends ApiClient {
       throw Exception('Failed to fetch conversation with user $otherUserId: $e');
     }
   }
+
+  /// Fetches all messages involving the authenticated user.
+  Future<List<ChatMessage>> getAllMessages() async {
+    const urlPath = '$_messagesBaseUrl/';
+    try {
+      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
+      
+      if (responseData is List) {
+        return responseData
+            .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      
+      throw const FormatException('Expected a list for all messages.');
+    } catch (e) {
+      throw Exception('Failed to fetch all messages: $e');
+    }
+  }
+
+  /// Fetches a single message by its ID.
+  Future<ChatMessage> getMessageById(int messageId) async {
+    final urlPath = '$_messagesBaseUrl/$messageId/';
+    try {
+      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
+      
+      return ChatMessage.fromJson(responseData as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Failed to fetch message with ID $messageId: $e');
+    }
+  }
   
   Future<void> sendMessage({required int recipientId, required String content}) async {
     const urlPath = '$_messagesBaseUrl/';
