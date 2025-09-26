@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/post.dart';
+import 'package:transconnect/theme/app_theme.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -27,7 +28,13 @@ class _PostListScreenState extends State<PostListScreen> {
   void initState() {
     super.initState();
     _communityService = CommunityService();
-    _postsFuture = _communityService.fetchPostsForGroup(widget.groupId);
+    _loadPosts();
+  }
+
+  void _loadPosts() {
+    setState(() {
+      _postsFuture = _communityService.fetchPostsForGroup(widget.groupId);
+    });
   }
 
   @override
@@ -69,7 +76,7 @@ class _PostListScreenState extends State<PostListScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    trailing: const Icon(Icons.arrow_forward_ios),
+                    trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.secondary),
                     onTap: () {
                       GoRouter.of(context).push(
                         '/community/group/${widget.groupId}/post/${post.id}',
@@ -84,8 +91,11 @@ class _PostListScreenState extends State<PostListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          GoRouter.of(context).push('/community/group/${widget.groupId}/create-post');
+        onPressed: () async {
+          final result = await context.push('/community/group/${widget.groupId}/create-post');
+          if (result == true && mounted) {
+            _loadPosts();
+          }
         },
         tooltip: 'Add Post',
         child: const Icon(Icons.add),

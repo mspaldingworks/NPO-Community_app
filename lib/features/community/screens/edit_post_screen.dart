@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
+import 'package:transconnect/models/post.dart';
 
-class CreatePostScreen extends StatefulWidget {
-  final int groupId;
+class EditPostScreen extends StatefulWidget {
+  final Post post;
 
-  const CreatePostScreen({super.key, required this.groupId});
+  const EditPostScreen({super.key, required this.post});
 
   @override
-  State<CreatePostScreen> createState() => _CreatePostScreenState();
+  State<EditPostScreen> createState() => _EditPostScreenState();
 }
 
-class _CreatePostScreenState extends State<CreatePostScreen> {
+class _EditPostScreenState extends State<EditPostScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _bodyController = TextEditingController();
-  final _feelingController = TextEditingController();
-  final _emojiController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _bodyController;
   final _communityService = CommunityService();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.post.title);
+    _bodyController = TextEditingController(text: widget.post.body);
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
-    _feelingController.dispose();
-    _emojiController.dispose();
     super.dispose();
   }
 
@@ -36,25 +40,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
 
       try {
-        await _communityService.createPost(
-          groupId: widget.groupId,
-          title: _titleController.text,
-          body: _bodyController.text,
-          feeling: _feelingController.text,
-          emoji: _emojiController.text,
-          public: true, // Assuming posts in groups are public
+        await _communityService.updatePost(
+          widget.post.id,
+          {
+            'title': _titleController.text,
+            'body': _bodyController.text,
+          },
         );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Post created successfully!')),
+            const SnackBar(content: Text('Post updated successfully!')),
           );
-          context.pop(true); // Go back to the post list with a result
+          context.pop(); // Go back to the detail screen
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create post: $e')),
+            SnackBar(content: Text('Failed to update post: $e')),
           );
         }
       } finally {
@@ -71,7 +74,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Post'),
+        title: const Text('Edit Post'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -102,28 +105,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _feelingController,
-                decoration: const InputDecoration(labelText: 'How are you feeling?'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a feeling';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16.0),
-              TextFormField(
-                controller: _emojiController,
-                decoration: const InputDecoration(labelText: 'Emoji (optional)'),
-              ),
               const SizedBox(height: 24.0),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading
                     ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-                    : const Text('Create Post'),
+                    : const Text('Update Post'),
               ),
             ],
           ),

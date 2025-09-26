@@ -5,6 +5,7 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/features/friends/screens/friends_screen.dart';
 import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/theme/app_theme.dart';
 
 class ChatListScreen extends StatefulWidget {
   ChatListScreen({super.key});
@@ -69,10 +70,9 @@ class _ChatListScreenState extends State<ChatListScreen>
           children: [
             FloatingActionButton.small(
               heroTag: 'find_friends',
-              onPressed: null, // Temporarily disabled
-              backgroundColor: Colors.grey, // Visually indicate it's disabled
+              onPressed: () => GoRouter.of(context).push('/user-search'),
               child: const Icon(Icons.person_add),
-              tooltip: 'Find new friends (Feature disabled)',
+              tooltip: 'Find new friends',
             ),
             const SizedBox(height: 8),
             FloatingActionButton(
@@ -128,13 +128,24 @@ class _ConversationListState extends State<ConversationList> {
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: conversation.unreadCount > 0
+                        ? AppColors.tertiary
+                        : Colors.grey.shade300,
+                    foregroundColor: conversation.unreadCount > 0
+                        ? AppColors.textWhite
+                        : AppColors.textBlack,
+                    child: conversation.unreadCount > 0
+                        ? Text(conversation.unreadCount.toString())
+                        : const Icon(Icons.notifications_none),
+                  ),
                   title: Text(conversation.username),
                   subtitle: Text(
                     'Not Implemented yet',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: Icon(Icons.arrow_forward_ios),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: AppColors.secondary),
                   onTap: () {
                     GoRouter.of(context).push('/chat/${conversation.id}');
                   },

@@ -45,20 +45,22 @@ class CommunityService extends ApiClient {
 
   /// Creates a new post.
   Future<Post> createPost({
+    required int groupId,
     required String title,
     required String body,
     String? emoji,
-    String? statusMessage,
+    String? feeling,
     required bool public,
   }) async {
     final result = await post(
       urlPath: '/api/posts/',
       jsonHeaders: authHeaders,
       jsonPayload: {
+        'group': groupId,
         'title': title,
         'body': body,
         'emoji': emoji,
-        'status_message': statusMessage,
+        'feeling': feeling,
         'public': public,
       },
       expectedStatusCode: 201,
@@ -154,6 +156,24 @@ class CommunityService extends ApiClient {
   Future<void> deleteComment(int commentId) async {
     await delete(
       urlPath: '/api/comments/$commentId/',
+      jsonHeaders: authHeaders,
+    );
+  }
+
+  /// Updates a post.
+  Future<Post> updatePost(int postId, Map<String, dynamic> updates) async {
+    final result = await update(
+      urlPath: '/api/posts/$postId/',
+      jsonHeaders: authHeaders,
+      jsonPayload: updates,
+    );
+    return Post.fromJson(result as Map<String, dynamic>);
+  }
+
+  /// Deletes a post.
+  Future<void> deletePost(int postId) async {
+    await delete(
+      urlPath: '/api/posts/$postId/',
       jsonHeaders: authHeaders,
     );
   }

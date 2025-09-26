@@ -62,12 +62,14 @@ class ChatService extends ApiClient {
     }
   }
 
-  Future<void> sendMessageWithPost(
+  Future<ChatMessage> sendMessageWithPost(
       {required int recipientId, required String content}) async {
     return _coreChatService.sendMessage(recipientId: recipientId, content: content);
   }
 
-  Future<void> createConversation({required int userId, required String content}) async {
+  Future<ChatMessage> createConversation({required int userId, required String content}) async {
+    // The API doesn't have a dedicated "create conversation" endpoint.
+    // Sending the first message implicitly creates it.
     return _coreChatService.sendMessage(recipientId: userId, content: content);
   }
 

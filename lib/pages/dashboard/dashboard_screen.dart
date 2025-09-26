@@ -6,6 +6,7 @@ import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
+import 'package:transconnect/theme/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -105,6 +106,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: () {
                     context.push('/calendar');
                   },
+                  isHighlighted: _upcomingFavoritedEvents.isNotEmpty,
                 ),
               ],
             ),
@@ -122,25 +124,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildInfoCard(IconData icon, String text, {VoidCallback? onTap}) {
+  Widget _buildInfoCard(IconData icon, String text, {VoidCallback? onTap, bool isHighlighted = false}) {
+    final Color backgroundColor = isHighlighted ? AppColors.tertiary : Colors.grey[200]!;
+    final Color contentColor = isHighlighted ? AppColors.textWhite : Colors.grey[700]!;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 110,
         height: 90,
+        padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 30, color: Colors.grey[600]),
-            SizedBox(height: 8),
+            Icon(icon, size: 30, color: contentColor),
+            const SizedBox(height: 8),
             Text(
               text,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              style: TextStyle(fontSize: 12, color: contentColor, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -235,8 +241,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           context.push('/profile');
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF5E4A59),
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.secondary,
+          foregroundColor: AppColors.textBlack,
           padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
         ),
         child: Text('Edit Profile'),

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/theme/app_theme.dart';
 
 class ChatMessageScreen extends StatefulWidget {
   final int conversationId;
@@ -61,13 +62,29 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
-      _chatService.sendMessage(
-        recipientId: widget.conversationId,
-        content: _messageController.text,
-      );
+      final content = _messageController.text;
       _messageController.clear();
+
+      try {
+        final newMessage = await _chatService.sendMessage(
+          recipientId: widget.conversationId,
+          content: content,
+        );
+        setState(() {
+          _messages.add(newMessage);
+        });
+        _scrollToBottom();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send message: $e')),
+          );
+          // Restore the text if sending failed
+          _messageController.text = content;
+        }
+      }
     }
   }
 
@@ -105,7 +122,8 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                     reverse: true, // To show latest messages at the bottom
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      final message = _messages.reversed.toList()[index];
+                      // The list is reversed, so we access from the end.
+                      final message = _messages[_messages.length - 1 - index];
                       final isCurrentUser = message.sender.id == _currentUserId;
                       return _buildMessage(message, isCurrentUser);
                     },
@@ -153,14 +171,14 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
               padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 14.0),
               decoration: BoxDecoration(
                 color: isCurrentUser
-                    ? Theme.of(context).primaryColor
+                    ? AppColors.primary
                     : Colors.grey[300],
                 borderRadius: BorderRadius.circular(16.0),
               ),
               child: Text(
                 message.content,
                 style: TextStyle(
-                  color: isCurrentUser ? Colors.white : Colors.black,
+                  color: isCurrentUser ? AppColors.textWhite : AppColors.textBlack,
                 ),
               ),
             ),

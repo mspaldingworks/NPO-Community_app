@@ -13,6 +13,7 @@ import 'package:transconnect/features/community/screens/community_screen.dart';
 import 'package:transconnect/features/community/screens/post_list_screen.dart';
 import 'package:transconnect/features/community/screens/create_post_screen.dart';
 import 'package:transconnect/features/community/screens/post_detail_screen.dart';
+import 'package:transconnect/features/community/screens/edit_post_screen.dart';
 import 'package:transconnect/features/friends/screens/user_search_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
@@ -21,6 +22,7 @@ import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/profile/screens/profile_screen.dart';
 import 'package:transconnect/models/resource.dart';
+import 'package:transconnect/models/post.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -96,9 +98,19 @@ class AppRouter {
                       GoRoute(
                         path: 'post/:postId',
                         builder: (context, state) {
+                          final groupId = int.parse(state.pathParameters['id']!);
                           final postId = int.parse(state.pathParameters['postId']!);
-                          return PostDetailScreen(postId: postId);
+                          return PostDetailScreen(groupId: groupId, postId: postId);
                         },
+                        routes: [
+                          GoRoute(
+                            path: 'edit',
+                            builder: (context, state) {
+                              final post = state.extra as Post;
+                              return EditPostScreen(post: post);
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),

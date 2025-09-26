@@ -6,16 +6,19 @@ import 'package:transconnect/models/chat_message.dart'; // Assuming ChatMessage.
 class ConversationPreview {
   final int id;
   final String username;
+  final int unreadCount;
 
   ConversationPreview({
     required this.id,
     required this.username,
+    this.unreadCount = 0,
   });
 
   factory ConversationPreview.fromJson(Map<String, dynamic> json) {
     return ConversationPreview(
       id: json['id'] as int,
       username: json['username'] as String,
+      unreadCount: json['unread_count'] as int? ?? 0,
     );
   }
 }
@@ -94,7 +97,7 @@ class ChatService extends ApiClient {
     }
   }
   
-  Future<void> sendMessage({required int recipientId, required String content}) async {
+  Future<ChatMessage> sendMessage({required int recipientId, required String content}) async {
     const urlPath = '$_messagesBaseUrl/';
     final payload = {
       'recipient': recipientId,
@@ -103,12 +106,13 @@ class ChatService extends ApiClient {
     try {
       // Expected status code for creation is typically 201 Created or 200 OK. 
       // Using 201 as a common REST practice for creation.
-      await post(
+      final responseData = await post(
         urlPath: urlPath,
         jsonHeaders: authHeaders,
         jsonPayload: payload,
         expectedStatusCode: 201, 
       );
+      return ChatMessage.fromJson(responseData as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Failed to send message: $e');
     }

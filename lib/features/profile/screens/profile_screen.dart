@@ -9,6 +9,7 @@ import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
+import 'package:transconnect/theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -101,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt),
+                        icon: const Icon(Icons.camera_alt, color: AppColors.secondary),
                         onPressed: _pickImage,
                       ),
                     ),
@@ -125,12 +126,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: AppColors.secondary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
                           'Admin',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
+                          style: TextStyle(color: AppColors.textWhite, fontSize: 12),
                         ),
                       ),
                     ],
