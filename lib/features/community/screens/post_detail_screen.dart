@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
+import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/theme/app_theme.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class PostDetailScreen extends StatefulWidget {
   final int groupId;
@@ -19,6 +21,7 @@ class PostDetailScreen extends StatefulWidget {
 class _PostDetailScreenState extends State<PostDetailScreen> {
   late Future<Post> _postFuture;
   final TextEditingController _commentController = TextEditingController();
+  final CommunityService _communityService = CommunityService();
 
   @override
   void initState() {
@@ -27,18 +30,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _loadPost() {
-    final communityService = Provider.of<CommunityService>(context, listen: false);
     setState(() {
-      _postFuture = communityService.fetchPostById(widget.postId);
+      _postFuture = _communityService.fetchPostById(widget.postId);
     });
   }
 
   Future<void> _addComment() async {
     if (_commentController.text.isEmpty) return;
 
-    final communityService = Provider.of<CommunityService>(context, listen: false);
     try {
-      await communityService.addComment(
+      await _communityService.addComment(
         postId: widget.postId,
         content: _commentController.text,
       );
@@ -54,9 +55,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _deletePost() async {
-    final communityService = Provider.of<CommunityService>(context, listen: false);
     try {
-      await communityService.deletePost(widget.postId);
+      await _communityService.deletePost(widget.postId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post deleted successfully')),
@@ -72,12 +72,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
-  void _showDeleteConfirmationDialog() {
+  Future<void> _deleteComment(int commentId) async {
+    try {
+      await _communityService.deleteComment(commentId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Comment deleted successfully')),
+        );
+        _loadPost(); // Refresh post
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete comment: $e')),
+        );
+      }
+    }
+  }
+
+  void _showDeleteConfirmationDialog({required bool isPost}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Post?'),
-        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        title: Text(isPost ? 'Delete Post?' : 'Delete Comment?'),
+        content: const Text('Are you sure? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -86,18 +104,86 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _deletePost();
+              if (isPost) {
+                _deletePost();
+              }
             },
             child: const Text('Delete'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.secondary),
+            style: TextButton.styleFrom(foregroundColor: AppColors.tertiary),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _showAddCommentDialog() async {
-    return showDialog<void>(
+  void _showDeleteCommentConfirmationDialog(int commentId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Comment?'),
+        content: const Text('Are you sure you want to delete this comment?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteComment(commentId);
+            },
+            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.tertiary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCommentDialog(Comment comment) {
+    final editController = TextEditingController(text: comment.content);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Comment'),
+        content: TextField(
+          controller: editController,
+          autofocus: true,
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _updateComment(comment.id, editController.text);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateComment(int commentId, String content) async {
+    try {
+      await _communityService.updateComment(commentId, {'content': content});
+      _loadPost();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update comment: $e')),
+        );
+      }
+    }
+  }
+
+  void _showAddCommentDialog() {
+    _commentController.clear();
+    showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -110,10 +196,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _commentController.clear(); // Clear text on cancel
-              },
+              onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: const Text('Submit'),
@@ -136,6 +219,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Post'),
+        actions: [
+          FutureBuilder<Post>(
+            future: _postFuture,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || currentUserId == null) return const SizedBox.shrink();
+              final post = snapshot.data!;
+              if (post.author == currentUserId) {
+                return Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => _showDeleteConfirmationDialog(isPost: true),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddCommentDialog,
+        child: const Icon(Icons.add),
+        tooltip: 'Add Comment',
       ),
       body: FutureBuilder<Post>(
         future: _postFuture,
@@ -149,60 +263,90 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           }
 
           final post = snapshot.data!;
-          final isAuthor = post.author == currentUserId;
 
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Post'),
-              actions: isAuthor
-                  ? [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
-                        },
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(post.title ?? '[No Title]', style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 8),
+                Text('By ${post.authorUsername ?? 'Anonymous'} on ${post.pubDate != null ? timeago.format(DateTime.parse(post.pubDate!)) : 'Unknown Date'}'),
+                const SizedBox(height: 16),
+                Text(post.body ?? '[No Content]'),
+                const Divider(height: 32),
+                Text('Comments', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 16),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: post.comments.length,
+                  separatorBuilder: (context, index) => const Divider(),
+                  itemBuilder: (context, index) {
+                    final comment = post.comments[index];
+                    final isCommentAuthor = comment.authorId == currentUserId;
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: comment.authorProfilePic != null
+                                ? NetworkImage(comment.authorProfilePic!)
+                                : null,
+                            child: comment.authorProfilePic == null
+                                ? const Icon(Icons.person)
+                                : null,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(comment.authorUsername, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    if (comment.authorIsStaff)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8.0),
+                                        child: Chip(
+                                          avatar: const Icon(Icons.shield, size: 12, color: Colors.white),
+                                          label: const Text('Admin', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                          backgroundColor: AppColors.primary,
+                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                Text(timeago.format(DateTime.parse(comment.pubDate)), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                const SizedBox(height: 4),
+                                Text(comment.content),
+                              ],
+                            ),
+                          ),
+                          if (isCommentAuthor)
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  _showEditCommentDialog(comment);
+                                } else if (value == 'delete') {
+                                  _showDeleteCommentConfirmationDialog(comment.id);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              ],
+                            ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: _showDeleteConfirmationDialog,
-                      ),
-                    ]
-                  : null,
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: _showAddCommentDialog,
-              child: const Icon(Icons.add),
-              tooltip: 'Add Comment',
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(post.title ?? '[No Title]', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 8),
-                  Text('By ${post.authorUsername ?? 'Anonymous'} on ${post.pubDate ?? 'Unknown Date'}'),
-                  const SizedBox(height: 16),
-                  Text(post.body ?? '[No Content]'),
-                  const Divider(height: 32),
-                  Text('Comments', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 16),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: post.comments.length,
-                    separatorBuilder: (context, index) => const Divider(),
-                    itemBuilder: (context, index) {
-                      final comment = post.comments[index];
-                      return ListTile(
-                        title: Text(comment.user ?? 'Anonymous'),
-                        subtitle: Text(comment.content),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
           );
         },

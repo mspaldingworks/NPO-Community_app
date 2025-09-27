@@ -13,8 +13,13 @@ class MessageUser {
   factory MessageUser.fromJson(Map<String, dynamic> json) {
     return MessageUser(
       id: json['id'] as int,
-      username: json['username'] as String,
+      username: json['username'] as String? ?? 'Unknown',
     );
+  }
+
+  // Factory to handle cases where only a user ID is provided.
+  factory MessageUser.fromId(int id) {
+    return MessageUser(id: id, username: '...'); // Placeholder username
   }
 }
 
@@ -37,14 +42,24 @@ class ChatMessage {
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    // Helper to robustly parse user data which might be a map or just an ID.
+    MessageUser _parseUser(dynamic userData) {
+      if (userData is Map<String, dynamic>) {
+        return MessageUser.fromJson(userData);
+      } else if (userData is int) {
+        return MessageUser.fromId(userData);
+      }
+      // Fallback for unexpected format
+      return MessageUser(id: 0, username: 'Unknown');
+    }
+
     return ChatMessage(
       id: json['id'] as int,
-      // Parse the nested user objects using the MessageUser model
-      sender: MessageUser.fromJson(json['sender'] as Map<String, dynamic>),
-      recipient: MessageUser.fromJson(json['recipient'] as Map<String, dynamic>),
+      sender: _parseUser(json['sender']),
+      recipient: _parseUser(json['recipient']),
       content: json['content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
-      isRead: json['is_read'] as bool,
+      isRead: json['is_read'] as bool? ?? false, // Safely handle is_read
     );
   }
 }

@@ -48,8 +48,7 @@ class CommunityService extends ApiClient {
     required int groupId,
     required String title,
     required String body,
-    String? emoji,
-    String? feeling,
+    List<String> emojis = const [],
     required bool public,
   }) async {
     final result = await post(
@@ -59,8 +58,7 @@ class CommunityService extends ApiClient {
         'group': groupId,
         'title': title,
         'body': body,
-        'emoji': emoji,
-        'feeling': feeling,
+        'emojis': emojis, 
         'public': public,
       },
       expectedStatusCode: 201,
