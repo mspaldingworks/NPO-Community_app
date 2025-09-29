@@ -57,7 +57,7 @@ class _FriendsTabViewState extends State<FriendsTabView> {
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: Text('No friends or pending requests.'),
+                      child: Text('No pending requests.'),
                     ),
                   ),
               ],
