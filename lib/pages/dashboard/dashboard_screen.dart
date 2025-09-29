@@ -91,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Icon(Icons.chat, size: 30, color: Colors.grey[600]),
                         SizedBox(height: 8),
                         Text(
-                          'Chat',
+                          'Friends',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                         ),

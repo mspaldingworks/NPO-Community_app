@@ -52,7 +52,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Post updated successfully!')),
           );
-          context.pop(); // Go back to the detail screen
+          context.pop(true); // Go back to the detail screen
         }
       } catch (e) {
         if (mounted) {

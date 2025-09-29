@@ -172,12 +172,21 @@ class _PostListScreenState extends State<PostListScreen> {
                                 ),
                                 if (currentUser != null && currentUser.id == post.author)
                                   PopupMenuButton<String>(
-                                    onSelected: (value) {
+                                    onSelected: (value) async {
                                       if (value == 'delete') {
                                         _showDeleteConfirmationDialog(post.id);
+                                      } else if (value == 'edit') {
+                                        final result = await context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
+                                        if (result == true && mounted) {
+                                          _refreshPosts();
+                                        }
                                       }
                                     },
                                     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                      const PopupMenuItem<String>(
+                                        value: 'edit',
+                                        child: Text('Edit'),
+                                      ),
                                       const PopupMenuItem<String>(
                                         value: 'delete',
                                         child: Text('Delete'),

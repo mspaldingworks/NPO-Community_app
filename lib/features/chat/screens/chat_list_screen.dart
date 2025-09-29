@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/features/friends/screens/friends_screen.dart';
+import 'package:transconnect/features/friends/widgets/friends_tab_view.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/theme/app_theme.dart';
 
@@ -40,7 +40,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Chats'),
+            Tab(text: 'Messages'),
             Tab(text: 'Friends'),
           ],
         ),
@@ -49,7 +49,7 @@ class _ChatListScreenState extends State<ChatListScreen>
         controller: _tabController,
         children: [
           ConversationList(),
-          FriendsList(),
+          const FriendsTabView(),
         ],
       ),
       floatingActionButton: _buildFloatingActionButton(),
@@ -61,27 +61,15 @@ class _ChatListScreenState extends State<ChatListScreen>
       case 0: // Chats Tab
         return FloatingActionButton(
           onPressed: () => GoRouter.of(context).push('/chat/create'),
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
           tooltip: 'Start a new chat',
         );
       case 1: // Friends Tab
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton.small(
-              heroTag: 'find_friends',
-              onPressed: () => GoRouter.of(context).push('/user-search'),
-              child: const Icon(Icons.person_add),
-              tooltip: 'Find new friends',
-            ),
-            const SizedBox(height: 8),
-            FloatingActionButton(
-              heroTag: 'chat_with_friends',
-              onPressed: () => GoRouter.of(context).push('/select-friends-for-chat'),
-              child: const Icon(Icons.group_add),
-              tooltip: 'Chat with friends',
-            ),
-          ],
+        return FloatingActionButton(
+          onPressed: () => GoRouter.of(context).push('/user-search'),
+          backgroundColor: AppColors.secondary, // Yellow color
+          child: const Icon(Icons.person_add),
+          tooltip: 'Add Friend',
         );
       default:
         return null;

@@ -1,4 +1,5 @@
 import 'package:transconnect/core/services/api_client.dart';
+import 'package:transconnect/models/friend_request.dart';
 import 'package:transconnect/models/user.dart';
 
 /// A service class to manage all friend-related API requests.
@@ -15,7 +16,7 @@ class FriendService extends ApiClient {
 
   /// Searches for users who are not currently friends and not involved in a pending request.
   /// Returns a list of user maps.
-  Future<List<User>> searchFriends(String query) async {
+  Future<List<Friend>> searchFriends(String query) async {
     try {
       final urlPath = '$_friendsBasePath/$_searchPath?q=$query';
       
@@ -28,8 +29,8 @@ class FriendService extends ApiClient {
       // 2. Validate the result is a list.
       if (result is List) {
         // 3. Map the decoded list of dynamic objects to a List<User>.
-        final List<User> users = result
-            .map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
+        final List<Friend> users = result
+            .map((userJson) => Friend.fromJson(userJson as Map<String, dynamic>))
             .toList();
             
         return users;
@@ -61,13 +62,19 @@ class FriendService extends ApiClient {
 
   /// Retrieves a list of all pending friend requests received by the current user.
   /// Returns a list of friend request maps.
-  Future<List<Map<String, dynamic>>> listPendingRequests() async {
+  Future<List<FriendRequest>> listPendingRequests() async {
     final urlPath = '$_friendsBasePath/$_requestsPath';
     final result = await read(
       urlPath: urlPath,
       jsonHeaders: authHeaders,
     );
-    return result as List<Map<String, dynamic>>;
+    if (result is List) {
+      return result
+          .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } else {
+      return [];
+    }
   }
 
   /// Accepts a pending friend request from a specified username.
@@ -91,11 +98,45 @@ class FriendService extends ApiClient {
     final payload = {'username': username, 'action': 'decline'};
 
     // Explicitly set expectedStatusCode to 204 for the decline action.
-    await update( 
+    await update(
       urlPath: urlPath,
       jsonHeaders: authHeaders,
       jsonPayload: payload,
-      expectedStatusCode: 204, 
+      expectedStatusCode: 204,
     );
+  }
+
+  /// Retrieves a list of all friends for the current user.
+  /// Returns a list of Friend objects.
+  Future<List<Friend>> listFriends() async {
+    final urlPath = '$_friendsBasePath/';
+    final result = await read(
+      urlPath: urlPath,
+      jsonHeaders: authHeaders,
+    );
+    
+    if (result is List) {
+      return result
+          .map((json) => Friend.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } else {
+      return [];
+    }
+  }
+
+  /// Removes a friend by their username.
+  /// Returns true if successful, false otherwise.
+  Future<bool> removeFriend(String username) async {
+    try {
+      final urlPath = '$_friendsBasePath/$username/';
+      await delete(
+        urlPath: urlPath,
+        jsonHeaders: authHeaders,
+        expectedStatusCode: 204,
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

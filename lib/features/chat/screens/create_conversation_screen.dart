@@ -17,7 +17,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
   final FriendService _friendService = FriendService();
   final ChatService _chatService = ChatService();
   final TextEditingController _searchController = TextEditingController();
-  List<User> _searchResults = [];
+  List<Friend> _searchResults = [];
   bool _isLoading = false;
   Timer? _debounce;
 
@@ -63,12 +63,18 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
     });
   }
 
-  void _startConversation(User user, String content) async {
+  void _startConversation(Friend user, String content) async {
     try {
-      final conversation = await _chatService.sendMessage(recipientId: user.id, content: content);
+      // Assuming sendMessage can take a recipientId and content
+      // You might need to adjust this based on your ChatService implementation
+      await _chatService.sendMessage(recipientId: user.id, content: content);
       if (mounted) {
-        // Navigate to the new chat screen, replacing the current screen
-        // GoRouter.of(context).pushReplacement('/chat/${conversation.id}'); TODO Fix chat
+        // Navigate to the chat screen or show a confirmation
+        // For now, just pop back
+        GoRouter.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Conversation started with ${user.username}')),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -96,15 +102,16 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              itemCount: _searchResults.length,
-              itemBuilder: (context, index) {
-                final user = _searchResults[index];
-                return ListTile(
-                  title: Text(user.username),
-                  onTap: () => _startConversation(user, user.username),
-                );
-              },
-            ),
+        itemCount: _searchResults.length,
+        itemBuilder: (context, index) {
+          final user = _searchResults[index];
+          return ListTile(
+            title: Text(user.username),
+            // Example of starting a chat by tapping the user
+            onTap: () => _startConversation(user, 'Hey!'),
+          );
+        },
+      ),
     );
   }
 }
