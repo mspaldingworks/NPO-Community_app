@@ -23,6 +23,7 @@ import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/features/profile/screens/profile_screen.dart';
 import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/post.dart';
+import 'package:transconnect/pages/forms/lgl_form_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -158,6 +159,10 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/forms/lgl',
+        builder: (context, state) => const LglFormScreen(),
       ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
