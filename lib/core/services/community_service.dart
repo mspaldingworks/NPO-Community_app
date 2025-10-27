@@ -142,13 +142,14 @@ class CommunityService extends ApiClient {
     bool anonymous = false,
   }) async {
     final jsonPayload = {
+      'post': postId,
       'content': content,
       'anonymous': anonymous,
     };
 
     // The post method handles Content-Type (via authHeaders) and checks for 201 Created.
     final result = await post(
-      urlPath: '/api/posts/${postId.toString()}/comments/',
+      urlPath: '/api/comments/',
       jsonHeaders: authHeaders,
       jsonPayload: jsonPayload,
       expectedStatusCode: 201,

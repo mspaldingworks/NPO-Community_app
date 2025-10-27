@@ -27,7 +27,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
   
   List<Friend> _searchResults = [];
   List<Friend> _selectedUsers = [];
+  List<Friend> _friends = [];
   bool _isLoading = false;
+  bool _isFriendsLoading = true;
+  String? _friendsError;
   bool _isCreatingGroup = false;
   Timer? _debounce;
   late TabController _tabController;
@@ -36,6 +39,29 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadFriends();
+  }
+
+  Future<void> _loadFriends() async {
+    setState(() {
+      _isFriendsLoading = true;
+      _friendsError = null;
+    });
+
+    try {
+      final results = await _friendService.listFriends();
+      if (!mounted) return;
+      setState(() {
+        _friends = results;
+        _isFriendsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _friendsError = 'Failed to load friends. Please try again.';
+        _isFriendsLoading = false;
+      });
+    }
   }
 
   @override
@@ -282,11 +308,15 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
           Expanded(
             child: _isLoading
                 ? const Center(child: LoadingIndicator())
+                : _isFriendsLoading
+                    ? const Center(child: LoadingIndicator())
+                    : _friendsError != null
+                        ? _buildFriendsError()
                 : _searchController.text.isNotEmpty
                     ? _buildSearchResults()
                     : _isCreatingGroup
                         ? _buildGroupCreationGuide()
-                        : _buildRecentContacts(),
+                        : _buildContactsList(),
           ),
         ],
       ),
@@ -390,17 +420,17 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
         child: Text('No users found'),
       );
     }
-    
+
     return ListView.builder(
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final user = _searchResults[index];
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: user.profilePic != null 
-                ? NetworkImage(user.profilePic!) 
+            backgroundImage: user.profilePic != null
+                ? NetworkImage(user.profilePic!)
                 : null,
-            child: user.profilePic == null 
+            child: user.profilePic == null
                 ? Text(user.username[0].toUpperCase())
                 : null,
           ),
@@ -418,70 +448,91 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       },
     );
   }
-  
-  Widget _buildRecentContacts() {
-    // In a real app, you would fetch recent contacts from your database
-    return ListView(
-      children: [
-        ListTile(
-          leading: const CircleAvatar(
-            child: Icon(Icons.group_add),
-          ),
-          title: const Text('New Group'),
-          onTap: () {
-            setState(() {
-              _isCreatingGroup = true;
-              _tabController.animateTo(1);
-            });
-          },
+
+  Widget _buildContactsList() {
+    Widget buildNewGroupTile() {
+      return ListTile(
+        leading: const CircleAvatar(
+          child: Icon(Icons.group_add),
         ),
-        const Divider(),
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text(
-            'Your contacts',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-        ),
-        // In a real app, you would map through actual recent contacts
-        _buildContactItem('John Doe', 'Hey there!', '10:30 AM', 'assets/avatar1.jpg'),
-        _buildContactItem('Jane Smith', 'See you tomorrow!', 'Yesterday', 'assets/avatar2.jpg'),
-        _buildContactItem('Alex Johnson', 'Thanks for your help!', 'Monday', 'assets/avatar3.jpg'),
-      ],
-    );
-  }
-  
-  Widget _buildContactItem(String name, String lastMessage, String time, String avatar) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: AssetImage(avatar),
-        onBackgroundImageError: (_, __) {
-          // Handle image loading error
+        title: const Text('New Group'),
+        onTap: () {
+          setState(() {
+            _isCreatingGroup = true;
+            _tabController.animateTo(1);
+          });
         },
-        child: Text(name[0].toUpperCase()),
+      );
+    }
+
+    if (_friends.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _loadFriends,
+        child: ListView(
+          children: [
+            buildNewGroupTile(),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'No friends yet',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadFriends,
+      child: ListView.separated(
+        itemCount: _friends.length + 2,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return buildNewGroupTile();
+          }
+          if (index == 1) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+              child: Text(
+                'Your friends',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            );
+          }
+
+          final friend = _friends[index - 2];
+          return ListTile(
+            leading: CircleAvatar(
+              backgroundImage:
+                  friend.profilePic != null && friend.profilePic!.isNotEmpty
+                      ? NetworkImage(friend.profilePic!)
+                      : null,
+              child: (friend.profilePic == null || friend.profilePic!.isEmpty)
+                  ? Text(friend.username[0].toUpperCase())
+                  : null,
+            ),
+            title: Text(friend.username),
+            subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
+                ? Text(friend.statusMessage!, maxLines: 1, overflow: TextOverflow.ellipsis)
+                : (friend.city != null && friend.city!.isNotEmpty
+                    ? Text(friend.city!)
+                    : null),
+            onTap: () => _createDirectChat(friend),
+          );
+        },
       ),
-      title: Text(name),
-      subtitle: Text(
-        lastMessage,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Text(
-        time,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
-      ),
-      onTap: () {
-        // In a real app, you would navigate to the chat with this contact
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Opening chat with $name')),
-        );
-      },
     );
   }
-  
+
   Widget _buildGroupCreationGuide() {
     return Center(
       child: Column(
@@ -546,6 +597,22 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                 child: const Text('Create Group'),
               ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFriendsError() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(_friendsError ?? 'Something went wrong'),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _loadFriends,
+            child: const Text('Retry'),
+          ),
         ],
       ),
     );
