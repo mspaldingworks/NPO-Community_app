@@ -9,7 +9,6 @@ import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
-import 'package:transconnect/theme/app_theme.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -102,7 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt, color: AppColors.secondary),
+                        icon: const Icon(Icons.camera_alt),
                         onPressed: _pickImage,
                       ),
                     ),
@@ -111,31 +110,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 24),
               if (currentUser != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      currentUser.username,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    if (currentUser.isStaff) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Admin',
-                          style: TextStyle(color: AppColors.textWhite, fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ],
+                Text(
+                  currentUser.username,
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
               const SizedBox(height: 16),
               TextFormField(

@@ -24,15 +24,6 @@ class ResourceService extends ApiClient {
     return createResourceListFromJson(result);
   }
 
-  // Fetches a single resource by its ID.
-  Future<Resource> fetchResourceById(int resourceId) async {
-    final result = await read(
-      urlPath: 'api/resources/$resourceId/',
-      jsonHeaders: authHeaders,
-    );
-    return Resource.fromJson(result as Map<String, dynamic>);
-  }
-
   // Adds a new resource.
   Future<Resource> addResource({
     required String name,
@@ -61,11 +52,19 @@ class ResourceService extends ApiClient {
   }
 
   // Updates an existing resource.
-  Future<Resource> updateResource(int resourceId, Map<String, dynamic> updates) async {
+  Future<Resource> updateResource(Resource resource) async {
     final result = await put(
-      urlPath: 'api/resources/$resourceId/',
+      urlPath: 'api/resources/${resource.id}/',
       jsonHeaders: authHeaders, // Uses inherited property
-      jsonPayload: updates,
+      jsonPayload: {
+        'name': resource.name,
+        'description': resource.description,
+        'type': resource.type,
+        'url': resource.url,
+        'provider': resource.provider,
+        'public': resource.public,
+        'tags': resource.tags,
+      },
     );
     return Resource.fromJson(result as Map<String, dynamic>);
   }

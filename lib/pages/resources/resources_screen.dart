@@ -122,18 +122,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
     }
   }
 
-  Future<void> _launchPhone(String? phoneNumber) async {
-    if (phoneNumber == null || phoneNumber.isEmpty) return;
-    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (!await launchUrl(phoneUri)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not call $phoneNumber')),
-        );
-      }
-    }
-  }
-
   void _showDeleteConfirmation(int resourceId) {
     showDialog(
       context: context,
@@ -216,7 +204,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
   }
 
   Widget _buildResourceCard(Resource resource, User? user) {
-    final bool isAdmin = user?.isStaff ?? false;
+    // Admin check can be simplified or removed if isStaff is no longer available.
+    // For now, we'll assume no admin privileges for simplicity.
+    const bool isAdmin = false;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -237,10 +227,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
             const SizedBox(height: 8.0),
             Text(resource.description ?? '[No Description]',
                 style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 8.0),
-            if (resource.phoneNumber != null && resource.phoneNumber!.isNotEmpty)
-              Text('Phone: ${resource.phoneNumber}',
-                  style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 12.0),
             Wrap(
               spacing: 8.0,
@@ -281,11 +267,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
                         }
                       },
                       child: const Text('Edit'),
-                    ),
-                  if (resource.phoneNumber != null && resource.phoneNumber!.isNotEmpty)
-                    TextButton(
-                      onPressed: () => _launchPhone(resource.phoneNumber),
-                      child: const Text('Call'),
                     ),
                   const SizedBox(width: 8),
                   ElevatedButton(

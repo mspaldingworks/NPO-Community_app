@@ -1,120 +1,203 @@
-import 'package:transconnect/core/services/api_client.dart'; // Assuming ApiClient.dart is in this path
-import 'package:transconnect/models/chat_message.dart'; // Assuming ChatMessage.dart is in this path
+import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:transconnect/core/services/api_client.dart';
+import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/models/conversation.dart';
 
-/// Represents the other user in a conversation, as returned by the 
-/// 'active_conversations' API endpoint.
-class ConversationPreview {
-  final int id;
-  final String username;
-  final int unreadCount;
-
-  ConversationPreview({
-    required this.id,
-    required this.username,
-    this.unreadCount = 0,
-  });
-
-  factory ConversationPreview.fromJson(Map<String, dynamic> json) {
-    return ConversationPreview(
-      id: json['id'] as int,
-      username: json['username'] as String,
-      unreadCount: json['unread_count'] as int? ?? 0,
-    );
-  }
-}
-
-/// Service class for all chat and messaging related API calls.
+/// Service class that wraps chat-related API calls.
 class ChatService extends ApiClient {
-  static const String _messagesBaseUrl = 'api/messages';
+  ChatService();
 
-  /// Fetches a list of all current conversations, returning the other user's
-  /// The endpoint used is: GET /api/messages/active_conversations/
-  Future<List<ConversationPreview>> getAllConversations() async {
-    const urlPath = '$_messagesBaseUrl/active_conversations/';
-    try {
-      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
-      
-      if (responseData is List) {
-        return responseData
-            .map((json) => ConversationPreview.fromJson(json as Map<String, dynamic>))
-            .toList();
-      }
-      
-      throw const FormatException('Expected a list for active conversations.');
-    } catch (e) {
-      throw Exception('Failed to fetch active conversations: $e');
+  Future<List<Conversation>> fetchConversations() async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversations,
+      jsonHeaders: authHeaders,
+    );
+
+    if (result is List) {
+      return result
+          .map((json) => Conversation.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
+    return [];
   }
 
-  /// Fetches the entirety of a conversation between the current user and 
-  /// the user with the given [otherUserId].
-  /// The endpoint used is: GET /api/messages/messages_between/?user_id={otherUserId}
-  /// The response is mapped to a list of [ChatMessage] objects.
-  Future<List<ChatMessage>> getConversation(int otherUserId) async {
-    final urlPath = '$_messagesBaseUrl/messages_between/?user_id=$otherUserId';
-    try {
-      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
-
-      if (responseData is List) {
-        return responseData
-            .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
-            .toList();
-      }
-
-      throw const FormatException('Expected a list of messages for the conversation.');
-    } catch (e) {
-      throw Exception('Failed to fetch conversation with user $otherUserId: $e');
-    }
+  Future<Conversation> getConversation(String conversationId) async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversation(conversationId),
+      jsonHeaders: authHeaders,
+    ) as Map<String, dynamic>;
+    return Conversation.fromJson(result);
   }
 
-  /// Fetches all messages involving the authenticated user.
-  Future<List<ChatMessage>> getAllMessages() async {
-    const urlPath = '$_messagesBaseUrl/';
-    try {
-      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
-      
-      if (responseData is List) {
-        return responseData
-            .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
-            .toList();
-      }
-      
-      throw const FormatException('Expected a list for all messages.');
-    } catch (e) {
-      throw Exception('Failed to fetch all messages: $e');
+  Future<List<ChatMessage>> getMessages(String conversationId) async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversationMessages(conversationId),
+      jsonHeaders: authHeaders,
+    );
+
+    if (result is List) {
+      return result
+          .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
+    return [];
   }
 
-  /// Fetches a single message by its ID.
-  Future<ChatMessage> getMessageById(int messageId) async {
-    final urlPath = '$_messagesBaseUrl/$messageId/';
-    try {
-      final responseData = await read(urlPath: urlPath, jsonHeaders: authHeaders);
-      
-      return ChatMessage.fromJson(responseData as Map<String, dynamic>);
-    } catch (e) {
-      throw Exception('Failed to fetch message with ID $messageId: $e');
-    }
-  }
-  
-  Future<ChatMessage> sendMessage({required int recipientId, required String content}) async {
-    const urlPath = '$_messagesBaseUrl/';
+  Future<ChatMessage> sendMessage({
+    required String conversationId,
+    required String content,
+  }) async {
     final payload = {
-      'recipient': recipientId,
       'content': content,
     };
-    try {
-      // Expected status code for creation is typically 201 Created or 200 OK. 
-      // Using 201 as a common REST practice for creation.
-      final responseData = await post(
-        urlPath: urlPath,
-        jsonHeaders: authHeaders,
-        jsonPayload: payload,
-        expectedStatusCode: 201, 
-      );
-      return ChatMessage.fromJson(responseData as Map<String, dynamic>);
-    } catch (e) {
-      throw Exception('Failed to send message: $e');
+
+    final result = await post(
+      urlPath: ApiEndpoints.conversationMessages(conversationId),
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+      expectedStatusCode: 201,
+    ) as Map<String, dynamic>;
+
+    return ChatMessage.fromJson(result);
+  }
+
+  Future<Conversation> createChat({
+    required List<String> participantIds,
+    String? name,
+    bool isGroup = false,
+    String? groupImage,
+  }) async {
+    final payload = {
+      'participant_ids': participantIds,
+      if (name != null) 'name': name,
+      'is_group': isGroup,
+      if (groupImage != null) 'group_image': groupImage,
+    };
+
+    final result = await post(
+      urlPath: ApiEndpoints.conversations,
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+      expectedStatusCode: 201,
+    ) as Map<String, dynamic>;
+
+    return Conversation.fromJson(result);
+  }
+
+  Future<Conversation> createGroupChat({
+    required String name,
+    required List<String> participantIds,
+    String? groupImage,
+  }) {
+    return createChat(
+      participantIds: participantIds,
+      name: name,
+      isGroup: true,
+      groupImage: groupImage,
+    );
+  }
+
+  Future<Conversation> updateConversation({
+    required String conversationId,
+    String? name,
+    List<String>? addParticipants,
+    List<String>? removeParticipants,
+    String? groupImage,
+    bool? isMuted,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (name != null) payload['name'] = name;
+    if (addParticipants != null && addParticipants.isNotEmpty) {
+      payload['add_participants'] = addParticipants;
     }
+    if (removeParticipants != null && removeParticipants.isNotEmpty) {
+      payload['remove_participants'] = removeParticipants;
+    }
+    if (groupImage != null) payload['group_image'] = groupImage;
+    if (isMuted != null) payload['is_muted'] = isMuted;
+
+    final result = await update(
+      urlPath: ApiEndpoints.conversation(conversationId),
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+    ) as Map<String, dynamic>;
+
+    return Conversation.fromJson(result);
+  }
+
+  Future<bool> deleteConversation(String conversationId) async {
+    try {
+      await delete(
+        urlPath: ApiEndpoints.conversation(conversationId),
+        jsonHeaders: authHeaders,
+        expectedStatusCode: 204,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> markAsRead({
+    required String conversationId,
+    required List<String> messageIds,
+  }) async {
+    if (messageIds.isEmpty) return;
+
+    await post(
+      urlPath: ApiEndpoints.markAsRead(conversationId),
+      jsonHeaders: authHeaders,
+      jsonPayload: {'message_ids': messageIds},
+      expectedStatusCode: 200,
+    );
+  }
+
+  Future<bool> muteConversation(String conversationId, {bool mute = true}) async {
+    final endpoint = mute
+        ? ApiEndpoints.muteConversation(conversationId)
+        : ApiEndpoints.unmuteConversation(conversationId);
+
+    try {
+      await post(
+        urlPath: endpoint,
+        jsonHeaders: authHeaders,
+        jsonPayload: const {},
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> leaveGroup(String conversationId) async {
+    final endpoint = '${ApiEndpoints.conversation(conversationId)}leave/';
+    try {
+      await post(
+        urlPath: endpoint,
+        jsonHeaders: authHeaders,
+        jsonPayload: const {},
+        expectedStatusCode: 204,
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<List<ChatMessage>> searchMessages({
+    required String conversationId,
+    required String query,
+  }) async {
+    final result = await read(
+      urlPath: ApiEndpoints.searchConversationMessages(conversationId),
+      jsonHeaders: authHeaders,
+    );
+
+    if (result is List) {
+      return result
+          .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 }

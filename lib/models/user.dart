@@ -6,10 +6,10 @@ class User {
   final String? statusMessage;
   final String? flair;
   final String? profilePic;
-  final String? token;
   final List<Friend> friends;
+  final String? userType;
   final bool isStaff;
-  final String userType;
+  final String? fullName;
 
   User({
     required this.id,
@@ -19,10 +19,10 @@ class User {
     this.statusMessage,
     this.flair,
     this.profilePic,
-    this.token,
     this.friends = const [],
+    this.userType,
     this.isStaff = false,
-    this.userType = 'user',
+    this.fullName,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -44,17 +44,17 @@ class User {
         : <Friend>[];
 
     return User(
-      id: parsedId,
+id: parsedId,
       username: json['username'] as String,
       email: json['email'] as String,
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
-      token: json['token'] as String?,
       friends: friendsList,
+      userType: json['user_type'] as String?,
       isStaff: json['is_staff'] as bool? ?? false,
-      userType: json['user_type'] as String? ?? 'user',
+      fullName: json['full_name'] as String?,
     );
   }
 }
@@ -62,20 +62,20 @@ class User {
 class Friend {
   final int id;
   final String username;
+  final String email;
   final String? city;
   final String? statusMessage;
   final String? flair;
   final String? profilePic;
-  final String? token;
 
   Friend({
     required this.id,
     required this.username,
+    required this.email,
     this.city,
     this.statusMessage,
     this.flair,
     this.profilePic,
-    this.token,
   });
 
   factory Friend.fromJson(Map<String, dynamic> json) {
@@ -93,11 +93,11 @@ class Friend {
     return Friend(
       id: parsedId,
       username: json['username'] as String,
+      email: json['email'] as String? ?? '', // Handle missing email gracefully
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
-      token: json['token'] as String?,
     );
   }
 }

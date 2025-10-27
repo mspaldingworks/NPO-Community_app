@@ -3,9 +3,9 @@ class Resource {
   final String? user;
   final String? name;
   final String? description;
-  final String? phoneNumber;
   final String? type;
   final String? url;
+  final String? provider;
   final String? pubDate;
   final bool? public;
   final List<String> tags;
@@ -15,9 +15,9 @@ class Resource {
     this.user,
     this.name,
     this.description,
-    this.phoneNumber,
     this.type,
     this.url,
+    this.provider,
     this.pubDate,
     this.public,
     this.tags = const [],
@@ -33,12 +33,28 @@ class Resource {
       user: json['user'] as String?,
       name: json['name'] as String?,
       description: json['description'] as String?,
-      phoneNumber: json['phone_number'] as String?,
       type: json['type'] as String?,
       url: json['url'] as String?,
+      provider: json['provider'] as String?,
       pubDate: json['pub_date'] as String?,
       public: json['public'] as bool?,
       tags: tags,
     );
+  }
+
+  /// Converts a `Resource` instance to a JSON map.
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user': user,
+      'name': name,
+      'description': description,
+      'type': type,
+      'url': url,
+      'provider': provider,
+      'pub_date': pubDate,
+      'public': public,
+      'tags': tags,
+    };
   }
 }

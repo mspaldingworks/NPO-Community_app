@@ -1,80 +1,119 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:transconnect/core/services/chat_service.dart' as core;
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:transconnect/core/services/api_client.dart';
+import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/models/conversation.dart';
 
 class ChatService extends ApiClient {
-  final AuthService _authService = AuthService();
-  final core.ChatService _coreChatService = core.ChatService(); // Use the aliased core service
-  WebSocketChannel? _channel;
-  final StreamController<ChatMessage> _messageController = StreamController.broadcast();
+  ChatService();
 
-  Stream<ChatMessage> get messages => _messageController.stream;
-
-  Future<List<core.ConversationPreview>> fetchConversations() async {
-    return _coreChatService.getAllConversations();
-  }
-
-  Future<List<ChatMessage>> fetchMessages(int otherUserId) async {
-    return _coreChatService.getConversation(otherUserId);
-  }
-
-  void connect(String conversationId) {
-    final token = _authService.currentUser?.token;
-    if (token == null) {
-      throw Exception('User not authenticated');
-    }
-
-    final uri = Uri.parse('wss://api.luxashome.com/ws/chat/$conversationId/?token=$token');
-
-    _channel = WebSocketChannel.connect(uri);
-
-    _channel!.stream.listen(
-      (data) {
-        try {
-          final jsonData = jsonDecode(data);
-          final message = ChatMessage.fromJson(jsonData);
-          _messageController.add(message);
-        } catch (e) {
-          debugPrint('Error parsing incoming message: $e');
-        }
-      },
-      onError: (error) {
-        debugPrint('WebSocket Error: $error');
-      },
-      onDone: () {
-        debugPrint('WebSocket connection closed');
-      },
+  /// Returns all conversations for the current user.
+  Future<List<Conversation>> fetchConversations() async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversations,
+      jsonHeaders: authHeaders,
     );
+
+    if (result is List) {
+      return result
+          .map((json) => Conversation.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
   }
 
-  void sendMessage(String content) {
-    if (_channel != null) {
-      final message = {
-        'type': 'chat.message',
-        'message': content,
-      };
-      _channel!.sink.add(jsonEncode(message));
+  /// Fetches the details of a single conversation and returns the `Conversation` model.
+  Future<Conversation> getConversation(String conversationId) async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversation(conversationId),
+      jsonHeaders: authHeaders,
+    ) as Map<String, dynamic>;
+    return Conversation.fromJson(result);
+  }
+
+  /// Returns the messages for a particular conversation.
+  Future<List<ChatMessage>> getMessages(String conversationId) async {
+    final result = await read(
+      urlPath: ApiEndpoints.conversationMessages(conversationId),
+      jsonHeaders: authHeaders,
+    );
+
+    if (result is List) {
+      return result
+          .map((json) => ChatMessage.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
+  /// Sends a message to an existing conversation.
+  Future<ChatMessage> sendMessage({
+    required String conversationId,
+    required String content,
+  }) async {
+    final payload = {
+      'content': content,
+    };
+
+    final result = await post(
+      urlPath: ApiEndpoints.conversationMessages(conversationId),
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+      expectedStatusCode: 201,
+    ) as Map<String, dynamic>;
+
+    return ChatMessage.fromJson(result);
+  }
+
+  /// Creates a new conversation with the supplied participant ids. When more than
+  /// one participant is provided, the caller can supply a `name` and `isGroup`
+  /// flag to control backend behaviour.
+  Future<Conversation> createChat({
+    required List<String> participantIds,
+    String? name,
+    bool? isGroup,
+  }) async {
+    final payload = {
+      'participant_ids': participantIds,
+      if (name != null) 'name': name,
+      if (isGroup != null) 'is_group': isGroup,
+    };
+
+    final result = await post(
+      urlPath: ApiEndpoints.conversations,
+      jsonHeaders: authHeaders,
+      jsonPayload: payload,
+      expectedStatusCode: 201,
+    ) as Map<String, dynamic>;
+
+    return Conversation.fromJson(result);
+  }
+
+  /// Deletes a conversation, returning true on success.
+  Future<bool> deleteConversation(String conversationId) async {
+    try {
+      await delete(
+        urlPath: ApiEndpoints.conversation(conversationId),
+        jsonHeaders: authHeaders,
+        expectedStatusCode: 204,
+      );
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
-  Future<ChatMessage> sendMessageWithPost(
-      {required int recipientId, required String content}) async {
-    return _coreChatService.sendMessage(recipientId: recipientId, content: content);
-  }
+  /// Marks the provided message ids as read in the conversation.
+  Future<void> markAsRead({
+    required String conversationId,
+    required List<String> messageIds,
+  }) async {
+    if (messageIds.isEmpty) return;
 
-  Future<ChatMessage> createConversation({required int userId, required String content}) async {
-    // The API doesn't have a dedicated "create conversation" endpoint.
-    // Sending the first message implicitly creates it.
-    return _coreChatService.sendMessage(recipientId: userId, content: content);
-  }
-
-  void dispose() {
-    _channel?.sink.close();
-    _messageController.close();
+    await post(
+      urlPath: ApiEndpoints.markAsRead(conversationId),
+      jsonHeaders: authHeaders,
+      jsonPayload: {'message_ids': messageIds},
+      expectedStatusCode: 200,
+    );
   }
 }

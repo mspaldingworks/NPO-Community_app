@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/friend_request.dart';
 import 'package:transconnect/models/user.dart';
@@ -10,44 +11,31 @@ class FriendService extends ApiClient {
   static const String _searchPath = 'search/';
   static const String _usersPath = 'api/users/';
 
-  FriendService(); 
-
-  // --- Friends Endpoints ---
+  FriendService();
 
   /// Searches for users who are not currently friends and not involved in a pending request.
-  /// Returns a list of user maps.
+  /// Returns a list of `Friend` models.
   Future<List<Friend>> searchFriends(String query) async {
+    final urlPath = '$_friendsBasePath/$_searchPath?q=$query';
     try {
-      final urlPath = '$_friendsBasePath/$_searchPath?q=$query';
-      
-      // 1. Call the inherited read method. It returns the decoded body (List<dynamic>) or throws an exception.
       final result = await read(
         urlPath: urlPath,
-        jsonHeaders: authHeaders, // Inherited from ApiClient
+        jsonHeaders: authHeaders,
       );
-  
-      // 2. Validate the result is a list.
+
       if (result is List) {
-        // 3. Map the decoded list of dynamic objects to a List<User>.
-        final List<Friend> users = result
+        return result
             .map((userJson) => Friend.fromJson(userJson as Map<String, dynamic>))
             .toList();
-            
-        return users;
-      } else {
-        // Return an empty list if the successful response was not a list.
-        return []; 
       }
-    } catch (e) {
-      // Catch any exceptions thrown by read() (network errors, API errors)
-      // and return an empty list on failure, as requested.
-      // print('Error searching for friends: $e');
-      return []; 
+      return [];
+    } catch (e, stackTrace) {
+      debugPrint('Error searching friends: $e\n$stackTrace');
+      return [];
     }
   }
 
   /// Sends a friend request to a user by their username.
-  /// Returns a map with the success detail.
   Future<Map<String, dynamic>> sendFriendRequest(String username) async {
     final urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username};
@@ -60,25 +48,28 @@ class FriendService extends ApiClient {
     return result as Map<String, dynamic>;
   }
 
-  /// Retrieves a list of all pending friend requests received by the current user.
-  /// Returns a list of friend request maps.
+  /// Retrieves all pending friend requests received by the current user.
   Future<List<FriendRequest>> listPendingRequests() async {
     final urlPath = '$_friendsBasePath/$_requestsPath';
-    final result = await read(
-      urlPath: urlPath,
-      jsonHeaders: authHeaders,
-    );
-    if (result is List) {
-      return result
-          .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } else {
+    try {
+      final result = await read(
+        urlPath: urlPath,
+        jsonHeaders: authHeaders,
+      );
+
+      if (result is List) {
+        return result
+            .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e, stackTrace) {
+      debugPrint('Error fetching pending requests: $e\n$stackTrace');
       return [];
     }
   }
 
-  /// Accepts a pending friend request from a specified username.
-  /// Returns a map with the success detail.
+  /// Accepts a pending friend request from the provided username.
   Future<Map<String, dynamic>> acceptFriendRequest(String username) async {
     final urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username, 'action': 'accept'};
@@ -91,13 +82,11 @@ class FriendService extends ApiClient {
     return result as Map<String, dynamic>;
   }
 
-  /// Declines a pending friend request from a specified username.
-  /// Completes successfully if the 204 No Content status is received.
+  /// Declines a pending friend request from the provided username.
   Future<void> declineFriendRequest(String username) async {
     final urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username, 'action': 'decline'};
 
-    // Explicitly set expectedStatusCode to 204 for the decline action.
     await update(
       urlPath: urlPath,
       jsonHeaders: authHeaders,
@@ -106,26 +95,28 @@ class FriendService extends ApiClient {
     );
   }
 
-  /// Retrieves a list of all friends for the current user.
-  /// Returns a list of Friend objects.
+  /// Retrieves the current user's friends list.
   Future<List<Friend>> listFriends() async {
     final urlPath = '$_friendsBasePath/';
-    final result = await read(
-      urlPath: urlPath,
-      jsonHeaders: authHeaders,
-    );
-    
-    if (result is List) {
-      return result
-          .map((json) => Friend.fromJson(json as Map<String, dynamic>))
-          .toList();
-    } else {
+    try {
+      final result = await read(
+        urlPath: urlPath,
+        jsonHeaders: authHeaders,
+      );
+
+      if (result is List) {
+        return result
+            .map((json) => Friend.fromJson(json as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
+    } catch (e, stackTrace) {
+      debugPrint('Error fetching friends: $e\n$stackTrace');
       return [];
     }
   }
 
-  /// Removes a friend by their username.
-  /// Returns true if successful, false otherwise.
+  /// Removes the friend with the provided username.
   Future<bool> removeFriend(String username) async {
     try {
       final urlPath = '$_friendsBasePath/$username/';
@@ -135,7 +126,8 @@ class FriendService extends ApiClient {
         expectedStatusCode: 204,
       );
       return true;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Error removing friend $username: $e\n$stackTrace');
       return false;
     }
   }

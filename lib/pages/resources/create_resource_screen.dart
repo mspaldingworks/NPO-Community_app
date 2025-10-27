@@ -12,8 +12,8 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _providerController = TextEditingController();
   final _urlController = TextEditingController();
+  final _providerController = TextEditingController();
   final _tagsController = TextEditingController();
   final _resourceService = ResourceService();
   String? _selectedType;
@@ -24,8 +24,8 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
-    _providerController.dispose();
     _urlController.dispose();
+    _providerController.dispose();
     _tagsController.dispose();
     super.dispose();
   }
@@ -128,25 +128,13 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 16.0),
               TextFormField(
-                controller: _providerController,
-                decoration: const InputDecoration(labelText: 'Provider'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a provider';
-                  }
-                  return null;
-                },
+                controller: _urlController,
+                decoration: const InputDecoration(labelText: 'Website URL'),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
-                controller: _urlController,
-                decoration: const InputDecoration(labelText: 'Website URL'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a URL';
-                  }
-                  return null;
-                },
+                controller: _providerController,
+                decoration: const InputDecoration(labelText: 'Provider'),
               ),
               const SizedBox(height: 16.0),
               TextFormField(
@@ -155,7 +143,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 16.0),
               SwitchListTile(
-                title: const Text('Make this resource public?'),
+                title: const Text('Make Public'),
                 value: _isPublic,
                 onChanged: (bool value) {
                   setState(() {

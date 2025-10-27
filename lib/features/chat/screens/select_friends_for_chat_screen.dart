@@ -1,56 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/auth_service.dart'; 
+import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/features/chat/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
 class SelectFriendsForChatScreen extends StatefulWidget {
   const SelectFriendsForChatScreen({super.key});
 
   @override
-  State<SelectFriendsForChatScreen> createState() => _SelectFriendsForChatScreenState();
+  State<SelectFriendsForChatScreen> createState() =>
+      _SelectFriendsForChatScreenState();
 }
 
 class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen> {
   final AuthService _authService = AuthService();
-  late Future<List<User>> _friendsFuture;
-  User? _selectedFriend;
+  final ChatService _chatService = ChatService();
+  late Future<User> _userProfileFuture;
+  final Set<Friend> _selectedFriends = {};
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _friendsFuture = _loadFriends();
+    _userProfileFuture = _authService.getProfile();
   }
 
-  Future<List<User>> _loadFriends() async {
-    final currentUser = _authService.currentUser;
-    if (currentUser != null && currentUser.friends.isNotEmpty) {
-      final userFriends = currentUser.friends.map((friend) {
-        return User(
-          id: friend.id,
-          username: friend.username,
-          email: '', // email is not available on the Friend model, provide a placeholder
-          city: friend.city,
-          statusMessage: friend.statusMessage,
-          flair: friend.flair,
-          profilePic: friend.profilePic,
-        );
-      }).toList();
-      return Future.value(userFriends);
-    }
-    return Future.value([]); // Return empty list if no user or no friends
-  }
-
-  void _onFriendSelected(User? friend) {
+  void _onFriendSelected(Friend friend, bool isSelected) {
     setState(() {
-      _selectedFriend = friend;
+      if (isSelected) {
+        _selectedFriends.add(friend);
+      } else {
+        _selectedFriends.remove(friend);
+      }
     });
   }
 
-  void _startChat() {
-    if (_selectedFriend == null) {
-      return;
+  Future<void> _startChat() async {
+    if (_selectedFriends.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final participantIds =
+          _selectedFriends.map((friend) => friend.id.toString()).toList();
+      final chatName = _selectedFriends.map((friend) => friend.username).join(', ');
+
+      final conversation = await _chatService.createChat(
+        participantIds: participantIds,
+        name: chatName.isEmpty ? null : chatName,
+        isGroup: participantIds.length > 1,
+      );
+
+      if (mounted) {
+        context.go('/chat/${conversation.id}', extra: conversation);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start chat: ${error.toString()}')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-    context.go('/chat/${_selectedFriend!.id}');
   }
 
   @override
@@ -59,32 +77,55 @@ class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen>
       appBar: AppBar(
         title: const Text('New Chat'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _selectedFriend != null ? _startChat : null,
-          ),
+          _isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: _selectedFriends.isNotEmpty ? _startChat : null,
+                ),
         ],
       ),
-      body: FutureBuilder<List<User>>(
-        future: _friendsFuture,
+      body: FutureBuilder<User>(
+        future: _userProfileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('You have no friends to start a chat with.'));
+          } else if (!snapshot.hasData || snapshot.data!.friends.isEmpty) {
+            return const Center(
+              child: Text('You have no friends to start a chat with.'),
+            );
           } else {
-            final friends = snapshot.data!;
+            final friends = snapshot.data!.friends;
             return ListView.builder(
               itemCount: friends.length,
               itemBuilder: (context, index) {
                 final friend = friends[index];
-                return RadioListTile<User>(
+                final isSelected =
+                    _selectedFriends.any((selected) => selected.id == friend.id);
+
+                return CheckboxListTile(
                   title: Text(friend.username),
-                  value: friend,
-                  groupValue: _selectedFriend,
-                  onChanged: _onFriendSelected,
+                  subtitle: friend.statusMessage != null
+                      ? Text(friend.statusMessage!)
+                      : null,
+                  value: isSelected,
+                  onChanged: (bool? selected) {
+                    if (selected != null) {
+                      _onFriendSelected(friend, selected);
+                    }
+                  },
                 );
               },
             );

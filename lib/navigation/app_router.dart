@@ -5,10 +5,13 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/pages/auth/signin_screen.dart';
 import 'package:transconnect/pages/auth/register_screen.dart';
+import 'package:transconnect/pages/auth/onboarding_screen.dart';
+import 'package:transconnect/pages/auth/video_splash_screen.dart';
 import 'package:transconnect/features/chat/screens/chat_list_screen.dart';
 import 'package:transconnect/features/chat/screens/chat_message_screen.dart';
 import 'package:transconnect/features/chat/screens/create_conversation_screen.dart';
 import 'package:transconnect/features/chat/screens/select_friends_for_chat_screen.dart';
+import 'package:transconnect/models/conversation.dart';
 import 'package:transconnect/features/community/screens/community_screen.dart';
 import 'package:transconnect/features/community/screens/post_list_screen.dart';
 import 'package:transconnect/features/community/screens/create_post_screen.dart';
@@ -32,15 +35,23 @@ class AppRouter {
 
   late final GoRouter router = GoRouter(
     refreshListenable: GoRouterRefreshStream(authService.authStateChanges),
-    initialLocation: '/home',
+    initialLocation: '/splash',
     routes: [
       GoRoute(
+        path: '/splash',
+        builder: (context, state) => const VideoSplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
         path: '/login',
-        builder: (context, state) => SignInScreen(),
+        builder: (context, state) => const SignInScreen(),
       ),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => RegisterScreen(),
+        builder: (context, state) => const RegisterScreen(),
       ),
       GoRoute(
         path: '/user-search',
@@ -57,8 +68,14 @@ class AppRouter {
           GoRoute(
             path: ':id',
             builder: (context, state) {
-              int id = int.tryParse(state.pathParameters['id']!) ?? 0;
-              return ChatMessageScreen(conversationId: id);
+              final conversationId = state.pathParameters['id']!;
+              final conversation = state.extra is Conversation
+                  ? state.extra as Conversation
+                  : null;
+              return ChatMessageScreen(
+                conversationId: conversationId,
+                conversation: conversation,
+              );
             },
           ),
         ],
@@ -167,13 +184,14 @@ class AppRouter {
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final bool loggedIn = authService.currentUser != null;
-      final bool onAuthRoute =
-          state.matchedLocation == '/login' || state.matchedLocation == '/signup';
+      final String location = state.matchedLocation;
+      final bool onAuthRoute = location == '/login' || location == '/signup';
+      final bool onSplashOrOnboarding = location == '/splash' || location == '/onboarding';
 
-      if (!loggedIn && !onAuthRoute) {
-        return '/login';
+      if (!loggedIn && !onAuthRoute && !onSplashOrOnboarding) {
+        return '/splash';
       }
-      if (loggedIn && onAuthRoute) {
+      if (loggedIn && (onAuthRoute || onSplashOrOnboarding)) {
         return '/home';
       }
       return null;

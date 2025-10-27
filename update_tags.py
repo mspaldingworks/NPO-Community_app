@@ -1,6 +1,6 @@
 # update_tags.py
 
-import requests
+import request
 import json
 import getpass
 import sys

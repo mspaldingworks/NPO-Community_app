@@ -104,18 +104,44 @@ class CommunityService extends ApiClient {
     return Group.fromJson(result as Map<String, dynamic>);
   }
 
+  /// Creates a new status post.
+  Future<Post> createStatusPost({
+    required String title,
+    required String body,
+    required String emoji,
+    required String statusMessage,
+    required bool public,
+  }) async {
+    final jsonPayload = {
+      'title': title,
+      'body': body,
+      'emoji': emoji,
+      'status_message': statusMessage,
+      'public': public,
+    };
+
+    final result = await post(
+      urlPath: '/api/posts/',
+      jsonHeaders: authHeaders,
+      jsonPayload: jsonPayload,
+      expectedStatusCode: 201,
+    );
+
+    return Post.fromJson(result as Map<String, dynamic>);
+  }
+
   /// Adds a new comment to a post.
   Future<Comment> addComment({required int postId, required String content}) async {
     final jsonPayload = {
       'content': content,
-      'post': postId,
     };
-    
+
+    // The post method handles Content-Type (via authHeaders) and checks for 201 Created.
     final result = await post(
-      urlPath: '/api/comments/',
+      urlPath: '/api/posts/${postId.toString()}/comments/',
       jsonHeaders: authHeaders,
       jsonPayload: jsonPayload,
-      expectedStatusCode: 201, 
+      expectedStatusCode: 201,
     );
 
     return Comment.fromJson(result as Map<String, dynamic>);

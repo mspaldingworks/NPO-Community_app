@@ -2,9 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/models/conversation.dart';
+import 'package:transconnect/theme/app_theme.dart';
+import 'package:transconnect/widgets/loading_indicator.dart';
 
 class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({super.key});
@@ -13,18 +18,32 @@ class CreateConversationScreen extends StatefulWidget {
   State<CreateConversationScreen> createState() => _CreateConversationScreenState();
 }
 
-class _CreateConversationScreenState extends State<CreateConversationScreen> {
+class _CreateConversationScreenState extends State<CreateConversationScreen> with SingleTickerProviderStateMixin {
   final FriendService _friendService = FriendService();
   final ChatService _chatService = ChatService();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _groupNameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  
   List<Friend> _searchResults = [];
+  List<Friend> _selectedUsers = [];
   bool _isLoading = false;
+  bool _isCreatingGroup = false;
   Timer? _debounce;
+  late TabController _tabController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
+    _groupNameController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -39,20 +58,31 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
         }
         return;
       }
+      
       if (mounted) {
         setState(() {
           _isLoading = true;
         });
       }
+      
       try {
         final results = await _friendService.searchFriends(query);
         if (mounted) {
           setState(() {
-            _searchResults = results;
+            // Filter out already selected users and current user
+            final currentUserId = Provider.of<AuthService>(context, listen: false).currentUser?.id;
+            _searchResults = results.where((user) {
+              return !_selectedUsers.any((selected) => selected.id == user.id) &&
+                  user.id != currentUserId;
+            }).toList();
           });
         }
       } catch (e) {
-        // Handle error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to search users')),
+          );
+        }
       } finally {
         if (mounted) {
           setState(() {
@@ -63,54 +93,460 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> {
     });
   }
 
-  void _startConversation(Friend user, String content) async {
+  void _toggleUserSelection(Friend user) {
+    setState(() {
+      if (_selectedUsers.contains(user)) {
+        _selectedUsers.remove(user);
+      } else {
+        _selectedUsers.add(user);
+      }
+      // Clear search results when user is selected
+      _searchController.clear();
+      _searchResults = [];
+    });
+  }
+
+  Future<void> _createDirectChat(Friend user) async {
+    if (_isLoading) return;
+    
+    setState(() => _isLoading = true);
+    
     try {
-      // Assuming sendMessage can take a recipientId and content
-      // You might need to adjust this based on your ChatService implementation
-      await _chatService.sendMessage(recipientId: user.id, content: content);
+      final conversations = await _chatService.fetchConversations();
+      final existingConversation = conversations.firstWhere(
+        (conv) => !conv.isGroup &&
+            conv.participants.any((p) => p.id == user.id),
+        orElse: () => Conversation(
+          id: '',
+          participants: const [],
+          lastMessage: null,
+          unreadCount: 0,
+          isGroup: false,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      if (existingConversation.id.isNotEmpty) {
+        if (mounted) {
+          GoRouter.of(context).pop();
+          GoRouter.of(context).push(
+            '/chat/${existingConversation.id}',
+            extra: existingConversation,
+          );
+        }
+        return;
+      }
+
+      final conversation = await _chatService.createChat(
+        participantIds: [user.id.toString()],
+      );
+
       if (mounted) {
-        // Navigate to the chat screen or show a confirmation
-        // For now, just pop back
         GoRouter.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Conversation started with ${user.username}')),
+        GoRouter.of(context).push(
+          '/chat/${conversation.id}',
+          extra: conversation,
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create conversation: $e')),
+          SnackBar(content: Text('Failed to start conversation: $e')),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+  
+  Future<void> _createGroupChat() async {
+    if (_isLoading || _selectedUsers.length < 2) return;
+    if (_isCreatingGroup && !_formKey.currentState!.validate()) return;
+    
+    setState(() => _isLoading = true);
+    
+    try {
+      final participantIds = _selectedUsers.map((u) => u.id.toString()).toList();
+      final groupName = _groupNameController.text.trim().isNotEmpty 
+          ? _groupNameController.text.trim()
+          : '${_selectedUsers.take(2).map((u) => u.username.split(' ').first).join(', ')}${_selectedUsers.length > 2 ? ' +${_selectedUsers.length - 2}' : ''}';
+      
+      final conversation = await _chatService.createGroupChat(
+        name: groupName,
+        participantIds: participantIds,
+      );
+
+      if (mounted) {
+        GoRouter.of(context).pop();
+        GoRouter.of(context).push(
+          '/chat/${conversation.id}',
+          extra: conversation,
+        );
+      }
+      
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create group: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+  
+  void _toggleGroupMode() {
+    setState(() {
+      _isCreatingGroup = !_isCreatingGroup;
+      if (!_isCreatingGroup) {
+        _selectedUsers.clear();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Search for a user to chat with...',
-            border: InputBorder.none,
-          ),
-          onChanged: _searchUsers,
+        title: _isCreatingGroup 
+            ? Text('New Group (${_selectedUsers.length})')
+            : const Text('New Chat'),
+        actions: [
+          if (_isCreatingGroup && _selectedUsers.isNotEmpty)
+            TextButton(
+              onPressed: _selectedUsers.length < 2 ? null : _createGroupChat,
+              child: Text(
+                'Create',
+                style: TextStyle(
+                  color: _selectedUsers.length < 2 
+                      ? Colors.grey 
+                      : Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.person), text: 'Contacts'),
+            Tab(icon: Icon(Icons.group), text: 'New Group'),
+          ],
+          onTap: (index) {
+            setState(() {
+              _isCreatingGroup = index == 1;
+              if (!_isCreatingGroup) {
+                _selectedUsers.clear();
+              }
+            });
+          },
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: _searchResults.length,
-        itemBuilder: (context, index) {
-          final user = _searchResults[index];
-          return ListTile(
-            title: Text(user.username),
-            // Example of starting a chat by tapping the user
-            onTap: () => _startConversation(user, 'Hey!'),
-          );
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: _isCreatingGroup 
+                    ? 'Search for people to add...'
+                    : 'Search for a user...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              ),
+              onChanged: _searchUsers,
+            ),
+          ),
+          
+          // Selected users (for group chat)
+          if (_isCreatingGroup && _selectedUsers.isNotEmpty) ..._buildSelectedUsers(),
+          
+          // Group name input (for group chat)
+          if (_isCreatingGroup && _selectedUsers.isNotEmpty) ..._buildGroupNameInput(),
+          
+          // Search results or friend list
+          Expanded(
+            child: _isLoading
+                ? const Center(child: LoadingIndicator())
+                : _searchController.text.isNotEmpty
+                    ? _buildSearchResults()
+                    : _isCreatingGroup
+                        ? _buildGroupCreationGuide()
+                        : _buildRecentContacts(),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  List<Widget> _buildSelectedUsers() {
+    return [
+      SizedBox(
+        height: 100,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _selectedUsers.length,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          itemBuilder: (context, index) {
+            final user = _selectedUsers[index];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 32,
+                        backgroundImage: user.profilePic != null
+                            ? NetworkImage(user.profilePic!)
+                            : null,
+                        child: user.profilePic == null
+                            ? Text(user.username[0].toUpperCase())
+                            : null,
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: GestureDetector(
+                          onTap: () => _toggleUserSelection(user),
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 16, color: Colors.red),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 64,
+                    child: Text(
+                      user.username.split(' ')[0],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+      const Divider(height: 1),
+    ];
+  }
+  
+  List<Widget> _buildGroupNameInput() {
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+        child: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _groupNameController,
+            decoration: InputDecoration(
+              hintText: 'Group name (optional)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            validator: (value) {
+              if (value != null && value.length > 30) {
+                return 'Group name is too long';
+              }
+              return null;
+            },
+          ),
+        ),
+      ),
+      const Divider(height: 1),
+    ];
+  }
+  
+  Widget _buildSearchResults() {
+    if (_searchResults.isEmpty) {
+      return const Center(
+        child: Text('No users found'),
+      );
+    }
+    
+    return ListView.builder(
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final user = _searchResults[index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: user.profilePic != null 
+                ? NetworkImage(user.profilePic!) 
+                : null,
+            child: user.profilePic == null 
+                ? Text(user.username[0].toUpperCase())
+                : null,
+          ),
+          title: Text(user.username),
+          onTap: _isCreatingGroup
+              ? () => _toggleUserSelection(user)
+              : () => _createDirectChat(user),
+          trailing: _isCreatingGroup
+              ? Checkbox(
+                  value: _selectedUsers.contains(user),
+                  onChanged: (_) => _toggleUserSelection(user),
+                )
+              : null,
+        );
+      },
+    );
+  }
+  
+  Widget _buildRecentContacts() {
+    // In a real app, you would fetch recent contacts from your database
+    return ListView(
+      children: [
+        ListTile(
+          leading: const CircleAvatar(
+            child: Icon(Icons.group_add),
+          ),
+          title: const Text('New Group'),
+          onTap: () {
+            setState(() {
+              _isCreatingGroup = true;
+              _tabController.animateTo(1);
+            });
+          },
+        ),
+        const Divider(),
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Your contacts',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        // In a real app, you would map through actual recent contacts
+        _buildContactItem('John Doe', 'Hey there!', '10:30 AM', 'assets/avatar1.jpg'),
+        _buildContactItem('Jane Smith', 'See you tomorrow!', 'Yesterday', 'assets/avatar2.jpg'),
+        _buildContactItem('Alex Johnson', 'Thanks for your help!', 'Monday', 'assets/avatar3.jpg'),
+      ],
+    );
+  }
+  
+  Widget _buildContactItem(String name, String lastMessage, String time, String avatar) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: AssetImage(avatar),
+        onBackgroundImageError: (_, __) {
+          // Handle image loading error
         },
+        child: Text(name[0].toUpperCase()),
+      ),
+      title: Text(name),
+      subtitle: Text(
+        lastMessage,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: Text(
+        time,
+        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      ),
+      onTap: () {
+        // In a real app, you would navigate to the chat with this contact
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Opening chat with $name')),
+        );
+      },
+    );
+  }
+  
+  Widget _buildGroupCreationGuide() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.group_add,
+            size: 80,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Create a new group',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+            child: Text(
+              'Search for people to add to your group',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (_selectedUsers.isNotEmpty) ...[
+            const Text(
+              'Selected participants:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              children: _selectedUsers.map((user) {
+                return Chip(
+                  label: Text(user.username.split(' ')[0]),
+                  onDeleted: () => _toggleUserSelection(user),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            if (_selectedUsers.length >= 2)
+              ElevatedButton(
+                onPressed: _createGroupChat,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
+                child: const Text('Create Group'),
+              ),
+          ],
+        ],
       ),
     );
   }
