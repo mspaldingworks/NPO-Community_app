@@ -42,7 +42,10 @@ class FriendsController with ChangeNotifier {
     notifyListeners();
 
     try {
-      _pendingRequests = await _friendService.listPendingRequests();
+      final requests = await _friendService.listPendingRequests();
+      _pendingRequests = requests
+          .where((req) => req.status == null || req.status == 'pending')
+          .toList();
     } catch (e) {
       _pendingError = 'Failed to load pending requests. Please try again.';
     } finally {

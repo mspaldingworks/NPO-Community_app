@@ -23,7 +23,9 @@ class PendingRequestTile extends StatelessWidget {
             : null,
       ),
       title: Text(request.fromUser.username, style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text('Sent ${timeAgo(request.createdAt)}'),
+      subtitle: request.createdAt != null
+          ? Text('Sent ${timeAgo(request.createdAt!)}')
+          : const Text('Pending request'),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
