@@ -271,7 +271,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               children: [
                 Text(post.title ?? '[No Title]', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                Text('By ${post.authorUsername ?? 'Anonymous'} on ${post.pubDate != null ? timeago.format(DateTime.parse(post.pubDate!)) : 'Unknown Date'}'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} on ${post.pubDate != null ? timeago.format(DateTime.parse(post.pubDate!)) : 'Unknown Date'}',
+                      ),
+                    ),
+                    if (post.emojis.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: Text(
+                          post.emojis.first,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 Text(post.body ?? '[No Content]'),
                 const Divider(height: 32),

@@ -120,6 +120,9 @@ class _PostListScreenState extends State<PostListScreen> {
                 itemBuilder: (context, index) {
                   final post = posts[index];
                   final postDate = post.pubDate != null ? DateTime.parse(post.pubDate!) : DateTime.now();
+                  final displayAuthor = post.isAnonymous
+                      ? 'Anonymous'
+                      : (post.authorUsername ?? 'Unknown user');
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -152,7 +155,7 @@ class _PostListScreenState extends State<PostListScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(post.authorUsername ?? 'Anonymous', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          Text(displayAuthor, style: const TextStyle(fontWeight: FontWeight.bold)),
                                           if (post.authorIsStaff)
                                             Padding(
                                               padding: const EdgeInsets.only(left: 8.0),
@@ -193,10 +196,33 @@ class _PostListScreenState extends State<PostListScreen> {
                                       ),
                                     ],
                                   ),
+                                if (post.emojis.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      post.emojis.first,
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
+                                ),
+                                if (post.emojis.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      post.emojis.first,
+                                      style: const TextStyle(fontSize: 24),
+                                    ),
+                                  ),
+                              ],
+                            ),
                             const SizedBox(height: 8),
                             Text(post.body ?? ''),
                             if (post.emojis.isNotEmpty)

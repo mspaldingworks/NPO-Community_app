@@ -15,6 +15,7 @@ class Post {
   final int? groupId;
   final List<Comment> comments;
   final List<String> emojis;
+  final bool isAnonymous;
 
   Post({
     required this.id,
@@ -31,6 +32,7 @@ class Post {
     this.groupId,
     required this.comments,
     this.emojis = const [],
+    this.isAnonymous = false,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -54,7 +56,7 @@ class Post {
     } else if (authorValue is String) {
       authorId = int.tryParse(authorValue);
     } else if (authorValue is Map) {
-      final dynamic nestedId = authorValue['id'];
+      final dynamic nestedId = authorValue['id'] ?? authorValue['user_id'] ?? authorValue['pk'];
       if (nestedId is int) {
         authorId = nestedId;
       } else if (nestedId is String) {
@@ -62,11 +64,27 @@ class Post {
       }
     }
 
-    final authorUsername = json['author_username'] as String? ??
-        (json['author'] is Map ? (json['author'] as Map)['username'] as String? : null);
+    authorId ??= json['author_id'] as int?;
+    authorId ??= json['user_id'] as int?;
 
-    final authorProfilePic = json['author_profile_pic'] as String? ??
-        (json['author'] is Map ? (json['author'] as Map)['profile_pic'] as String? : null);
+    final authorUsername = json['author_username'] as String?
+        ?? json['author_display_name'] as String?
+        ?? json['author_name'] as String?
+        ?? json['created_by'] as String?
+        ?? json['user'] as String?
+        ?? (json['author'] is Map
+            ? ((json['author'] as Map)['username'] as String?
+                ?? (json['author'] as Map)['display_name'] as String?
+                ?? (json['author'] as Map)['name'] as String?)
+            : null);
+
+    final authorProfilePic = json['author_profile_pic'] as String?
+        ?? json['author_avatar'] as String?
+        ?? json['author_profile_image'] as String?
+        ?? (json['author'] is Map
+            ? ((json['author'] as Map)['profile_pic'] as String?
+                ?? (json['author'] as Map)['avatar'] as String?)
+            : null);
 
     final authorIsStaff = json['author_is_staff'] as bool? ??
         (json['author'] is Map ? (json['author'] as Map)['is_staff'] as bool? : false) ??
@@ -76,6 +94,10 @@ class Post {
     final emojisList = emojisData != null
         ? emojisData.map((emoji) => emoji.toString()).toList()
         : <String>[];
+
+    final isAnonymous = (json['anonymous'] as bool?) ??
+        (json['is_anonymous'] as bool?) ??
+        false;
 
     return Post(
       id: json['id'] as int,
@@ -92,6 +114,7 @@ class Post {
       groupId: groupId,
       comments: comments,
       emojis: emojisList,
+      isAnonymous: isAnonymous,
     );
   }
 }

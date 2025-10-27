@@ -48,8 +48,10 @@ class CommunityService extends ApiClient {
     required int groupId,
     required String title,
     required String body,
+    required String feeling,
     List<String> emojis = const [],
     required bool public,
+    bool anonymous = false,
   }) async {
     final result = await post(
       urlPath: '/api/posts/',
@@ -58,8 +60,11 @@ class CommunityService extends ApiClient {
         'group': groupId,
         'title': title,
         'body': body,
+        'feeling': feeling,
+        'emoji': emojis.isNotEmpty ? emojis.first : null,
         'emojis': emojis, 
         'public': public,
+        'anonymous': anonymous,
       },
       expectedStatusCode: 201,
     );
@@ -131,9 +136,14 @@ class CommunityService extends ApiClient {
   }
 
   /// Adds a new comment to a post.
-  Future<Comment> addComment({required int postId, required String content}) async {
+  Future<Comment> addComment({
+    required int postId,
+    required String content,
+    bool anonymous = false,
+  }) async {
     final jsonPayload = {
       'content': content,
+      'anonymous': anonymous,
     };
 
     // The post method handles Content-Type (via authHeaders) and checks for 201 Created.

@@ -22,6 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _usernameError;
+  String? _emailError;
 
   final List<String> _flairs = ['She/Her', 'He/Him', 'They/Them', 'Other'];
 
@@ -54,6 +56,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
     });
 
+    setState(() {
+      _usernameError = null;
+      _emailError = null;
+    });
+
     try {
       await _authService.signUp(
         email: _emailController.text.trim(),
@@ -70,6 +77,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SnackBar(content: Text('Registration successful!')),
         );
         // The router's refreshListenable will handle navigation on auth state change.
+      }
+    } on SignUpException catch (e) {
+      if (mounted) {
+        setState(() {
+          _usernameError = e.errors['username']?.join(' ');
+          _emailError = e.errors['email']?.join(' ');
+        });
+
+        final messages = <String>[
+          if (_usernameError != null && _usernameError!.isNotEmpty)
+            'Username: $_usernameError',
+          if (_emailError != null && _emailError!.isNotEmpty)
+            'Email: $_emailError',
+        ];
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              messages.isNotEmpty
+                  ? messages.join('\n')
+                  : (e.message ?? 'Registration failed. Please review your details and try again.'),
+            ),
+          ),
+        );
       }
     } on Exception catch (e) {
       if (mounted) {
@@ -156,7 +187,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _usernameController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: themedInput(label: 'Username', icon: Icons.person),
+                      decoration:
+                          themedInput(label: 'Username', icon: Icons.person).copyWith(errorText: _usernameError),
+                      onChanged: (_) {
+                        if (_usernameError != null) {
+                          setState(() {
+                            _usernameError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a username';
@@ -170,8 +209,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _emailController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: themedInput(label: 'Email', icon: Icons.email),
+                      decoration:
+                          themedInput(label: 'Email', icon: Icons.email).copyWith(errorText: _emailError),
                       keyboardType: TextInputType.emailAddress,
+                      onChanged: (_) {
+                        if (_emailError != null) {
+                          setState(() {
+                            _emailError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';

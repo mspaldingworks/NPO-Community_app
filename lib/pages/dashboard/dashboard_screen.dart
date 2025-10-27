@@ -66,7 +66,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(),
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: ListView(
@@ -105,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Icons.calendar_today_outlined,
                   _isLoading ? '...' : '${_upcomingFavoritedEvents.length} upcoming events',
                   onTap: () {
-                    context.push('/calendar');
+                    context.push('/events/calendar');
                   },
                   isHighlighted: _upcomingFavoritedEvents.isNotEmpty,
                 ),
@@ -251,47 +250,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Floating Action Button for LGL Form
-  Widget _buildFloatingActionButton() {
-    return SizedBox(
-      width: 120, // Slightly wider to accommodate text
-      height: 120, // Taller to fit text below icon
-      child: FloatingActionButton(
-        onPressed: () async {
-          final result = await context.push<bool>('/forms/lgl');
-          if (!mounted || result != true) {
-            return;
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thanks for submitting the form!')),
-          );
-        },
-        backgroundColor: AppColors.tertiary,
-        foregroundColor: AppColors.textWhite,
-        elevation: 4.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.handshake, size: 36), // Larger icon
-              const SizedBox(height: 4), // Space between icon and text
-              const Text(
-                'Mutual Aid',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  height: 1.1, // Tighter line height
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

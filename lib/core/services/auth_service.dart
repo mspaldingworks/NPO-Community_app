@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
@@ -78,15 +79,16 @@ class AuthService extends ApiClient with ChangeNotifier {
 
     if (token != null && username != null && password != null) {
       try {
-        // We can't use fetchUserFromToken because we don't know the password
+        // We can't use fetchUserFromToken because we don't know the password.
         // The original logic re-signs in the user.
         await signIn(username: username, password: password);
-      } catch (e) {
+      } catch (_) {
         // If sign-in fails (e.g., token expired, password changed), clear session.
         await signOut();
       }
     }
-  
+  }
+
   // Private method to save user data.
   Future<void> _saveUser(User user, String token, {String? password}) async {
     _currentUser = user;
@@ -104,7 +106,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   // Private method to clear user data on logout.
   Future<void> _clearUser() async {
     _currentUser = null;
-{{ ... }}
+    _authStateController.add(null);
     final prefsService = SharedPreferencesService();
     await prefsService.clearData(_tokenKey);
     await prefsService.clearData(_usernameKey);
@@ -125,10 +127,8 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String flair,
     required String statusMessage,
   }) async {
-    // No headers required for a public endpoint (Content-Type is handled in the post method).
-    final jsonHeaders = {'Content-Type': 'application/json'};
-    
-    final jsonPayload = {
+    final uri = Uri.parse('https://api.luxashome.com/api/signup/');
+    final payload = jsonEncode({
       'email': email,
       'password': password,
       'password2': password2,
@@ -136,20 +136,60 @@ class AuthService extends ApiClient with ChangeNotifier {
       'city': city,
       'flair': flair,
       'status_message': statusMessage,
-    };
-    // The post method now processes the response for us.
-    // We expect a 201 Created on success.
-    await post(
-      urlPath: '/api/signup/', 
-      jsonHeaders: jsonHeaders, 
-      jsonPayload: jsonPayload,
-      expectedStatusCode: 201,
-    ); 
-    
-    // After successful registration, sign in the user to get the token
-    await signIn(username: username, password: password);
-  }
+    });
 
+    http.Response response;
+    try {
+      response = await http.post(
+        uri,
+        headers: const {'Content-Type': 'application/json'},
+        body: payload,
+      );
+    } catch (e) {
+      throw SignUpException(
+        message: 'Unable to reach the server. Please check your connection and try again.',
+      );
+    }
+
+    if (response.statusCode == 201) {
+      await signIn(username: username, password: password);
+      return;
+    }
+
+    Map<String, dynamic>? decodedBody;
+    try {
+      if (response.body.isNotEmpty) {
+        decodedBody = jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (_) {
+      // Ignore decoding errors; fall back to generic messaging below.
+    }
+
+    if (decodedBody != null) {
+      final errors = <String, List<String>>{};
+      String? message;
+
+      decodedBody.forEach((key, value) {
+        if (key == 'detail' && value is String) {
+          message = value;
+        } else if (value is List) {
+          errors[key] = value.map((item) => item.toString()).toList();
+        } else if (value is String) {
+          errors[key] = [value];
+        }
+      });
+
+      throw SignUpException(
+        message: message ?? 'Registration failed. Please review your details.',
+        errors: errors,
+      );
+    }
+
+    throw SignUpException(
+      message: 'Registration failed with status code ${response.statusCode}.',
+    );
+  }
+  
   Future<void> signIn({
     required String username, 
     required String password,
@@ -234,4 +274,15 @@ class AuthService extends ApiClient with ChangeNotifier {
       return [];
     }
   }
+}
+
+class SignUpException implements Exception {
+  final String? message;
+  final Map<String, List<String>> errors;
+
+  SignUpException({this.message, Map<String, List<String>>? errors})
+      : errors = errors ?? {};
+
+  @override
+  String toString() => message ?? 'Sign up failed.';
 }

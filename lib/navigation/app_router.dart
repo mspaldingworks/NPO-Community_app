@@ -27,6 +27,7 @@ import 'package:transconnect/features/profile/screens/profile_screen.dart';
 import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/pages/forms/lgl_form_screen.dart';
+import 'package:transconnect/features/events/screens/calendar_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -143,6 +144,17 @@ class AppRouter {
                 path: '/home',
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: DashboardScreen(),
+                ),
+              ),
+            ],
+          ),
+          // Events
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/events/calendar',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: CalendarScreen(),
                 ),
               ),
             ],

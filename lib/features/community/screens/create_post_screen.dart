@@ -21,6 +21,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _isLoading = false;
   final List<String> _selectedEmojis = [];
   bool _emojiPickerShowing = false;
+  bool _isAnonymous = false;
+  String? _emojiError;
 
   @override
   void dispose() {
@@ -30,13 +32,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   void _onEmojiSelected(Category? category, Emoji emoji) {
-    if (_selectedEmojis.length < 4) {
+    if (_selectedEmojis.length < 1) {
       setState(() {
         _selectedEmojis.add(emoji.emoji);
+        _emojiError = null;
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You can select up to 4 emojis.')),
+        const SnackBar(content: Text('You can select only one emoji to describe your feeling.')),
       );
     }
   }
@@ -45,6 +48,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (_selectedEmojis.isNotEmpty) {
       setState(() {
         _selectedEmojis.removeLast();
+        if (_selectedEmojis.isEmpty) {
+          _emojiError = 'Please select an emoji to describe how you are feeling.';
+        }
       });
     }
   }
@@ -56,38 +62,51 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedEmojis.isEmpty) {
       setState(() {
-        _isLoading = true;
+        _emojiError = 'Please select an emoji to describe how you are feeling.';
       });
+      return;
+    }
 
-      try {
-        await _communityService.createPost(
-          groupId: widget.groupId,
-          title: _titleController.text,
-          body: _bodyController.text,
-          emojis: _selectedEmojis, // Pass the list of emojis
-          public: true, // Assuming posts in groups are public
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final derivedFeeling = _selectedEmojis.join(' ');
+
+      await _communityService.createPost(
+        groupId: widget.groupId,
+        title: _titleController.text.trim(),
+        body: _bodyController.text.trim(),
+        feeling: derivedFeeling,
+        emojis: _selectedEmojis,
+        public: true,
+        anonymous: _isAnonymous,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post created successfully!')),
         );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Post created successfully!')),
-          );
-          context.pop(true); // Go back to the post list with a result
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create post: $e')),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        context.pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create post: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -131,16 +150,53 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       },
                     ),
                     const SizedBox(height: 16.0),
+                    SwitchListTile.adaptive(
+                      value: _isAnonymous,
+                      onChanged: (value) {
+                        setState(() {
+                          _isAnonymous = value;
+                        });
+                      },
+                      title: const Text('Post anonymously'),
+                      subtitle: const Text('When enabled, your username will not be shown to others.'),
+                    ),
+                    const SizedBox(height: 16.0),
                     GestureDetector(
                       onTap: _toggleEmojiPicker,
                       child: InputDecorator(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'How are you feeling?',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
+                          helperText: 'Tap to select exactly one emoji that matches your feeling.',
+                          errorText: _emojiError,
                         ),
                         child: Wrap(
                           spacing: 8.0,
-                          children: _selectedEmojis.map((emoji) => Chip(label: Text(emoji))).toList(),
+                          children: _selectedEmojis.isEmpty
+                              ? [
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                                    child: Text('Tap to choose an emoji'),
+                                  ),
+                                ]
+                              : _selectedEmojis
+                                  .map(
+                                    (emoji) => Chip(
+                                      label: Text(
+                                        emoji,
+                                        style: const TextStyle(fontSize: 24),
+                                      ),
+                                      onDeleted: () {
+                                        setState(() {
+                                          _selectedEmojis.remove(emoji);
+                                          if (_selectedEmojis.isEmpty) {
+                                            _emojiError = 'Please select an emoji to describe how you are feeling.';
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  )
+                                  .toList(),
                         ),
                       ),
                     ),

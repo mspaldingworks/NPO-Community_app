@@ -1,20 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:transconnect/models/resource.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/resource_service.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-// Helper function to generate a color from a string
-Color _getColorFromTag(String tag) {
-  final hash = tag.hashCode;
-  final r = (hash & 0xFF0000) >> 16;
-  final g = (hash & 0x00FF00) >> 8;
-  final b = hash & 0x0000FF;
-  return Color.fromRGBO(r, g, b, 1);
-}
+import 'package:transconnect/pages/resources/resource_guide_screen.dart';
+import 'package:transconnect/pages/resources/resource_mutual_aid_screen.dart';
 
 class ResourcesScreen extends StatefulWidget {
   const ResourcesScreen({super.key});
@@ -24,304 +11,62 @@ class ResourcesScreen extends StatefulWidget {
 }
 
 class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProviderStateMixin {
-  final ResourceService _resourceService = ResourceService();
-  late Future<List<Resource>> _resourcesFuture;
-  List<Resource> _allResources = [];
-  List<Resource> _filteredResources = [];
-  final TextEditingController _searchController = TextEditingController();
-  TabController? _tabController;
-  List<String> _tags = [];
+  late TabController _tabController;
+  final GlobalKey<ResourceGuideScreenState> _guideKey = GlobalKey<ResourceGuideScreenState>();
 
   @override
   void initState() {
     super.initState();
-    _resourcesFuture = _fetchAndSetResources();
-    _searchController.addListener(_filterResources);
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _tabController?.dispose();
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
     super.dispose();
   }
 
-  Future<List<Resource>> _fetchAndSetResources() async {
-    final resources = await _resourceService.fetchResources();
-    if (mounted) {
-      // Filter out null or empty tags before creating the list
-      final allTags = resources
-          .expand((r) => r.tags)
-          .where((tag) => tag.isNotEmpty)
-          .toSet()
-          .toList();
-      allTags.insert(0, 'All');
-
-      setState(() {
-        _allResources = resources;
-        _filteredResources = resources;
-        _tags = allTags;
-        _tabController = TabController(length: _tags.length, vsync: this);
-        _tabController!.addListener(_handleTabSelection);
-      });
+  Future<void> _createResource() async {
+    final result = await context.push<bool>('/resources/create');
+    if (result == true) {
+      _guideKey.currentState?.reloadResources();
     }
-    return resources;
-  }
-
-  void _handleTabSelection() {
-    if (_tabController!.indexIsChanging) {
-      _filterResources();
-    }
-  }
-
-  void _filterResources() {
-    final query = _searchController.text.toLowerCase();
-    final selectedTag = _tabController != null && _tabController!.index != 0
-        ? _tags[_tabController!.index]
-        : null;
-
-    setState(() {
-      _filteredResources = _allResources.where((resource) {
-        final nameMatches = resource.name?.toLowerCase().contains(query) ?? false;
-        final descriptionMatches = resource.description?.toLowerCase().contains(query) ?? false;
-        final tagMatches = selectedTag == null || resource.tags.contains(selectedTag);
-        return (nameMatches || descriptionMatches) && tagMatches;
-      }).toList();
-    });
-  }
-
-  Future<void> _launchURL(String? urlString) async {
-    if (urlString == null) return;
-    final Uri url = Uri.parse(urlString);
-    if (!await launchUrl(url)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not launch $urlString')),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteResource(int resourceId) async {
-    try {
-      await _resourceService.deleteResource(resourceId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Resource deleted successfully')),
-        );
-        setState(() {
-          _resourcesFuture = _fetchAndSetResources();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete resource: $e')),
-        );
-      }
-    }
-  }
-
-  void _showDeleteConfirmation(int resourceId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to delete this resource? This action cannot be undone.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteResource(resourceId);
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<AuthService>(context, listen: false).currentUser;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Resource Guide'),
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await GoRouter.of(context).push<bool>('/resources/create');
-          if (result == true) {
-            // Refresh the list if a new resource was added
-            setState(() {
-              _resourcesFuture = _fetchAndSetResources();
-            });
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: FutureBuilder<List<Resource>>(
-        future: _resourcesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (_tabController == null) {
-            return const Center(child: Text('No resources found.'));
-          } else {
-            return Column(
-              children: [
-                _buildSearchAndFilter(),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: _filteredResources.length,
-                    itemBuilder: (context, index) {
-                      final resource = _filteredResources[index];
-                      return _buildResourceCard(resource, user);
-                    },
-                  ),
-                ),
-              ],
-            );
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _buildResourceCard(Resource resource, User? user) {
-    // Admin check can be simplified or removed if isStaff is no longer available.
-    // For now, we'll assume no admin privileges for simplicity.
-    const bool isAdmin = false;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(resource.name ?? '[No Name]',
-                style: Theme.of(context).textTheme.titleLarge),
-            if (isAdmin)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text('Added by: ${resource.user ?? 'Unknown'}',
-                    style: Theme.of(context).textTheme.bodySmall),
-              ),
-            const SizedBox(height: 8.0),
-            Text(resource.description ?? '[No Description]',
-                style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 12.0),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 4.0,
-              children: resource.tags.map((tag) {
-                return Chip(
-                  label: Text(tag, style: const TextStyle(color: Colors.white)),
-                  backgroundColor: _getColorFromTag(tag),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide.none,
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 12.0),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isAdmin)
-                    TextButton(
-                      onPressed: () => _showDeleteConfirmation(resource.id),
-                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                    ),
-                  if (isAdmin)
-                    TextButton(
-                      onPressed: () async {
-                        final result = await GoRouter.of(context).push<bool>(
-                          '/resources/edit',
-                          extra: resource,
-                        );
-                        if (result == true) {
-                          setState(() {
-                            _resourcesFuture = _fetchAndSetResources();
-                          });
-                        }
-                      },
-                      child: const Text('Edit'),
-                    ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () => _launchURL(resource.url),
-                    child: const Text('More Info'),
-                  ),
-                ],
-              ),
-            ),
+        title: Text(_tabController.index == 0 ? 'Resource Guide' : 'Mutual Aid'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.menu_book_outlined), text: 'Guide'),
+            Tab(icon: Icon(Icons.handshake_outlined), text: 'Mutual Aid'),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSearchAndFilter() {
-    return Card(
-      margin: const EdgeInsets.all(16.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Search Resources', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search by keyword...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            if (_tabController != null)
-              Container(
-                height: 45, // Give the TabBar a fixed height
-                margin: const EdgeInsets.only(top: 8.0),
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: Colors.deepPurple, // Highlight color for the selected tab
-                  ),
-                  splashBorderRadius: BorderRadius.circular(20),
-                  tabs: _tags.map((tag) => Tab(text: tag)).toList(),
-                ),
-              ),
-          ],
-        ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: _createResource,
+              child: const Icon(Icons.add),
+            )
+          : null,
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          ResourceGuideScreen(key: _guideKey),
+          const ResourceMutualAidScreen(),
+        ],
       ),
     );
   }
 }
+
