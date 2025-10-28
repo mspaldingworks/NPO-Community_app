@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:transconnect/core/services/api_client.dart';
@@ -124,30 +125,61 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String password2,
     required String username,
     required String city,
-    required String flair,
+    required List<String> pronouns,
     required String statusMessage,
+    File? profileImage,
   }) async {
     final uri = Uri.parse('https://api.luxashome.com/api/signup/');
-    final payload = jsonEncode({
-      'email': email,
-      'password': password,
-      'password2': password2,
-      'username': username,
-      'city': city,
-      'flair': flair,
-      'status_message': statusMessage,
-    });
+    final cleanedPronouns =
+        pronouns.map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+    final pronounString = cleanedPronouns.join(', ');
 
-    http.Response response;
-    try {
-      response = await http.post(
+    Future<http.Response> sendMultipart(File imageFile) async {
+      final request = http.MultipartRequest('POST', uri)
+        ..fields['email'] = email
+        ..fields['password'] = password
+        ..fields['password2'] = password2
+        ..fields['username'] = username
+        ..fields['city'] = city
+        ..fields['flair'] = pronounString
+        ..fields['status_message'] = statusMessage;
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile_pic',
+        imageFile.path,
+      ));
+
+      final streamedResponse = await request.send();
+      return http.Response.fromStream(streamedResponse);
+    }
+
+    Future<http.Response> sendJson() async {
+      final payload = jsonEncode({
+        'email': email,
+        'password': password,
+        'password2': password2,
+        'username': username,
+        'city': city,
+        'flair': pronounString,
+        'status_message': statusMessage,
+      });
+
+      return http.post(
         uri,
         headers: const {'Content-Type': 'application/json'},
         body: payload,
       );
+    }
+
+    http.Response response;
+    try {
+      response = profileImage != null
+          ? await sendMultipart(profileImage)
+          : await sendJson();
     } catch (e) {
       throw SignUpException(
-        message: 'Unable to reach the server. Please check your connection and try again.',
+        message:
+            'Unable to reach the server. Please check your connection and try again.',
       );
     }
 

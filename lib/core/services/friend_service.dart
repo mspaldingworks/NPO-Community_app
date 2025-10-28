@@ -11,6 +11,28 @@ class FriendService extends ApiClient {
   static const String _searchPath = 'search/';
   static const String _usersPath = 'api/users/';
 
+  static const List<String> _friendListCandidates = <String>[
+    'api/friends/',
+    'api/friendships/',
+    'api/friends/list/',
+    'api/friendships/list/',
+  ];
+
+  static const List<String> _friendRequestIncomingCandidates = <String>[
+    'api/friends/requests/',
+    'api/friendships/requests/',
+    'api/friend-requests/',
+    'api/friendrequests/',
+    'api/friendships/pending/',
+  ];
+
+  static const List<String> _friendRequestOutgoingCandidates = <String>[
+    'api/friends/sent/',
+    'api/friendships/sent/',
+    'api/friends/outgoing/',
+    'api/friendships/outgoing/',
+  ];
+
   FriendService();
 
   /// Searches for users who are not currently friends and not involved in a pending request.
@@ -68,13 +90,86 @@ class FriendService extends ApiClient {
     }
   }
 
+  bool _is404Error(Object error) {
+    final message = error.toString();
+    return message.contains('Status 404') || message.contains('status 404');
+  }
+
+  Future<dynamic> _readWithFallback(List<String> urlPaths) async {
+    for (final path in urlPaths) {
+      try {
+        return await read(
+          urlPath: path,
+          jsonHeaders: authHeaders,
+        );
+      } catch (e, stackTrace) {
+        if (_is404Error(e)) {
+          debugPrint('FriendService read fallback 404 for $path');
+          continue;
+        }
+        debugPrint('FriendService read failed for $path: $e\n$stackTrace');
+      }
+    }
+    return null;
+  }
+
+  Future<dynamic> _updateWithFallback(
+    List<String> urlPaths,
+    Map<String, dynamic> payload, {
+    int expectedStatusCode = 200,
+  }) async {
+    for (final path in urlPaths) {
+      try {
+        return await update(
+          urlPath: path,
+          jsonHeaders: authHeaders,
+          jsonPayload: payload,
+          expectedStatusCode: expectedStatusCode,
+        );
+      } catch (e, stackTrace) {
+        if (_is404Error(e)) {
+          debugPrint('FriendService update fallback 404 for $path');
+          continue;
+        }
+        debugPrint('FriendService update failed for $path: $e\n$stackTrace');
+        rethrow;
+      }
+    }
+    throw Exception('FriendService update failed for all candidate endpoints.');
+  }
+
+  Future<bool> _deleteWithFallback(List<String> urlPaths) async {
+    for (final path in urlPaths) {
+      try {
+        await delete(
+          urlPath: path,
+          jsonHeaders: authHeaders,
+          expectedStatusCode: 204,
+        );
+        return true;
+      } catch (e, stackTrace) {
+        if (_is404Error(e)) {
+          debugPrint('FriendService delete fallback 404 for $path');
+          continue;
+        }
+        debugPrint('FriendService delete failed for $path: $e\n$stackTrace');
+        rethrow;
+      }
+    }
+    return false;
+  }
+
   List<Friend> _parseFriendResults(dynamic result) {
     final List<dynamic> rawResults;
     if (result is List) {
       rawResults = result;
     } else if (result is Map<String, dynamic>) {
       final dynamic candidates =
-          result['results'] ?? result['data'] ?? result['users'] ?? result['items'];
+          result['results'] ??
+          result['data'] ??
+          result['users'] ??
+          result['items'] ??
+          result['friends'];
       if (candidates is List) {
         rawResults = candidates;
       } else if (candidates is Map<String, dynamic>) {
@@ -146,65 +241,123 @@ class FriendService extends ApiClient {
 
   /// Retrieves all pending friend requests received by the current user.
   Future<List<FriendRequest>> listPendingRequests() async {
-    final urlPath = '$_friendsBasePath/$_requestsPath';
-    try {
-      final result = await read(
-        urlPath: urlPath,
-        jsonHeaders: authHeaders,
-      );
+    final incomingCandidates = <String>{
+      '$_friendsBasePath/$_requestsPath',
+      ..._friendRequestIncomingCandidates,
+    };
 
-      if (result is List) {
-        return result
-            .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
-            .toList();
+    final outgoingCandidates = <String>{
+      ..._friendRequestOutgoingCandidates,
+    };
+
+    try {
+      final incoming = await _readWithFallback(incomingCandidates.toList());
+      final outgoing = await _readWithFallback(outgoingCandidates.toList());
+
+      final List<FriendRequest> requests = [];
+
+      void addRequests(dynamic source, {bool isOutgoing = false}) {
+        if (source is List) {
+          requests.addAll(
+            source
+                .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
+                .map(
+                  (req) => isOutgoing
+                      ? FriendRequest(
+                          id: req.id,
+                          fromUser: req.fromUser,
+                          toUser: req.toUser,
+                          status: req.status ?? 'pending',
+                          createdAt: req.createdAt,
+                        )
+                      : req,
+                ),
+          );
+        } else if (source is Map<String, dynamic>) {
+          final dynamic list = source['results'] ?? source['data'] ?? source['requests'];
+          if (list is List) {
+            addRequests(list, isOutgoing: isOutgoing);
+          }
+        }
       }
-      return [];
+
+      addRequests(incoming);
+      addRequests(outgoing, isOutgoing: true);
+
+      // De-duplicate based on request id (if provided)
+      final Map<int, FriendRequest> byId = {};
+      final List<FriendRequest> results = [];
+      for (final request in requests) {
+        if (request.id != -1) {
+          byId[request.id] = request;
+        } else {
+          results.add(request);
+        }
+      }
+
+      results.addAll(byId.values);
+      return results;
     } catch (e, stackTrace) {
       debugPrint('Error fetching pending requests: $e\n$stackTrace');
       return [];
     }
   }
-
   /// Accepts a pending friend request from the provided username.
   Future<Map<String, dynamic>> acceptFriendRequest(String username) async {
-    final urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username, 'action': 'accept'};
+    final candidates = <String>{
+      '$_friendsBasePath/$_requestsPath',
+      ..._friendRequestIncomingCandidates,
+      ..._friendRequestOutgoingCandidates,
+    };
 
-    final result = await update(
-      urlPath: urlPath,
-      jsonHeaders: authHeaders,
-      jsonPayload: payload,
-    );
-    return result as Map<String, dynamic>;
+    final result = await _updateWithFallback(candidates.toList(), payload);
+    return (result as Map<String, dynamic>?) ?? <String, dynamic>{};
   }
 
   /// Declines a pending friend request from the provided username.
   Future<void> declineFriendRequest(String username) async {
-    final urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username, 'action': 'decline'};
+    final candidates = <String>{
+      '$_friendsBasePath/$_requestsPath',
+      ..._friendRequestIncomingCandidates,
+      ..._friendRequestOutgoingCandidates,
+    };
 
-    await update(
-      urlPath: urlPath,
-      jsonHeaders: authHeaders,
-      jsonPayload: payload,
-      expectedStatusCode: 204,
-    );
+    await _updateWithFallback(candidates.toList(), payload, expectedStatusCode: 204);
   }
 
   /// Retrieves the current user's friends list.
   Future<List<Friend>> listFriends() async {
-    final urlPath = '$_friendsBasePath/';
+    final candidates = <String>{
+      '$_friendsBasePath/',
+      ..._friendListCandidates,
+    };
     try {
-      final result = await read(
-        urlPath: urlPath,
-        jsonHeaders: authHeaders,
-      );
+      final result = await _readWithFallback(candidates.toList());
+      if (result == null) {
+        return [];
+      }
+      final parsed = _parseFriendResults(result);
+      if (parsed.isNotEmpty) {
+        return parsed;
+      }
+
+      if (result is Map<String, dynamic>) {
+        final dynamic fallbackList = result['friends'] ?? result['data'];
+        if (fallbackList is List) {
+          return fallbackList
+              .map((json) => Friend.fromJson(json as Map<String, dynamic>))
+              .toList();
+        }
+      }
 
       if (result is List) {
         return result
             .map((json) => Friend.fromJson(json as Map<String, dynamic>))
             .toList();
       }
+
       return [];
     } catch (e, stackTrace) {
       debugPrint('Error fetching friends: $e\n$stackTrace');
@@ -214,14 +367,13 @@ class FriendService extends ApiClient {
 
   /// Removes the friend with the provided username.
   Future<bool> removeFriend(String username) async {
+    final candidates = <String>{
+      '$_friendsBasePath/$username/',
+      ..._friendListCandidates.map((base) => '$base$username/'),
+    };
+
     try {
-      final urlPath = '$_friendsBasePath/$username/';
-      await delete(
-        urlPath: urlPath,
-        jsonHeaders: authHeaders,
-        expectedStatusCode: 204,
-      );
-      return true;
+      return await _deleteWithFallback(candidates.toList());
     } catch (e, stackTrace) {
       debugPrint('Error removing friend $username: $e\n$stackTrace');
       return false;

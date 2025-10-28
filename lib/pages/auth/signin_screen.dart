@@ -14,6 +14,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -113,8 +114,20 @@ class _SignInScreenState extends State<SignInScreen> {
                 TextFormField(
                   controller: _passwordController,
                   style: const TextStyle(color: Colors.white, fontSize: 18),
-                  decoration: themedInput('Password', Icons.lock),
-                  obscureText: true,
+                  decoration: themedInput('Password', Icons.lock).copyWith(
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  obscureText: _obscurePassword,
                 ),
                 const SizedBox(height: 24),
                 _isLoading
