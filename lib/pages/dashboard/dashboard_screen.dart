@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
+import 'package:transconnect/data/affirmation_quotes.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
@@ -22,6 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
   bool _isLoading = true;
+  AffirmationQuote? _quote;
 
   @override
   void initState() {
@@ -34,6 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final favoriteIds = await _favoritesService.getFavorites();
     final imagePath = await _profileService.getImagePath();
     final now = DateTime.now();
+
+    final quote = pickRandomQuote();
 
     final upcomingFavoritedEvents = allEvents.where((event) {
       final isFavorited = favoriteIds.contains(event.uid);
@@ -48,6 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _profileImage = File(imagePath);
         }
         _isLoading = false;
+        _quote = quote;
       });
     }
   }
@@ -155,6 +160,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuoteCard() {
+    final quote = _quote ?? pickRandomQuote();
+
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -165,14 +172,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '"The time is always right to do what is right."',
+            '"${quote.text}"',
             style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
           ),
           SizedBox(height: 8),
           Align(
             alignment: Alignment.bottomRight,
             child: Text(
-              '- Martin Luther King Jr.',
+              '- ${quote.author}',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
