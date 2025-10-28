@@ -12,6 +12,7 @@ class Post {
   final String? authorProfilePic;
   final bool authorIsStaff;
   final String? pubDate;
+  final String? updatedAt;
   final int? groupId;
   final List<Comment> comments;
   final List<String> emojis;
@@ -29,11 +30,15 @@ class Post {
     this.authorProfilePic,
     this.authorIsStaff = false,
     this.pubDate,
+    this.updatedAt,
     this.groupId,
     required this.comments,
     this.emojis = const [],
     this.isAnonymous = false,
   });
+
+  bool get isEdited =>
+      updatedAt != null && updatedAt!.isNotEmpty && updatedAt != pubDate;
 
   factory Post.fromJson(Map<String, dynamic> json) {
     var commentsList = json['comments'] as List? ?? [];
@@ -91,9 +96,18 @@ class Post {
         false;
 
     final emojisData = json['emojis'] as List?;
-    final emojisList = emojisData != null
+    final List<String> emojisList = emojisData != null
         ? emojisData.map((emoji) => emoji.toString()).toList()
         : <String>[];
+
+    final String? primaryEmoji = (json['emoji'] as String?)?.trim();
+    if (primaryEmoji != null && primaryEmoji.isNotEmpty && !emojisList.contains(primaryEmoji)) {
+      emojisList.insert(0, primaryEmoji);
+    }
+
+    final String? updatedAt = json['updated_at'] as String?
+        ?? json['modified_at'] as String?
+        ?? json['edited_at'] as String?;
 
     final isAnonymous = (json['anonymous'] as bool?) ??
         (json['is_anonymous'] as bool?) ??
@@ -111,6 +125,7 @@ class Post {
       authorProfilePic: authorProfilePic,
       authorIsStaff: authorIsStaff,
       pubDate: json['pub_date'] as String?,
+      updatedAt: updatedAt,
       groupId: groupId,
       comments: comments,
       emojis: emojisList,

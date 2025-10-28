@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/comment.dart';
@@ -22,6 +23,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   late Future<Post> _postFuture;
   final TextEditingController _commentController = TextEditingController();
   final CommunityService _communityService = CommunityService();
+  final DateFormat _editedDateFormat = DateFormat('MMM d, yyyy h:mm a');
 
   @override
   void initState() {
@@ -114,6 +116,33 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         ],
       ),
     );
+  }
+
+  DateTime? _parseDate(String? raw) {
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    try {
+      return DateTime.parse(raw).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _formatRelative(String? raw, {String fallback = 'Unknown date'}) {
+    final parsed = _parseDate(raw);
+    if (parsed == null) {
+      return fallback;
+    }
+    return timeago.format(parsed);
+  }
+
+  String? _formatEditedLabel(String? raw) {
+    final parsed = _parseDate(raw);
+    if (parsed == null) {
+      return null;
+    }
+    return _editedDateFormat.format(parsed);
   }
 
   void _showDeleteCommentConfirmationDialog(int commentId) {
@@ -272,10 +301,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Text(post.title ?? '[No Title]', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
                       child: Text(
-                        'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} on ${post.pubDate != null ? timeago.format(DateTime.parse(post.pubDate!)) : 'Unknown Date'}',
+                        'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
                       ),
                     ),
                     if (post.emojis.isNotEmpty)
@@ -283,11 +313,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
                           post.emojis.first,
-                          style: const TextStyle(fontSize: 24),
+                          style: const TextStyle(fontSize: 48),
                         ),
                       ),
                   ],
                 ),
+                if (post.isEdited)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      'Edited ${_formatEditedLabel(post.updatedAt) ?? ''}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Text(post.body ?? '[No Content]'),
                 const Divider(height: 32),
@@ -322,7 +360,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(comment.authorUsername, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(
+                                      comment.authorUsername,
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
                                     if (comment.authorIsStaff)
                                       Padding(
                                         padding: const EdgeInsets.only(left: 8.0),
@@ -336,32 +377,44 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       ),
                                   ],
                                 ),
-                                Text(timeago.format(DateTime.parse(comment.pubDate)), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                Text(
+                                  _formatRelative(comment.pubDate),
+                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                ),
+                                if (comment.isEdited)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: Text(
+                                      'Edited ${_formatEditedLabel(comment.updatedAt) ?? ''}',
+                                      style: const TextStyle(color: Colors.grey, fontSize: 11, fontStyle: FontStyle.italic),
+                                    ),
+                                  ),
                                 const SizedBox(height: 4),
                                 Text(comment.content),
+                                if (isCommentAuthor)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4.0),
+                                    child: Row(
+                                      children: [
+                                        TextButton(
+                                          onPressed: () => _showEditCommentDialog(comment),
+                                          child: const Text('Edit'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => _showDeleteCommentConfirmationDialog(comment.id),
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
-                          if (isCommentAuthor)
-                            PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  _showEditCommentDialog(comment);
-                                } else if (value == 'delete') {
-                                  _showDeleteCommentConfirmationDialog(comment.id);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                              ],
-                            ),
                         ],
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 16),
               ],
             ),
           );

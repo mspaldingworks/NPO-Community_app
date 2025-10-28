@@ -8,6 +8,7 @@ class Comment {
   final String? authorProfilePic;
   final bool authorIsStaff;
   final String pubDate;
+  final String? updatedAt;
   final int postId;
   // TODO(paige-working): Uncomment when backend provides unread metadata.
   // final bool isUnreadForOwner;
@@ -22,6 +23,7 @@ class Comment {
     this.authorProfilePic,
     this.authorIsStaff = false,
     required this.pubDate,
+    this.updatedAt,
     required this.postId,
     // this.isUnreadForOwner = false,
     // this.mentionsOwner = false,
@@ -56,10 +58,16 @@ class Comment {
       authorProfilePic: json['author_profile_pic'] as String?,
       authorIsStaff: json['author_is_staff'] as bool? ?? false,
       pubDate: json['pub_date'] as String,
+      updatedAt: json['updated_at'] as String?
+          ?? json['modified_at'] as String?
+          ?? json['edited_at'] as String?,
       postId: json['post'] as int,
       // isUnreadForOwner: isUnreadForOwner,
       // mentionsOwner: mentionsOwner,
       // createdAt: createdAt,
     );
   }
+
+  bool get isEdited =>
+      updatedAt != null && updatedAt!.isNotEmpty && updatedAt != pubDate;
 }

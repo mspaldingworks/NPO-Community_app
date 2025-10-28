@@ -120,6 +120,15 @@ class _PostListScreenState extends State<PostListScreen> {
                 itemBuilder: (context, index) {
                   final post = posts[index];
                   final postDate = post.pubDate != null ? DateTime.parse(post.pubDate!) : DateTime.now();
+                  String editedLabel = '';
+                  if (post.isEdited && post.updatedAt != null) {
+                    try {
+                      final editedDate = DateTime.parse(post.updatedAt!).toLocal();
+                      editedLabel = ' · Edited ${timeago.format(editedDate)}';
+                    } catch (_) {
+                      editedLabel = ' · Edited';
+                    }
+                  }
                   final displayAuthor = post.isAnonymous
                       ? 'Anonymous'
                       : (post.authorUsername ?? 'Unknown user');
@@ -139,6 +148,7 @@ class _PostListScreenState extends State<PostListScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 CircleAvatar(
                                   backgroundImage: post.authorProfilePic != null
@@ -162,17 +172,27 @@ class _PostListScreenState extends State<PostListScreen> {
                                               child: Chip(
                                                 avatar: const Icon(Icons.shield, size: 12, color: Colors.white),
                                                 label: const Text('Admin', style: TextStyle(fontSize: 10, color: Colors.white)),
-                                                backgroundColor: AppColors.primary, // Using primary color for admin badge
-                                                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                                backgroundColor: AppColors.primary,
                                                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                               ),
                                             ),
                                         ],
                                       ),
-                                      Text(timeago.format(postDate), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                      Text(
+                                        'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${timeago.format(postDate)}$editedLabel',
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
                                     ],
                                   ),
                                 ),
+                                if (post.emojis.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text(
+                                      post.emojis.first,
+                                      style: const TextStyle(fontSize: 48),
+                                    ),
+                                  ),
                                 if (currentUser != null && currentUser.id == post.author)
                                   PopupMenuButton<String>(
                                     onSelected: (value) async {
@@ -185,54 +205,23 @@ class _PostListScreenState extends State<PostListScreen> {
                                         }
                                       }
                                     },
-                                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                      const PopupMenuItem<String>(
+                                    itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
                                         value: 'edit',
                                         child: Text('Edit'),
                                       ),
-                                      const PopupMenuItem<String>(
+                                      PopupMenuItem<String>(
                                         value: 'delete',
                                         child: Text('Delete'),
                                       ),
                                     ],
                                   ),
-                                if (post.emojis.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: Text(
-                                      post.emojis.first,
-                                      style: const TextStyle(fontSize: 24),
-                                    ),
-                                  ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
-                                ),
-                                if (post.emojis.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: Text(
-                                      post.emojis.first,
-                                      style: const TextStyle(fontSize: 24),
-                                    ),
-                                  ),
-                              ],
-                            ),
+                            Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 8),
                             Text(post.body ?? ''),
-                            if (post.emojis.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Wrap(
-                                  spacing: 8.0,
-                                  children: post.emojis.map((emoji) => Text(emoji, style: const TextStyle(fontSize: 20))).toList(),
-                                ),
-                              ),
                           ],
                         ),
                       ),
