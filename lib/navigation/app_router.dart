@@ -65,21 +65,19 @@ class AppRouter {
           GoRoute(
             path: 'create',
             builder: (context, state) => const CreateConversationScreen(),
+          ),          
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final conversationId = state.pathParameters['id']!;
+              final conversation = state.extra is ConversationPreview
+                  ? state.extra as ConversationPreview
+                  : null;
+              return ChatMessageScreen(
+                conversationId: conversationId
+              );
+            },
           ),
-          // TODO Convo route
-          // GoRoute(
-          //   path: ':id',
-          //   builder: (context, state) {
-          //     final conversationId = state.pathParameters['id']!;
-          //     final conversation = state.extra is ConversationPreview
-          //         ? state.extra as ConversationPreview
-          //         : null;
-          //     return ChatMessageScreen(
-          //       conversationId: conversationId,
-          //       conversation: conversation,
-          //     );
-          //   },
-          // ),
         ],
       ),
       GoRoute(
