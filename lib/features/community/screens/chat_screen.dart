@@ -44,10 +44,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadMessages() async {
-    final messages = await _chatService.getConversation(widget.channelId);
+    final messages = await _chatService.getConversation(widget.channelId.toString());
     if (mounted) {
       setState(() {
-        _messages.addAll(messages);
+        // _messages.addAll(messages); TODO MAKE IT WORK
       });
     }
   }
@@ -67,7 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
       return;
     }
     await _chatService.sendMessage(
-      recipientId: widget.channelId,
+      conversationId: widget.channelId.toString(),
       content: _messageController.text.trim(),
     );
     _messageController.clear();

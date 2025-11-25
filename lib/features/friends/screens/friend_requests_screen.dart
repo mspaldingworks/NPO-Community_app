@@ -72,19 +72,19 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
                 leading: const CircleAvatar(
                   child: Icon(Icons.person_add),
                 ),
-                title: Text('${request.fromUsername} wants to be your friend'),
+                title: Text('FROM USER DATA wants to be your friend'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.check),
                       onPressed: () =>
-                          _respondToRequest(request.fromUsername, 'accept'),
+                          _respondToRequest('FROM USER DATA', 'accept'),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close),
                       onPressed: () =>
-                          _respondToRequest(request.fromUsername, 'decline'),
+                          _respondToRequest('FROM USER DATA', 'decline'),
                     ),
                   ],
                 ),
