@@ -1,4 +1,4 @@
-import 'package:transconnect/features/auth/models/profile_model.dart';
+import 'package:transconnect/models/user.dart';
 
 class Message {
   final String id;
@@ -6,7 +6,7 @@ class Message {
   final String userId;
   final String content;
   final DateTime createdAt;
-  final Profile? profile;
+  final User? profile;
 
   Message({
     required this.id,
@@ -24,7 +24,7 @@ class Message {
       userId: json['user_id'] as String,
       content: json['content'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      profile: json['profiles'] == null ? null : Profile.fromJson(json['profiles']),
+      profile: json['profiles'] == null ? null : User.fromJson(json['profiles']),
     );
   }
 }

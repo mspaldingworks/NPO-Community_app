@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/features/community/models/group_model.dart';
-import 'package:transconnect/features/community/services/community_service.dart';
+import 'package:provider/provider.dart';
+import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/core/services/community_service.dart';
+import 'package:transconnect/models/group.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -12,11 +14,12 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   late Future<List<Group>> _groupsFuture;
-  final CommunityService _communityService = CommunityService();
+  late final CommunityService _communityService;
 
   @override
   void initState() {
     super.initState();
+    _communityService = CommunityService();
     _groupsFuture = _communityService.fetchGroups();
   }
 
@@ -44,12 +47,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
-                    title: Text('# ${group.name}'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    title: Text(group.name),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      // Navigate to the chat screen for the selected group
-                      // The channelId should be a unique identifier, like group.id
-                      context.go('/community/${group.id}');
+                      GoRouter.of(context).push('/community/group/${group.id}', extra: group.name);
                     },
                   ),
                 );

@@ -11,20 +11,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http: ^1.2.1
-  cupertino_icons: ^1.0.6
-  go_router: ^14.1.0
-  provider: ^6.1.2
-  adaptive_theme: ^3.6.0
+  cupertino_icons: ^1.0.2
+  go_router: ^14.8.1
+  provider: ^6.0.3
+  http: ^1.5.0
+  shared_preferences: ^2.0.7
   flutter_secure_storage: ^9.2.2
-  intl: ^0.19.0
+  image_picker: ^1.1.2
+  table_calendar: ^3.1.3
+  intl: ^0.20.2
+  emoji_picker_flutter: ^2.2.0
+  timeago: ^3.6.1
+  web_socket_channel: ^3.0.0
+  logger: ^2.3.0
+  adaptive_theme: ^3.6.0
   icalendar_parser: ^2.1.0
   url_launcher: ^6.3.0
-  shared_preferences: ^2.5.3
-  firebase_core: ^3.2.0
-  cloud_firestore: ^5.1.0
-  firebase_auth: ^5.1.3
   scoped_model: ^2.0.0
+  webview_flutter: ^4.7.0
+  video_player: ^2.9.1
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +38,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/animations/trans_connect_open_video.mp4
+    - assets/media/twc_primary_logo.png

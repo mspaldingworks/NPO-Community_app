@@ -1,0 +1,72 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:transconnect/pages/resources/resource_guide_screen.dart';
+import 'package:transconnect/pages/resources/resource_mutual_aid_screen.dart';
+
+class ResourcesScreen extends StatefulWidget {
+  const ResourcesScreen({super.key});
+
+  @override
+  State<ResourcesScreen> createState() => _ResourcesScreenState();
+}
+
+class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final GlobalKey<ResourceGuideScreenState> _guideKey = GlobalKey<ResourceGuideScreenState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleTabChange() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _createResource() async {
+    final result = await context.push<bool>('/resources/create');
+    if (result == true) {
+      _guideKey.currentState?.reloadResources();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_tabController.index == 0 ? 'Resource Guide' : 'Mutual Aid'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.menu_book_outlined), text: 'Guide'),
+            Tab(icon: Icon(Icons.handshake_outlined), text: 'Mutual Aid'),
+          ],
+        ),
+      ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: _createResource,
+              child: const Icon(Icons.add),
+            )
+          : null,
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          ResourceGuideScreen(key: _guideKey),
+          const ResourceMutualAidScreen(),
+        ],
+      ),
+    );
+  }
+}
+

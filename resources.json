@@ -1,0 +1,474 @@
+[
+  {
+    "name": "Fairness Campaign",
+    "type": "Advocacy Group",
+    "url": "https://www.fairness.org/",
+    "public": true,
+    "description": "Kentucky\u2019s statewide LGBTQ advocacy organization founded in 1991; it works through legislative advocacy and public education to achieve comprehensive civil\u2011rights legislation protecting people from discrimination based on sexual orientation and gender identity and to advance fairness across Kentucky\u3010806182307411126\u2020L80-L87\u3011.",
+    "provider": "Fairness Campaign",
+    "tags": [
+      "advocacy",
+      "civil rights",
+      "lgbtq",
+      "kentucky",
+      "equality"
+    ]
+  },
+  {
+    "name": "Kentucky Health Justice Network (KHJN)",
+    "type": "Advocacy Group",
+    "url": "https://www.kentuckyhealthjusticenetwork.org/",
+    "public": true,
+    "description": "KHJN uses a reproductive\u2011justice framework to build the power of Kentuckians through direct support, education and outreach, advocating for reproductive freedom and trans health equity across the state\u3010384425182690134\u2020L60-L69\u3011.",
+    "provider": "Kentucky Health Justice Network",
+    "tags": [
+      "reproductive justice",
+      "healthcare",
+      "trans health",
+      "advocacy",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "TransKentucky",
+    "type": "Community Center",
+    "url": "https://www.transkentucky.com/",
+    "public": true,
+    "description": "A support, social and resource group serving Lexington and Kentucky that offers a safe place where transgender individuals and people who do not fit standard gender norms can express their true selves and connect with community resources\u3010623565047364457\u2020L20-L31\u3011.",
+    "provider": "TransKentucky",
+    "tags": [
+      "support",
+      "community",
+      "transgender",
+      "kentucky",
+      "resources"
+    ]
+  },
+  {
+    "name": "Louisville Youth Group (LYG)",
+    "type": "Youth Services",
+    "url": "https://www.louisvilleyouthgroup.org/",
+    "public": true,
+    "description": "A nonprofit organization that empowers QTBIPoC/LGBTQIA+ youth in Louisville to become healthy and resilient leaders through community connection, life\u2011skills education and social advocacy\u3010798354504111523\u2020L63-L69\u3011.",
+    "provider": "Louisville Youth Group Inc.",
+    "tags": [
+      "youth",
+      "community",
+      "support",
+      "louisville",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "University of Louisville Transgender Care (UofL Medicine)",
+    "type": "Medical Clinic",
+    "url": "https://louisville.edu/medicine/departments/familymedicine/clinical/transgender-care",
+    "public": true,
+    "description": "Provides gender\u2011affirming healthcare at the UofL School of Medicine; the clinic offers support, education and management of hormone therapy for transgender, gender\u2011nonbinary and gender\u2011diverse individuals using evidence\u2011based guidelines\u3010248043110589599\u2020L308-L318\u3011.",
+    "provider": "University of Louisville School of Medicine",
+    "tags": [
+      "medical",
+      "gender affirming",
+      "transgender",
+      "healthcare",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Transform Health Services (University of Kentucky)",
+    "type": "Medical Clinic",
+    "url": "https://ukhealthcare.uky.edu/transform-health",
+    "public": true,
+    "description": "An interprofessional healthcare home for LGBTQ+ patients in Kentucky; its mission is to improve LGBTQ+ health by providing evidence\u2011based, high\u2011quality care, training healthcare providers, conducting research and offering outreach and resources\u3010923298153097426\u2020L398-L410\u3011.",
+    "provider": "University of Kentucky HealthCare",
+    "tags": [
+      "healthcare",
+      "lgbtq",
+      "medical",
+      "kentucky",
+      "resources"
+    ]
+  },
+  {
+    "name": "AVOL Kentucky",
+    "type": "Medical Clinic",
+    "url": "https://avolky.org/",
+    "public": true,
+    "description": "A community organization whose mission is to collaborate with communities across Kentucky to end the stigma around HIV and other chronic health conditions; it offers free HIV testing, STI screening, treatment and reliable health information\u3010656038004020611\u2020L62-L73\u3011.",
+    "provider": "AVOL Kentucky",
+    "tags": [
+      "hiv",
+      "healthcare",
+      "testing",
+      "kentucky",
+      "support"
+    ]
+  },
+  {
+    "name": "Lexington Pride Center (formerly Pride Community Services Organization)",
+    "type": "Community Center",
+    "url": "https://www.lexpridecenter.org/",
+    "public": true,
+    "description": "The oldest LGBTQIA+ organization in Kentucky; it operates a community center and Pride Festival and works to create safe and inclusive spaces, programming and services that celebrate and empower the intersectional lives of LGBTQIA+ Kentuckians\u301078111698431344\u2020L190-L205\u3011.",
+    "provider": "Lexington Pride Center",
+    "tags": [
+      "community",
+      "pride",
+      "lgbtq",
+      "lexington",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "PFLAG Louisville",
+    "type": "Community Center",
+    "url": "https://pflaglouisville.org/",
+    "public": true,
+    "description": "Local chapter of PFLAG; its mission is to create a caring, just and affirming world for LGBTQ+ people and those who love them, offering support meetings and resources for families and allies\u3010110082829366799\u2020L44-L55\u3011.",
+    "provider": "PFLAG Louisville",
+    "tags": [
+      "support",
+      "families",
+      "lgbtq",
+      "louisville",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "The Trevor Project",
+    "type": "Hotline",
+    "url": "https://www.thetrevorproject.org/",
+    "public": true,
+    "description": "A national organization whose mission is to end suicide among LGBTQ young people; it provides crisis intervention and suicide\u2011prevention services, including a 24/7 hotline, chat and text support for LGBTQ youth under 25\u3010334015377672374\u2020L309-L338\u3011.",
+    "provider": "The Trevor Project",
+    "tags": [
+      "crisis",
+      "support",
+      "youth",
+      "hotline",
+      "national"
+    ]
+  },
+  {
+    "name": "Trans Lifeline",
+    "type": "Hotline",
+    "url": "https://translifeline.org/",
+    "public": true,
+    "description": "A grassroots hotline and micro\u2011grant organization run by and for trans people; it connects transgender callers to peer support and the resources they need to survive and thrive\u3010446548596283463\u2020L90-L103\u3011.",
+    "provider": "Trans Lifeline",
+    "tags": [
+      "crisis",
+      "transgender",
+      "hotline",
+      "peer support",
+      "national"
+    ]
+  },
+  {
+    "name": "Advocates for Trans Equality (formerly NCTE/TLDEF)",
+    "type": "Advocacy Group",
+    "url": "https://transequality.org/",
+    "public": true,
+    "description": "Formed by the merger of the National Center for Transgender Equality and the Transgender Legal Defense & Education Fund; the organization works to shift government and society toward a future where trans people can live joyfully and without barriers\u3010566226321126743\u2020L146-L154\u3011.",
+    "provider": "Advocates for Trans Equality",
+    "tags": [
+      "advocacy",
+      "trans rights",
+      "policy",
+      "national",
+      "legal"
+    ]
+  },
+  {
+    "name": "Human Rights Campaign (HRC)",
+    "type": "Advocacy Group",
+    "url": "https://www.hrc.org/",
+    "public": true,
+    "description": "The largest LGBTQ civil\u2011rights organization in the U.S.; HRC and its Foundation fight to make equality, equity and liberation a reality for LGBTQ+ people by mobilizing voters, changing hearts and minds through programming and advancing inclusive policies in institutions and systems\u3010750242324217852\u2020L52-L70\u3011.",
+    "provider": "Human Rights Campaign",
+    "tags": [
+      "civil rights",
+      "advocacy",
+      "policy",
+      "national",
+      "equality"
+    ]
+  },
+  {
+    "name": "Lambda Legal",
+    "type": "Legal Aid",
+    "url": "https://www.lambdalegal.org/",
+    "public": true,
+    "description": "A national organization committed to achieving full recognition of the civil rights of lesbian, gay, bisexual, transgender people and those living with HIV through impact litigation, education and public policy work\u3010974372389660721\u2020L100-L103\u3011.",
+    "provider": "Lambda Legal",
+    "tags": [
+      "legal",
+      "civil rights",
+      "lgbtq",
+      "hiv",
+      "national"
+    ]
+  },
+  {
+    "name": "National LGBTQ Task Force",
+    "type": "Advocacy Group",
+    "url": "https://www.thetaskforce.org/",
+    "public": true,
+    "description": "Dedicated to achieving freedom and justice for LGBTQ people and their families; the Task Force advances this mission through proactive, targeted initiatives that change laws and expand opportunities nationwide\u3010432926405595753\u2020L92-L100\u3011.",
+    "provider": "National LGBTQ Task Force",
+    "tags": [
+      "advocacy",
+      "justice",
+      "policy",
+      "national",
+      "lgbtq"
+    ]
+  },
+  {
+    "name": "GLSEN (Gay, Lesbian & Straight Education Network)",
+    "type": "Advocacy Group",
+    "url": "https://www.glsen.org/",
+    "public": true,
+    "description": "National organization working to ensure that each member of every school community is valued and respected regardless of sexual orientation or gender identity/expression; GLSEN develops school climates where differences are celebrated and welcomes members committed to creating safe, inclusive K\u201112 environments\u3010639956332297952\u2020L92-L100\u3011.",
+    "provider": "GLSEN",
+    "tags": [
+      "education",
+      "youth",
+      "safe schools",
+      "advocacy",
+      "national"
+    ]
+  },
+  {
+    "name": "GLAAD (Gay & Lesbian Alliance Against Defamation)",
+    "type": "Advocacy Group",
+    "url": "https://glaad.org/",
+    "public": true,
+    "description": "A leading nonprofit dedicated to LGBTQ+ advocacy and cultural transformation; its mission is to ensure fair, accurate and inclusive representation across media platforms and to create national and local programs that advance LGBTQ acceptance worldwide\u3010741745479926616\u2020L114-L118\u3011.",
+    "provider": "GLAAD",
+    "tags": [
+      "media",
+      "advocacy",
+      "representation",
+      "lgbtq",
+      "national"
+    ]
+  },
+  {
+    "name": "Mandala House",
+    "type": "Mental Health",
+    "url": "https://www.mandalalouisville.com/",
+    "public": true,
+    "description": "Gender-affirming counseling provider in Louisville offering mental health services and educational events for trans and nonbinary individuals\u3010505329013400766\u2020L160-L165\u3011.",
+    "provider": "Mandala House",
+    "tags": [
+      "mental health",
+      "counseling",
+      "gender-affirming",
+      "louisville",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Nightingale Healthcare",
+    "type": "Medical Clinic",
+    "url": "https://nghealthcareberea.com/",
+    "public": true,
+    "description": "Berea-based clinic providing psychological assessment, psychiatric care, hormone therapy management and STI screening for transgender patients\u3010505329013400766\u2020L90-L94\u3011.",
+    "provider": "Nightingale Healthcare",
+    "tags": [
+      "psychiatry",
+      "psychology",
+      "hrt",
+      "sti screening",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Folx Health",
+    "type": "Medical Clinic",
+    "url": "https://www.folxhealth.com/",
+    "public": true,
+    "description": "Telehealth-only service providing gender-affirming care and hormone therapy with self-pay membership options for Kentucky residents\u3010505329013400766\u2020L190-L193\u3011.",
+    "provider": "Folx Health",
+    "tags": [
+      "telehealth",
+      "gender-affirming",
+      "hormone therapy",
+      "kentucky",
+      "national"
+    ]
+  },
+  {
+    "name": "Plume",
+    "type": "Medical Clinic",
+    "url": "https://getplume.co/map/gender-affirming-hormone-therapy-in-kentucky/",
+    "public": true,
+    "description": "Telehealth provider offering gender-affirming hormone therapy via a monthly membership, accessible to patients in Kentucky\u3010505329013400766\u2020L194-L199\u3011.",
+    "provider": "Plume",
+    "tags": [
+      "telehealth",
+      "hormone therapy",
+      "membership",
+      "kentucky",
+      "national"
+    ]
+  },
+  {
+    "name": "Trans Clinique",
+    "type": "Medical Clinic",
+    "url": "https://transclinique.com/",
+    "public": true,
+    "description": "Telehealth platform that offers gender-affirming care through monthly memberships with insurance and no-insurance options\u3010505329013400766\u2020L201-L204\u3011.",
+    "provider": "Trans Clinique",
+    "tags": [
+      "telehealth",
+      "gender-affirming",
+      "hormone therapy",
+      "membership",
+      "national"
+    ]
+  },
+  {
+    "name": "True U Clinic",
+    "type": "Medical Clinic",
+    "url": "https://trueuclinic.com/kentucky/",
+    "public": true,
+    "description": "Telehealth clinic providing self-pay gender-affirming care in Kentucky; insurance is not accepted\u3010505329013400766\u2020L211-L214\u3011.",
+    "provider": "True U Clinic",
+    "tags": [
+      "telehealth",
+      "self-pay",
+      "gender-affirming",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Empower Pharmacy",
+    "type": "Medical Clinic",
+    "url": "https://www.empowerpharmacy.com/compound-medication/gender-affirming-care/",
+    "public": true,
+    "description": "Compounding pharmacy that ships anywhere in Kentucky and offers gender-affirming medications, sexual wellness products and other compounded medicines\u3010505329013400766\u2020L216-L219\u3011.",
+    "provider": "Empower Pharmacy",
+    "tags": [
+      "pharmacy",
+      "gender-affirming",
+      "compounding",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "New Era Pharmacy",
+    "type": "Medical Clinic",
+    "url": "https://newerapharmacy.com/",
+    "public": true,
+    "description": "Compounding pharmacy that ships medications to patients; offers gender-affirming care, specialty fertility medications and other services\u3010505329013400766\u2020L221-L224\u3011.",
+    "provider": "New Era Pharmacy",
+    "tags": [
+      "pharmacy",
+      "gender-affirming",
+      "fertility",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "JustFund Kentucky",
+    "type": "Advocacy Group",
+    "url": "https://justfundky.org/",
+    "public": true,
+    "description": "Statewide nonprofit that provides grants and supports LGBTQ+ events and programs across Kentucky\u3010505329013400766\u2020L268-L269\u3011.",
+    "provider": "JustFund Kentucky",
+    "tags": [
+      "grants",
+      "advocacy",
+      "events",
+      "kentucky",
+      "lgbtq"
+    ]
+  },
+  {
+    "name": "EKY Mutual Aid",
+    "type": "Community Center",
+    "url": "https://www.patreon.com/ekymutualaid",
+    "public": true,
+    "description": "Mutual aid network in Eastern Kentucky that provides support and assistance to marginalized community members\u3010505329013400766\u2020L271-L273\u3011.",
+    "provider": "EKY Mutual Aid",
+    "tags": [
+      "mutual aid",
+      "support",
+      "community",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Kentuckiana AIDS Alliance",
+    "type": "Community Center",
+    "url": "https://www.kentuckianaaidsalliance.org/",
+    "public": true,
+    "description": "Alliance that connects HIV/AIDS nonprofits in the Kentuckiana region to coordinate support and resources for people living with HIV\u3010505329013400766\u2020L276-L279\u3011.",
+    "provider": "Kentuckiana AIDS Alliance",
+    "tags": [
+      "hiv",
+      "support",
+      "community",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "LivWell Community Health Service",
+    "type": "Medical Clinic",
+    "url": "https://livwellchs.org/",
+    "public": true,
+    "description": "Paducah-based health service providing HIV prevention, medical care, case management, mental health, housing and nutrition resources\u3010505329013400766\u2020L280-L285\u3011.",
+    "provider": "LivWell Community Health Service",
+    "tags": [
+      "healthcare",
+      "hiv",
+      "case management",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Alford Law Office",
+    "type": "Legal Aid",
+    "url": "https://www.alfordlawoffice.com/abbie",
+    "public": true,
+    "description": "Law office offering legal name change support for transgender individuals in Kentucky\u3010505329013400766\u2020L304-L307\u3011.",
+    "provider": "Alford Law Office",
+    "tags": [
+      "legal",
+      "name change",
+      "transgender",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Kentucky Youth Law Project",
+    "type": "Legal Aid",
+    "url": "https://www.kylp.org/",
+    "public": true,
+    "description": "Non-profit law firm that provides legal representation and advocacy for LGBTQ youth in Kentucky\u3010505329013400766\u2020L309-L311\u3011.",
+    "provider": "Kentucky Youth Law Project",
+    "tags": [
+      "legal",
+      "youth",
+      "advocacy",
+      "kentucky"
+    ]
+  },
+  {
+    "name": "Sweet Evening Breeze",
+    "type": "Youth Services",
+    "url": "https://sweeteveningbreeze.org/",
+    "public": true,
+    "description": "Louisville-based organization providing shelter and resource connections for unhoused LGBTQ+ young adults\u3010505329013400766\u2020L379-L382\u3011.",
+    "provider": "Sweet Evening Breeze",
+    "tags": [
+      "housing",
+      "youth",
+      "support",
+      "louisville",
+      "kentucky"
+    ]
+  }
+]
