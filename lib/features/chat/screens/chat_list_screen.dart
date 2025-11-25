@@ -5,7 +5,6 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/features/friends/widgets/friends_tab_view.dart';
 import 'package:transconnect/models/chat_message.dart';
-import 'package:transconnect/models/conversation.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/models/user.dart';
 
@@ -88,27 +87,29 @@ class ConversationList extends StatefulWidget {
 }
 
 class _ConversationListState extends State<ConversationList> {
-  late Future<List<Conversation>> _conversationsFuture;
+  late Future<List<ConversationPreview>> _conversationsFuture;
   late final ChatService _chatService;
-  late final AuthService _authService;
+  // AuthService is no longer strictly necessary since we only need the other user's info
+  // final AuthService _authService = Provider.of<AuthService>(context, listen: false); 
 
   @override
   void initState() {
     super.initState();
     _chatService = ChatService();
-    _authService = Provider.of<AuthService>(context, listen: false);
-    _conversationsFuture = _chatService.fetchConversations();
+    // Start fetching the list of other participants immediately
+    _conversationsFuture = _chatService.getAllConversations();
   }
 
   Future<void> _loadConversations() async {
     try {
-      final conversations = await _chatService.fetchConversations();
+      final conversations = await _chatService.getAllConversations();
       if (!mounted) return;
       setState(() {
         _conversationsFuture = Future.value(conversations);
       });
     } catch (e) {
       if (!mounted) return;
+      // Show error in a SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load conversations: $e')),
       );
@@ -117,7 +118,7 @@ class _ConversationListState extends State<ConversationList> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Conversation>>(
+    return FutureBuilder<List<ConversationPreview>>(
       future: _conversationsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -129,7 +130,7 @@ class _ConversationListState extends State<ConversationList> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('No conversations yet.'),
+                const Text('No active chats. Start one now!'),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
@@ -148,110 +149,40 @@ class _ConversationListState extends State<ConversationList> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: conversations.length,
               itemBuilder: (context, index) {
-                final conversation = conversations[index];
-                final currentUserId = _authService.currentUser?.id;
-                final otherParticipants = conversation.participants
-                    .where((user) => user.id != currentUserId)
-                    .toList();
-                final displayName = conversation.isGroup
-                    ? conversation.name ?? 'Group Chat'
-                    : otherParticipants.isNotEmpty
-                        ? otherParticipants.first.username
-                        : 'Unknown';
+                final otherUser = conversations[index];
+                final displayName = otherUser.username;
 
-                final lastMessage = conversation.lastMessage;
-                final lastMessageText = lastMessage?.content ?? 'No messages yet';
-                final lastMessageTime = lastMessage?.createdAt != null
-                    ? _formatTimeAgo(lastMessage!.createdAt!)
-                    : '';
+                // All previous logic for lastMessage, unreadCount, isGroup,
+                // and multi-participants has been REMOVED.
 
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   elevation: 1,
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: conversation.unreadCount > 0
-                          ? AppColors.tertiary
-                          : Colors.grey.shade300,
-                      foregroundColor: conversation.unreadCount > 0
-                          ? AppColors.textWhite
-                          : AppColors.textBlack,
-                      backgroundImage: conversation.isGroup || otherParticipants.isEmpty
-                          ? null
-                          : (otherParticipants.first.profilePic != null
-                              ? NetworkImage(otherParticipants.first.profilePic!)
-                              : null),
-                      child: conversation.unreadCount > 0
-                          ? Text(conversation.unreadCount.toString())
-                          : conversation.isGroup
-                              ? const Icon(Icons.group)
-                              : otherParticipants.isNotEmpty && otherParticipants.first.profilePic == null
-                                  ? Text(displayName[0].toUpperCase())
-                                  : null,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: AppColors.textWhite,
+                      // Display the first letter of the username
+                      child: Text(displayName[0].toUpperCase()),
                     ),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            displayName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (lastMessageTime.isNotEmpty)
-                          Text(
-                            lastMessageTime,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      lastMessageText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: conversation.unreadCount > 0
-                            ? Theme.of(context).primaryColor
-                            : null,
-                        fontWeight: conversation.unreadCount > 0
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                    title: Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    trailing: conversation.unreadCount > 0
-                        ? CircleAvatar(
-                            radius: 10,
-                            backgroundColor: Theme.of(context).primaryColor,
-                            child: Text(
-                              conversation.unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          )
-                        : null,
+                    // subtitle is removed as there is no last message data
+                    // trailing is removed as there is no unread count data
                     onTap: () {
-                      if (conversation.unreadCount > 0 &&
-                          conversation.lastMessage != null &&
-                          conversation.lastMessage!.id.isNotEmpty) {
-                        _chatService.markAsRead(
-                          conversationId: conversation.id,
-                          messageIds: [conversation.lastMessage!.id],
-                        );
-                      }
-                      GoRouter.of(context).push(
-                        '/chat/${conversation.id}',
-                        extra: conversation,
-                      );
+                      // Navigate using the other user's ID
+                      GoRouter.of(context).push('/chat/${otherUser.id}'); 
+                      
+                      // NOTE: We no longer pass `extra: conversation` as it 
+                      // is now minimal and likely unnecessary for the chat detail screen.
                     },
-                    onLongPress: () {
-                      _showConversationOptions(conversation);
-                    },
+                    // Long press is removed since there are no options now
                   ),
                 );
               },
@@ -260,118 +191,5 @@ class _ConversationListState extends State<ConversationList> {
         }
       },
     );
-  }
-
-  String _formatTimeAgo(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 7) {
-      return '${date.month}/${date.day}/${date.year}';
-    } else if (difference.inDays > 1) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
-    }
-  }
-
-  void _showConversationOptions(Conversation conversation) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.delete),
-                title: const Text('Delete Conversation'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteConversation(conversation.id);
-                },
-              ),
-              ListTile(
-                leading: Icon(conversation.isMuted ? Icons.notifications : Icons.notifications_off),
-                title: Text(conversation.isMuted ? 'Unmute Notifications' : 'Mute Notifications'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _toggleMuteConversation(conversation);
-                },
-              ),
-              if (conversation.isGroup)
-                ListTile(
-                  leading: const Icon(Icons.group_remove),
-                  title: const Text('Leave Group'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _leaveGroup(conversation.id);
-                  },
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _deleteConversation(String conversationId) async {
-    try {
-      await _chatService.deleteConversation(conversationId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conversation deleted')),
-        );
-        _loadConversations();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete conversation: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<void> _toggleMuteConversation(Conversation conversation) async {
-    try {
-      await _chatService.updateConversation(
-        conversationId: conversation.id,
-        isMuted: !conversation.isMuted,
-      );
-      if (mounted) {
-        _loadConversations();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to update notification settings')),
-        );
-      }
-    }
-  }
-
-  Future<void> _leaveGroup(String conversationId) async {
-    try {
-      await _chatService.leaveGroup(conversationId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Left the group')),
-        );
-        _loadConversations();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to leave group')),
-        );
-      }
-    }
   }
 }

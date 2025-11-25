@@ -7,7 +7,6 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
-import 'package:transconnect/models/conversation.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/loading_indicator.dart';
 
@@ -138,43 +137,44 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
     setState(() => _isLoading = true);
     
     try {
-      final conversations = await _chatService.fetchConversations();
-      final existingConversation = conversations.firstWhere(
-        (conv) => !conv.isGroup &&
-            conv.participants.any((p) => p.id == user.id),
-        orElse: () => Conversation(
-          id: '',
-          participants: const [],
-          lastMessage: null,
-          unreadCount: 0,
-          isGroup: false,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
+      // COMMENTED OUT
+      // final conversations = await _chatService.getAllConversations();
+      // final existingConversation = conversations.firstWhere(
+      //   (conv) => !conv.isGroup &&
+      //       conv.participants.any((p) => p.id == user.id),
+      //   orElse: () => Conversation(
+      //     id: '',
+      //     participants: const [],
+      //     lastMessage: null,
+      //     unreadCount: 0,
+      //     isGroup: false,
+      //     createdAt: DateTime.now(),
+      //     updatedAt: DateTime.now(),
+      //   ),
+      // );
 
-      if (existingConversation.id.isNotEmpty) {
-        if (mounted) {
-          GoRouter.of(context).pop();
-          GoRouter.of(context).push(
-            '/chat/${existingConversation.id}',
-            extra: existingConversation,
-          );
-        }
-        return;
-      }
+      // if (existingConversation.id.isNotEmpty) {
+      //   if (mounted) {
+      //     GoRouter.of(context).pop();
+      //     GoRouter.of(context).push(
+      //       '/chat/${existingConversation.id}',
+      //       extra: existingConversation,
+      //     );
+      //   }
+      //   return;
+      // }
 
-      final conversation = await _chatService.createChat(
-        participantIds: [user.id.toString()],
-      );
+      // final conversation = await _chatService.createChat(
+      //   participantIds: [user.id.toString()],
+      // );
 
-      if (mounted) {
-        GoRouter.of(context).pop();
-        GoRouter.of(context).push(
-          '/chat/${conversation.id}',
-          extra: conversation,
-        );
-      }
+      // if (mounted) {
+      //   GoRouter.of(context).pop();
+      //   GoRouter.of(context).push(
+      //     '/chat/${conversation.id}',
+      //     extra: conversation,
+      //   );
+      // }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -195,23 +195,23 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
     setState(() => _isLoading = true);
     
     try {
-      final participantIds = _selectedUsers.map((u) => u.id.toString()).toList();
-      final groupName = _groupNameController.text.trim().isNotEmpty 
-          ? _groupNameController.text.trim()
-          : '${_selectedUsers.take(2).map((u) => u.username.split(' ').first).join(', ')}${_selectedUsers.length > 2 ? ' +${_selectedUsers.length - 2}' : ''}';
+      // final participantIds = _selectedUsers.map((u) => u.id.toString()).toList();
+      // final groupName = _groupNameController.text.trim().isNotEmpty 
+      //     ? _groupNameController.text.trim()
+      //     : '${_selectedUsers.take(2).map((u) => u.username.split(' ').first).join(', ')}${_selectedUsers.length > 2 ? ' +${_selectedUsers.length - 2}' : ''}';
       
-      final conversation = await _chatService.createGroupChat(
-        name: groupName,
-        participantIds: participantIds,
-      );
+      // final conversation = await _chatService.createGroupChat(
+      //   name: groupName,
+      //   participantIds: participantIds,
+      // );
 
-      if (mounted) {
-        GoRouter.of(context).pop();
-        GoRouter.of(context).push(
-          '/chat/${conversation.id}',
-          extra: conversation,
-        );
-      }
+      // if (mounted) {
+      //   GoRouter.of(context).pop();
+      //   GoRouter.of(context).push(
+      //     '/chat/${conversation.id}',
+      //     extra: conversation,
+      //   );
+      // }
       
     } catch (e) {
       if (mounted) {

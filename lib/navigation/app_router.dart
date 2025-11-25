@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/pages/auth/signin_screen.dart';
 import 'package:transconnect/pages/auth/register_screen.dart';
 import 'package:transconnect/pages/auth/onboarding_screen.dart';
@@ -11,7 +12,6 @@ import 'package:transconnect/features/chat/screens/chat_list_screen.dart';
 import 'package:transconnect/features/chat/screens/chat_message_screen.dart';
 import 'package:transconnect/features/chat/screens/create_conversation_screen.dart';
 import 'package:transconnect/features/chat/screens/select_friends_for_chat_screen.dart';
-import 'package:transconnect/models/conversation.dart';
 import 'package:transconnect/features/community/screens/community_screen.dart';
 import 'package:transconnect/features/community/screens/post_list_screen.dart';
 import 'package:transconnect/features/community/screens/create_post_screen.dart';
@@ -66,19 +66,20 @@ class AppRouter {
             path: 'create',
             builder: (context, state) => const CreateConversationScreen(),
           ),
-          GoRoute(
-            path: ':id',
-            builder: (context, state) {
-              final conversationId = state.pathParameters['id']!;
-              final conversation = state.extra is Conversation
-                  ? state.extra as Conversation
-                  : null;
-              return ChatMessageScreen(
-                conversationId: conversationId,
-                conversation: conversation,
-              );
-            },
-          ),
+          // TODO Convo route
+          // GoRoute(
+          //   path: ':id',
+          //   builder: (context, state) {
+          //     final conversationId = state.pathParameters['id']!;
+          //     final conversation = state.extra is ConversationPreview
+          //         ? state.extra as ConversationPreview
+          //         : null;
+          //     return ChatMessageScreen(
+          //       conversationId: conversationId,
+          //       conversation: conversation,
+          //     );
+          //   },
+          // ),
         ],
       ),
       GoRoute(
@@ -148,17 +149,6 @@ class AppRouter {
               ),
             ],
           ),
-          // Events
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/events/calendar',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: CalendarScreen(),
-                ),
-              ),
-            ],
-          ),
           // Resources
           StatefulShellBranch(
             routes: [
@@ -183,6 +173,17 @@ class AppRouter {
               ),
             ],
           ),
+          // Events
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/events/calendar',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: CalendarScreen(),
+                ),
+              ),
+            ],
+          ),          
         ],
       ),
       GoRoute(

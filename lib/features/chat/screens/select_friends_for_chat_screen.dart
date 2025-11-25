@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/chat/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 
 class SelectFriendsForChatScreen extends StatefulWidget {
@@ -43,19 +43,19 @@ class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen>
     });
 
     try {
-      final participantIds =
-          _selectedFriends.map((friend) => friend.id.toString()).toList();
-      final chatName = _selectedFriends.map((friend) => friend.username).join(', ');
+      // COMMENTED OUT
+      // final participantIds =
+      //     _selectedFriends.map((friend) => friend.id.toString()).toList();
+      // final chatName = _selectedFriends.map((friend) => friend.username).join(', ');
 
-      final conversation = await _chatService.createChat(
-        participantIds: participantIds,
-        name: chatName.isEmpty ? null : chatName,
-        isGroup: participantIds.length > 1,
-      );
+      // final conversation = await _chatService.sendMessage(
+      //   recipientId: participantIds,
+      //   content: chatName.isEmpty ? null : chatName
+      // );
 
-      if (mounted) {
-        context.go('/chat/${conversation.id}', extra: conversation);
-      }
+      // if (mounted) {
+      //   context.go('/chat/${conversation.id}', extra: conversation);
+      // }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

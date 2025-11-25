@@ -6,6 +6,8 @@ import 'package:transconnect/models/user.dart';
 /// A service class to manage all friend-related API requests.
 /// It inherits authentication and response processing from ApiClient.
 class FriendService extends ApiClient {
+
+  static const String _messages = '/api/messages/';
   static const String _friendsBasePath = '/api/friends';
   static const String _requestsPath = 'requests/';
   static const String _searchPath = 'search/';
