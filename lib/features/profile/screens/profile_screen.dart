@@ -9,6 +9,7 @@ import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -75,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context, listen: false);
     final currentUser = authService.currentUser;
+    final imageUrl = currentUser?.fullProfilePicUrl;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,11 +93,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Stack(
                   children: [
                     CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-                      child: _profileImage == null
-                          ? const Icon(Icons.person, size: 60)
+                      radius: 40,
+                      backgroundColor: Colors.grey[200],
+                      // 1. If URL is null, backgroundImage is null
+                      // 2. If URL exists, CachedNetworkImageProvider handles 
+                      //    cache check -> download -> save -> display logic.
+                      backgroundImage: imageUrl != null 
+                          ? CachedNetworkImageProvider(imageUrl) 
                           : null,
+                      child: imageUrl == null
+                          ? const Icon(Icons.person, size: 40)
+                          : null, 
                     ),
                     Positioned(
                       bottom: 0,
@@ -125,7 +133,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: _saveProfile,
+                onPressed: () {
+                  _saveProfile;
+                  if (imageUrl != null){
+                    CachedNetworkImage.evictFromCache(imageUrl);
+                  }
+                },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

@@ -1,6 +1,7 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
+  static String host = 'https://api.luxashome.com';
   static const String _base = '/api';
 
   // REST endpoints

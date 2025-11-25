@@ -1,19 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
-import 'package:transconnect/core/services/http_overrides.dart';
-import 'dart:io';
-import 'package:transconnect/navigation/app_router.dart';
-import 'firebase_options.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  HttpOverrides.global = MyHttpOverrides();
-  final savedThemeMode = await AdaptiveTheme.getThemeMode();
-  runApp(MyApp(savedThemeMode: savedThemeMode));
-=======
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transconnect/core/services/auth_service.dart';
@@ -27,7 +12,6 @@ void main() async {
   await SharedPreferencesService().init();
   final sharedPreferences = await SharedPreferences.getInstance();
   runApp(MyApp(sharedPreferences: sharedPreferences));
->>>>>>> paige-working
 }
 
 class MyApp extends StatelessWidget {

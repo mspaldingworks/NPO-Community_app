@@ -2,12 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/data/affirmation_quotes.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
 import 'package:transconnect/theme/app_theme.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:transconnect/models/user.dart';
+import 'package:transconnect/core/services/auth_service.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -227,16 +232,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildProfileAvatar() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentUser = authService.currentUser;
+    final imageUrl = currentUser?.fullProfilePicUrl;
+
     return Center(
       child: CircleAvatar(
         radius: 40,
-        backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
-        child: _profileImage == null
-            ? Icon(
-                Icons.person,
-                size: 40,
-              )
+        backgroundColor: Colors.grey[200],
+        // 1. If URL is null, backgroundImage is null
+        // 2. If URL exists, CachedNetworkImageProvider handles 
+        //    cache check -> download -> save -> display logic.
+        backgroundImage: imageUrl != null 
+            ? CachedNetworkImageProvider(imageUrl) 
             : null,
+        child: imageUrl == null
+            ? const Icon(Icons.person, size: 40)
+            : null, 
       ),
     );
   }

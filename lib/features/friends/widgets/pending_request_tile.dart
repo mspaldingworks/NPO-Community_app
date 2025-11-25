@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/features/friends/controllers/friends_controller.dart';
 import 'package:transconnect/models/friend_request.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PendingRequestTile extends StatelessWidget {
   final FriendRequest request;
@@ -11,16 +12,23 @@ class PendingRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.read<FriendsController>();
+    final controller = context.read<FriendsController>();    
+    final imageUrl = request.fromUser.fullProfilePicUrl;
+    print((imageUrl ?? 'No image'));
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: request.fromUser.profilePic != null
-            ? NetworkImage(request.fromUser.profilePic!)
+        radius: 40,
+        backgroundColor: Colors.grey[200],
+        // 1. If URL is null, backgroundImage is null
+        // 2. If URL exists, CachedNetworkImageProvider handles 
+        //    cache check -> download -> save -> display logic.
+        backgroundImage: imageUrl != null 
+            ? CachedNetworkImageProvider(imageUrl) 
             : null,
-        child: request.fromUser.profilePic == null
-            ? const Icon(Icons.person)
-            : null,
+        child: imageUrl == null
+            ? const Icon(Icons.person, size: 40)
+            : null, 
       ),
       title: Text(request.fromUser.username, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: request.createdAt != null

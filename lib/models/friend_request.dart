@@ -38,13 +38,13 @@ class FriendRequest {
       id: json['id'] is int ? json['id'] as int : int.parse(json['id'].toString()),
       fromUser: parseFriend(json['from_user']) ??
           parseFriend(json['from']) ??
-          Friend(id: -1, username: json['from_username'] as String? ?? 'unknown', email: ''),
+          Friend(id: -1, username: json['from_username'] as String? ?? 'unknown', email: '', profilePic: json['from_user_pic'] as String?),
       toUser: parseFriend(json['to_user']) ?? parseFriend(json['to']) ??
           (json['to_username'] != null
-              ? Friend(id: -1, username: json['to_username'] as String, email: '')
+              ? Friend(id: -1, username: json['to_username'] as String, email: '', profilePic: json['to_user_pic'] as String? ?? '')
               : null),
       status: json['status'] as String? ?? json['state'] as String?,
-      createdAt: parseDate(json['created_at'] ?? json['timestamp']),
+      createdAt: parseDate(json['created_at'] ?? json['timestamp']),      
     );
   }
 }

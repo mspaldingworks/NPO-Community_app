@@ -1,3 +1,5 @@
+import 'package:transconnect/core/constants/api_endpoints.dart';
+
 class User {
   final int id;
   final String username;
@@ -57,6 +59,13 @@ id: parsedId,
       fullName: json['full_name'] as String?,
     );
   }
+
+  String? get fullProfilePicUrl {
+    if (profilePic == null) return null;
+    // Check if the API accidently sent a full URL, otherwise append host
+    if (profilePic!.startsWith('http')) return profilePic; 
+    return ApiEndpoints.host + (profilePic ?? "");
+  }
 }
 
 class Friend {
@@ -99,5 +108,12 @@ class Friend {
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
     );
+  }
+
+  String? get fullProfilePicUrl {
+    if (profilePic == null) return null;
+    // Check if the API accidently sent a full URL, otherwise append host
+    if (profilePic!.startsWith('http')) return profilePic; 
+    return ApiEndpoints.host + '/media/' + (profilePic ?? ""); // TODO Look into why friend profile pics do not add media folder
   }
 }
