@@ -80,7 +80,7 @@ class Conversation {
       'id': id,
       if (name != null) 'name': name,
       'participants': participantMaps,
-      if (lastMessage != null) 'last_message': lastMessage!.toJson(),
+      if (lastMessage != null) 'last_message': lastMessage!,
       if (lastMessageAt != null) 'last_message_at': lastMessageAt!.toIso8601String(),
       'is_group': isGroup,
       if (groupImage != null) 'group_image': groupImage,

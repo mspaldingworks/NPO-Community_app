@@ -32,7 +32,6 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   bool _isSending = false;
   bool _showEmojiPicker = false;
 
-  // Replaced Conversation with simple username and the User model
   String _otherUsername = 'Chat'; 
   late User _currentUser;
 
@@ -41,51 +40,71 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     super.initState();
     _initializeData();
   }
+  
+  // --- NEW HELPER METHOD ---
+  // Extracted logic to fetch messages and update state
+  Future<void> _fetchMessages({bool updateUsername = false}) async {
+    try {
+      final otherUserId = int.parse(widget.conversationId);
+      final messages = await _chatService.getConversation(otherUserId);
+      
+      if (!mounted) return;
+
+      // Only attempt to find and set username if explicitly requested 
+      // or if messages were previously empty
+      if (updateUsername || _messages.isEmpty) {
+        final otherParticipantMessage = messages.firstWhere(
+            (m) => m.sender.id != _currentUser.id,
+            orElse: () => messages.firstWhere(
+                (m) => m.recipient.id != _currentUser.id),
+        );
+        
+        if (otherParticipantMessage != null) {
+          final otherUser = otherParticipantMessage.sender.id != _currentUser.id 
+              ? otherParticipantMessage.sender
+              : otherParticipantMessage.recipient;
+          _otherUsername = otherUser.username;
+        } else if (_otherUsername == 'Chat') {
+          _otherUsername = 'User $otherUserId';
+        }
+      }
+
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(messages.reversed.toList()); // API returns oldest first, reverse
+        _isLoading = false;
+      });
+
+      // Mark as read after fetching new list
+      await _markMessagesAsRead();
+      _scrollToBottom();
+      
+    } catch (e) {
+      if (!mounted) return;
+      // Only show a fatal error during initial load, not post-send
+      if (_isLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load conversation: $e')),
+        );
+      }
+      setState(() => _isLoading = false);
+    }
+  }
+
 
   Future<void> _initializeData() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       _currentUser = await authService.getCurrentUser();
-
-      // Assuming the other user's username is now passed via the router 
-      // or should be fetched separately if needed for the AppBar title.
-      // Since we don't have a ConversationPreview object here, 
-      // we'll rely on the ChatService to tell us the other username, 
-      // or we'll default it to the ID for now.
-      _otherUsername = 'User ${widget.conversationId}'; 
-
-      // Function 1: Fetch message history using the other user's ID
-      final messages = await _chatService.getConversation(int.parse(widget.conversationId));
-
-      if (!mounted) return;
-
-      // Find the other user's username from the messages list
-      // We look at the first message that was NOT sent by the current user
-      final otherParticipantMessage = messages.firstWhere(
-          (m) => m.sender.id != _currentUser.id,
-          orElse: () => messages.firstWhere(
-              (m) => m.recipient.id != _currentUser.id, 
-              orElse: () => throw Exception("Cannot determine other participant's ID.")),
-      );
       
-      final otherUser = otherParticipantMessage.sender.id != _currentUser.id 
-          ? otherParticipantMessage.sender
-          : otherParticipantMessage.recipient;
+      // Pass the username finding responsibility to _fetchMessages
+      await _fetchMessages(updateUsername: true);
 
-      setState(() {
-        _otherUsername = otherUser.username;
-        _messages
-          ..clear()
-          ..addAll(messages.reversed.toList()); // API returns oldest first, reverse for chat UI
-        _isLoading = false;
-      });
-
-      await _markMessagesAsRead();
-      _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load conversation: $e')),
+        SnackBar(content: Text('Failed to initialize chat data: $e')),
       );
       setState(() => _isLoading = false);
     }
@@ -310,51 +329,41 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     return '$hour:$minute';
   }
 
-  Future<void> _sendMessage() async {
+Future<void> _sendMessage() async {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
-
+    
+    // 1. Clear input and start loading
+    final originalContent = _messageController.text;
+    _messageController.clear();
     setState(() => _isSending = true);
 
     try {
-      // Function 2: Send message using the other user's ID as recipient
+      // Send message
       await _chatService.sendMessage(
-        recipientId: int.parse(widget.conversationId), // Use the parsed int ID
+        recipientId: int.parse(widget.conversationId),
         content: content,
-      );
+      );      
+      // 2. SUCCESS: Reload messages from the API to display the new message
+      await _fetchMessages(); 
 
       if (!mounted) return;
-      // To do add mock message
-      // To immediately show the sent message, we optimistically add a mock ChatMessage
-      // final mockMessage = ChatMessage(
-      //   id: -1, // Temporary ID since we don't get the saved message back
-      //   sender: _currentUser.toMessageUser(), // Assuming a helper to convert User to MessageUser
-      //   recipient: MessageUser(id: int.parse(widget.conversationId), username: _otherUsername),
-      //   content: content,
-      //   timestamp: DateTime.now(),
-      //   isRead: false, // Not yet read by recipient
-      // );
-
-      setState(() {
-        // _messages.insert(0, mockMessage);
-        _messageController.clear();
-      });
-
-      _scrollToBottom();
-      // NOTE: You should have logic (e.g., WebSockets/Polling) to refresh
-      // and replace the mock message with the actual message from the API.
+      
     } catch (e) {
       if (!mounted) return;
+      // 3. FAILURE: Restore input content
+      _messageController.text = originalContent; 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: $e')),
+        SnackBar(content: Text('Failed to send message. Please try again: $e')),
       );
     } finally {
       if (mounted) {
+        // 4. Stop loading indicator
         setState(() => _isSending = false);
+        _scrollToBottom(); // Scroll one last time just in case
       }
     }
   }
-
   void _toggleEmojiPicker() {
     setState(() {
       _showEmojiPicker = !_showEmojiPicker;

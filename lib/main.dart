@@ -11,6 +11,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferencesService().init();
   final sharedPreferences = await SharedPreferences.getInstance();
+  final authService = AuthService();
+  await authService.init();
   runApp(MyApp(sharedPreferences: sharedPreferences));
 }
 
