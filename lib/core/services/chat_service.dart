@@ -159,7 +159,6 @@ class ChatService extends ApiClient {
       throw Exception('Failed to send message: ${response.statusCode} ${response.body}');
     }
   }
-
   /// Fetches all messages for a specific channel
   ///
   /// GET /api/chat/{channelId}/messages
