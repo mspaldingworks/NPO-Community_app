@@ -25,17 +25,32 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   final CommunityService _communityService = CommunityService();
   final DateFormat _editedDateFormat = DateFormat('MMM d, yyyy h:mm a');
+  final AuthService _authService = AuthService();
+  Map<String, String?> _userPicByUsername = {};
 
   @override
   void initState() {
     super.initState();
     _loadPost();
+    _loadUserPicMap();
   }
 
   void _loadPost() {
     setState(() {
       _postFuture = _communityService.fetchPostById(widget.postId);
     });
+  }
+
+  Future<void> _loadUserPicMap() async {
+    try {
+      final users = await _authService.getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _userPicByUsername = {for (final u in users) u.username: u.fullProfilePicUrl};
+      });
+    } catch (_) {
+      // Ignore; avatars will stay placeholders
+    }
   }
 
   Future<void> _addComment() async {
@@ -304,6 +319,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    DisplayProfilePic(
+                      radius: 20,
+                      imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
@@ -346,7 +366,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DisplayProfilePic(radius: 20, imageUrl: comment.authorProfilePic),
+                          DisplayProfilePic(
+                            radius: 20,
+                            imageUrl: comment.authorProfilePic ?? _userPicByUsername[comment.authorUsername],
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(

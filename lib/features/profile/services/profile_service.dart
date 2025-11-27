@@ -7,7 +7,13 @@ class ProfileService {
   static const _statusKey = 'profile_status';
   static const _imagePathKey = 'profile_image_path';
 
-  Future<void> saveProfile(String status, String? imagePath) async {
+  Future<void> saveProfile(
+    String status,
+    String? imagePath, {
+    String? fullName,
+    String? city,
+    String? flair,
+  }) async {
     // TODO MADDIE Expand this to use the update form to post a new photo. 
     /*
     ### Update User Profile with Image
@@ -38,6 +44,10 @@ class ProfileService {
         ..headers['Authorization'] = 'Token $token'
         ..fields['status_message'] = status;
 
+      if (fullName != null) request.fields['full_name'] = fullName;
+      if (city != null) request.fields['city'] = city;
+      if (flair != null) request.fields['flair'] = flair;
+
       request.files.add(await http.MultipartFile.fromPath(
         'profile_pic',
         imagePath,
@@ -49,7 +59,11 @@ class ProfileService {
         throw Exception('Failed to update profile: ${response.statusCode} ${response.body}');
       }
     } else {
-      await auth.updateProfile({'status_message': status});
+      final Map<String, dynamic> updates = {'status_message': status};
+      if (fullName != null) updates['full_name'] = fullName;
+      if (city != null) updates['city'] = city;
+      if (flair != null) updates['flair'] = flair;
+      await auth.updateProfile(updates);
     }
 
     // Refresh the profile locally
