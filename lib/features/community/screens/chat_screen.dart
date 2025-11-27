@@ -19,7 +19,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
-  late StreamSubscription<Message> _messageSubscription;
+  StreamSubscription<Message>? _messageSubscription;
   final _authService = AuthService();
   int? _currentUserId;
 
@@ -33,7 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    _messageSubscription.cancel();
+    _messageSubscription?.cancel();
     _messageController.dispose();
     super.dispose();
   }
@@ -47,7 +47,9 @@ class _ChatScreenState extends State<ChatScreen> {
     final messages = await _chatService.getConversation(widget.channelId);
     if (mounted) {
       setState(() {
-        // _messages.addAll(messages); TODO MAKE IT WORK
+        _messages
+          ..clear()
+          ..addAll(messages);
       });
     }
   }
@@ -87,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
               itemBuilder: (context, index) {
                 final message = _messages[index];
                 final isMe = message.sender.id == _currentUserId;
-                final username = message.sender.username ?? '...';
+                final username = message.sender.username;
 
                 return ListTile(
                   title: Text(

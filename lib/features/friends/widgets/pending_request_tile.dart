@@ -4,6 +4,7 @@ import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/features/friends/controllers/friends_controller.dart';
 import 'package:transconnect/models/friend_request.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class PendingRequestTile extends StatelessWidget {
   final FriendRequest request;
@@ -17,19 +18,7 @@ class PendingRequestTile extends StatelessWidget {
     print((imageUrl ?? 'No image'));
 
     return ListTile(
-      leading: CircleAvatar(
-        radius: 40,
-        backgroundColor: Colors.grey[200],
-        // 1. If URL is null, backgroundImage is null
-        // 2. If URL exists, CachedNetworkImageProvider handles 
-        //    cache check -> download -> save -> display logic.
-        backgroundImage: imageUrl != null 
-            ? CachedNetworkImageProvider(imageUrl) 
-            : null,
-        child: imageUrl == null
-            ? const Icon(Icons.person, size: 40)
-            : null, 
-      ),
+      leading: DisplayProfilePic(radius: 40, imageUrl: imageUrl),
       title: Text(request.fromUser.username, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: request.createdAt != null
           ? Text('Sent ${timeAgo(request.createdAt!)}')

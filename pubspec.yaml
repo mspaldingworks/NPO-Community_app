@@ -6,7 +6,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.8.0'
 
 dependencies:
   flutter:
@@ -22,7 +23,7 @@ dependencies:
   intl: ^0.20.2
   emoji_picker_flutter: ^2.2.0
   timeago: ^3.6.1
-  web_socket_channel: ^3.0.0
+  web_socket_channel: ^3.0.3
   logger: ^2.3.0
   adaptive_theme: ^3.6.0
   icalendar_parser: ^2.1.0
@@ -31,6 +32,9 @@ dependencies:
   webview_flutter: ^4.7.0
   video_player: ^2.9.1
   cached_network_image: ^3.4.0
+  json_annotation: ^4.9.0
+  build_runner: ^2.10.4
+  json_serializable: ^6.11.3
 
 dev_dependencies:
   flutter_test:

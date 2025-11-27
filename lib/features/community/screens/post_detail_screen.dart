@@ -7,6 +7,7 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/theme/app_theme.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostDetailScreen extends StatefulWidget {
@@ -345,14 +346,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            backgroundImage: comment.authorProfilePic != null
-                                ? NetworkImage(comment.authorProfilePic!)
-                                : null,
-                            child: comment.authorProfilePic == null
-                                ? const Icon(Icons.person)
-                                : null,
-                          ),
+                          DisplayProfilePic(radius: 20, imageUrl: comment.authorProfilePic),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(

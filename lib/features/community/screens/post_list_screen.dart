@@ -7,6 +7,7 @@ import 'package:transconnect/models/post.dart';
 import 'package:transconnect/models/group.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -26,6 +27,7 @@ class _PostListScreenState extends State<PostListScreen> {
   late Future<List<Post>> _postsFuture;
   late final CommunityService _communityService;
   final AuthService _authService = AuthService();
+  Map<String, String?> _userPicByUsername = {};
 
   @override
   void initState() {
@@ -38,6 +40,21 @@ class _PostListScreenState extends State<PostListScreen> {
     setState(() {
       _postsFuture = _communityService.fetchPostsForGroup(widget.groupId);
     });
+    _loadUserPicMap();
+  }
+
+  Future<void> _loadUserPicMap() async {
+    try {
+      final users = await _authService.getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _userPicByUsername = {
+          for (final u in users) u.username: u.fullProfilePicUrl,
+        };
+      });
+    } catch (_) {
+      // Ignore silently; avatars will remain placeholders
+    }
   }
 
   Future<void> _refreshPosts() async {
@@ -150,13 +167,9 @@ class _PostListScreenState extends State<PostListScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  backgroundImage: post.authorProfilePic != null
-                                      ? NetworkImage(post.authorProfilePic!)
-                                      : null,
-                                  child: post.authorProfilePic == null
-                                      ? const Icon(Icons.person)
-                                      : null,
+                                DisplayProfilePic(
+                                  radius: 20,
+                                  imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(

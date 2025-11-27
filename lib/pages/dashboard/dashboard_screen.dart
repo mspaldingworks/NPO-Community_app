@@ -12,6 +12,7 @@ import 'package:transconnect/theme/app_theme.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -237,19 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final imageUrl = currentUser?.fullProfilePicUrl;
 
     return Center(
-      child: CircleAvatar(
-        radius: 40,
-        backgroundColor: Colors.grey[200],
-        // 1. If URL is null, backgroundImage is null
-        // 2. If URL exists, CachedNetworkImageProvider handles 
-        //    cache check -> download -> save -> display logic.
-        backgroundImage: imageUrl != null 
-            ? CachedNetworkImageProvider(imageUrl) 
-            : null,
-        child: imageUrl == null
-            ? const Icon(Icons.person, size: 40)
-            : null, 
-      ),
+      child: DisplayProfilePic(radius: 40, imageUrl: imageUrl),
     );
   }
 

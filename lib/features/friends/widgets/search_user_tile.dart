@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/features/friends/controllers/friends_controller.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class SearchUserTile extends StatelessWidget {
   final Friend user;
@@ -14,14 +15,7 @@ class SearchUserTile extends StatelessWidget {
     final isSent = controller.isRequestSent(user.username);
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: user.profilePic != null
-            ? NetworkImage(user.profilePic!)
-            : null,
-        child: user.profilePic == null
-            ? const Icon(Icons.person)
-            : null,
-      ),
+      leading: DisplayProfilePic(radius: 20, imageUrl: user.fullProfilePicUrl),
       title: Text(user.username, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(user.city ?? 'No location'),
       trailing: ElevatedButton(

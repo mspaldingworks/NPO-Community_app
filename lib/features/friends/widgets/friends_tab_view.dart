@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:transconnect/features/friends/controllers/friends_controller.dart';
 import 'package:transconnect/features/friends/widgets/pending_request_tile.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class FriendsTabView extends StatefulWidget {
   const FriendsTabView({Key? key}) : super(key: key);
@@ -82,10 +84,7 @@ class _FriendsTabViewState extends State<FriendsTabView> {
 
   Widget _buildFriendTile(Friend friend) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundImage: friend.profilePic != null ? NetworkImage(friend.profilePic!) : null,
-        child: friend.profilePic == null ? const Icon(Icons.person) : null,
-      ),
+      leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
       title: Text(friend.username),
       subtitle: friend.statusMessage != null ? Text(friend.statusMessage!) : null,
       trailing: IconButton(
@@ -109,7 +108,7 @@ class _FriendsTabViewState extends State<FriendsTabView> {
               title: const Text('Message'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to chat with friend
+                GoRouter.of(context).push('/chat/${friend.id}');
               },
             ),
             ListTile(

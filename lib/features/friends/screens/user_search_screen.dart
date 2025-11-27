@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -170,14 +171,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     final status = _requestStates[friend.id] ?? _FriendRequestStatus.idle;
 
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: (friend.profilePic != null && friend.profilePic!.isNotEmpty)
-                            ? NetworkImage(friend.profilePic!)
-                            : null,
-                        child: (friend.profilePic == null || friend.profilePic!.isEmpty)
-                            ? const Icon(Icons.person)
-                            : null,
-                      ),
+                      leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
                       title: Text(friend.username),
                       subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
                           ? Text(friend.statusMessage!)

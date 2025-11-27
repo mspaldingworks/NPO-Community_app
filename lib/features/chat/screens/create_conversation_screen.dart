@@ -9,6 +9,7 @@ import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/loading_indicator.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({super.key});
@@ -339,15 +340,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundImage: user.profilePic != null
-                            ? NetworkImage(user.profilePic!)
-                            : null,
-                        child: user.profilePic == null
-                            ? Text(user.username[0].toUpperCase())
-                            : null,
-                      ),
+                      DisplayProfilePic(radius: 32, imageUrl: user.fullProfilePicUrl),
                       Positioned(
                         right: 0,
                         top: 0,
@@ -426,14 +419,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       itemBuilder: (context, index) {
         final user = _searchResults[index];
         return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: user.profilePic != null
-                ? NetworkImage(user.profilePic!)
-                : null,
-            child: user.profilePic == null
-                ? Text(user.username[0].toUpperCase())
-                : null,
-          ),
+          leading: DisplayProfilePic(radius: 20, imageUrl: user.fullProfilePicUrl),
           title: Text(user.username),
           onTap: _isCreatingGroup
               ? () => _toggleUserSelection(user)
@@ -511,15 +497,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
 
           final friend = _friends[index - 2];
           return ListTile(
-            leading: CircleAvatar(
-              backgroundImage:
-                  friend.profilePic != null && friend.profilePic!.isNotEmpty
-                      ? NetworkImage(friend.profilePic!)
-                      : null,
-              child: (friend.profilePic == null || friend.profilePic!.isEmpty)
-                  ? Text(friend.username[0].toUpperCase())
-                  : null,
-            ),
+            leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
             title: Text(friend.username),
             subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
                 ? Text(friend.statusMessage!, maxLines: 1, overflow: TextOverflow.ellipsis)

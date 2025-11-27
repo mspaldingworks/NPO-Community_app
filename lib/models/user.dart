@@ -48,7 +48,7 @@ class User {
     return User(
 id: parsedId,
       username: json['username'] as String,
-      email: json['email'] as String,
+      email: json['email'] as String? ?? '',
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
       flair: json['flair'] as String?,

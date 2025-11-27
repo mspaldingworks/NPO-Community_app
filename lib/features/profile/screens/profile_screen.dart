@@ -10,6 +10,7 @@ import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -92,19 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey[200],
-                      // 1. If URL is null, backgroundImage is null
-                      // 2. If URL exists, CachedNetworkImageProvider handles 
-                      //    cache check -> download -> save -> display logic.
-                      backgroundImage: imageUrl != null 
-                          ? CachedNetworkImageProvider(imageUrl) 
-                          : null,
-                      child: imageUrl == null
-                          ? const Icon(Icons.person, size: 40)
-                          : null, 
-                    ),
+                    DisplayProfilePic(radius: 40, imageUrl: imageUrl),
                     Positioned(
                       bottom: 0,
                       right: 0,
@@ -134,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  _saveProfile;
+                  _saveProfile();
                   if (imageUrl != null){
                     CachedNetworkImage.evictFromCache(imageUrl);
                   }

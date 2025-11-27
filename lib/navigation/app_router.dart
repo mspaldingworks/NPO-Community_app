@@ -18,6 +18,7 @@ import 'package:transconnect/features/community/screens/create_post_screen.dart'
 import 'package:transconnect/features/community/screens/post_detail_screen.dart';
 import 'package:transconnect/features/community/screens/edit_post_screen.dart';
 import 'package:transconnect/features/friends/screens/user_search_screen.dart';
+import 'package:transconnect/features/chat/screens/chat_test_screen.dart'; // Add this import
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/pages/resources/create_resource_screen.dart';
@@ -192,6 +193,13 @@ class AppRouter {
         path: '/forms/lgl',
         builder: (context, state) => const LglFormScreen(),
       ),
+      
+      // Development-only routes
+      if (const bool.fromEnvironment('dart.vm.product') == false) 
+        GoRoute(
+          path: '/dev/chat-test',
+          builder: (context, state) => const ChatTestScreen(),
+        ),
     ],
     redirect: (BuildContext context, GoRouterState state) {
       final bool loggedIn = authService.currentUser != null;
