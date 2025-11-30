@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transconnect/core/services/auth_service.dart';
@@ -6,6 +7,7 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/navigation/app_router.dart';
 import 'package:transconnect/theme/app_theme.dart';
+import 'package:transconnect/features/dev/dev_menu.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,11 +39,12 @@ class MyApp extends StatelessWidget {
           final authService = Provider.of<AuthService>(context, listen: false);
           final appRouter = AppRouter(authService: authService);
 
-          return MaterialApp.router(
+          final app = MaterialApp.router(
             title: 'TransConnect',
             theme: AppTheme.lightTheme,
             routerConfig: appRouter.router,
           );
+          return kDebugMode ? DevMenu(child: app) : app;
         },
       ),
     );

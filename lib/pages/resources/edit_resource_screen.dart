@@ -22,6 +22,42 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
   late TextEditingController _tagsController;
   late bool _isPublic;
   bool _isLoading = false;
+  final List<String> _suggestedTags = const [
+    'Youth',
+    'Counseling',
+    'Non-profit',
+    'Mental Health',
+    'Healthcare',
+    'Legal',
+    'Housing',
+    'Crisis',
+    'Hotline',
+    'Support Group',
+    'Education',
+    'Employment',
+    'Food',
+    'Shelter',
+    'Transportation',
+    'Parents & Families',
+    'Advocacy',
+    'Financial Assistance',
+    'LGBTQ+',
+    'Trans',
+  ];
+  final Set<String> _selectedSuggestedTags = {};
+
+  List<String> _parseControllerTags() {
+    return _tagsController.text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+  }
+
+  void _syncTagsController() {
+    final combined = <String>{..._parseControllerTags(), ..._selectedSuggestedTags};
+    _tagsController.text = combined.join(', ');
+  }
 
   @override
   void initState() {
@@ -33,6 +69,12 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
     _providerController = TextEditingController(text: widget.resource.provider);
     _tagsController = TextEditingController(text: widget.resource.tags.join(', '));
     _isPublic = widget.resource.public ?? false;
+    final existing = widget.resource.tags.toSet();
+    for (final t in _suggestedTags) {
+      if (existing.contains(t)) {
+        _selectedSuggestedTags.add(t);
+      }
+    }
   }
 
   @override
@@ -61,7 +103,7 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
           url: _urlController.text,
           provider: _providerController.text,
           public: _isPublic,
-          tags: _tagsController.text.split(',').map((s) => s.trim()).toList(),
+          tags: <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList(),
         );
 
         await _resourceService.updateResource(updatedResource);
@@ -141,6 +183,30 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
               TextFormField(
                 controller: _tagsController,
                 decoration: const InputDecoration(labelText: 'Tags (comma-separated)'),
+              ),
+              const SizedBox(height: 12.0),
+              const Text('Suggested Tags'),
+              const SizedBox(height: 8.0),
+              Wrap(
+                spacing: 8,
+                runSpacing: -8,
+                children: _suggestedTags.map((tag) {
+                  final selected = _selectedSuggestedTags.contains(tag);
+                  return FilterChip(
+                    label: Text(tag),
+                    selected: selected,
+                    onSelected: (value) {
+                      setState(() {
+                        if (value) {
+                          _selectedSuggestedTags.add(tag);
+                        } else {
+                          _selectedSuggestedTags.remove(tag);
+                        }
+                        _syncTagsController();
+                      });
+                    },
+                  );
+                }).toList(),
               ),
               SwitchListTile(
                 title: const Text('Make Public'),
