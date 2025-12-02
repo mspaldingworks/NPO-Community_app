@@ -1,0 +1,30 @@
+# Virtual Environment
+venv/
+env/
+
+# Database
+db.sqlite3
+
+# Media and Static Files
+media/
+static_collected/
+staticfiles/
+
+# Configuration and Sensitive Information
+.env
+*.env
+settings_local.py
+
+# Python specific
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# IDE and OS specific
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

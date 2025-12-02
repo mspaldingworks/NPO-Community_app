@@ -9,6 +9,8 @@ import 'package:transconnect/theme/app_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:transconnect/core/services/shared_preferences_service.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -35,12 +37,14 @@ class _PostListScreenState extends State<PostListScreen> {
   late final CommunityService _communityService;
   final AuthService _authService = AuthService();
   Map<String, String?> _userPicByUsername = {};
+  late Future<Group> _groupFuture;
 
   @override
   void initState() {
     super.initState();
     _communityService = CommunityService();
     _loadPosts();
+    _groupFuture = _communityService.fetchGroupById(widget.groupId);
   }
 
   void _loadPosts() {
@@ -137,12 +141,65 @@ class _PostListScreenState extends State<PostListScreen> {
                 ),
               );
             } else {
-              final posts = snapshot.data!;
+              // Sort posts in descending order by publication date (most recent first)
+              final posts = [...snapshot.data!];
+              int _cmp(Post a, Post b) {
+                DateTime _parse(Post p) {
+                  final s = p.pubDate ?? p.updatedAt;
+                  if (s != null && s.isNotEmpty) {
+                    try { return DateTime.parse(s).toLocal(); } catch (_) {}
+                  }
+                  return DateTime.fromMillisecondsSinceEpoch(0);
+                }
+                final da = _parse(a);
+                final db = _parse(b);
+                return db.compareTo(da);
+              }
+              posts.sort(_cmp);
 
               return ListView.builder(
-                itemCount: posts.length,
+                itemCount: posts.length + 1,
                 itemBuilder: (context, index) {
-                  final post = posts[index];
+                  if (index == 0) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: FutureBuilder<Group>(
+                        future: _groupFuture,
+                        builder: (context, groupSnap) {
+                          final imgUrl = groupSnap.hasData ? groupSnap.data!.fullImageUrl : null;
+                          if (imgUrl == null) return const SizedBox.shrink();
+                          final token = SharedPreferencesService().getData('user_token');
+                          final headers = token != null ? {'Authorization': 'Token $token'} : null;
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CachedNetworkImage(
+                              imageUrl: imgUrl,
+                              httpHeaders: headers,
+                              height: 180,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Container(
+                                height: 180,
+                                alignment: Alignment.center,
+                                child: const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                height: 180,
+                                color: Colors.grey[200],
+                                alignment: Alignment.center,
+                                child: const Icon(Icons.image_not_supported),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                  final post = posts[index - 1];
                   final postDate = post.pubDate != null ? DateTime.parse(post.pubDate!) : DateTime.now();
                   String editedLabel = '';
                   if (post.isEdited && post.updatedAt != null) {
