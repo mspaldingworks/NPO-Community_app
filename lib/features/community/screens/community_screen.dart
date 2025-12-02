@@ -40,10 +40,37 @@ class _CommunityScreenState extends State<CommunityScreen> {
             return const Center(child: Text('No groups found.'));
           } else {
             final groups = snapshot.data!;
+            bool isRegion(Group g) {
+              final n = g.name.trim().toLowerCase();
+              return n == 'kentuckiana regional'
+                  || n == 'greater lexington'
+                  || n == 'central ky'
+                  || n == 'eastern ky'
+                  || n == 'western ky';
+            }
+
+            final regionGroups = groups.where(isRegion).toList();
+            final otherGroups = groups.where((g) => !isRegion(g)).toList();
+
+            final totalItems = otherGroups.length + (regionGroups.isNotEmpty ? 1 : 0);
             return ListView.builder(
-              itemCount: groups.length,
+              itemCount: totalItems,
               itemBuilder: (context, index) {
-                final group = groups[index];
+                if (regionGroups.isNotEmpty && index == 0) {
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: ListTile(
+                      title: const Text('Regional Chats'),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () {
+                        GoRouter.of(context).push('/community/regional');
+                      },
+                    ),
+                  );
+                }
+
+                final adjustedIndex = regionGroups.isNotEmpty ? index - 1 : index;
+                final group = otherGroups[adjustedIndex];
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
