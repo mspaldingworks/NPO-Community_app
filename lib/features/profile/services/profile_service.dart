@@ -15,7 +15,6 @@ class ProfileService {
     String? flair,
     List<String> statusImagePaths = const [],
   }) async {
-    // TODO MADDIE Expand this to use the update form to post a new photo. 
     /*
     ### Update User Profile with Image
       PATCH https://api.luxashome.com/api/profile/
