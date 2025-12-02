@@ -24,6 +24,7 @@ class ChatMessage {
   final String content;
   final DateTime timestamp;
   final bool isRead;
+  final String? imageUrl;
 
   ChatMessage({
     required this.id,
@@ -32,9 +33,11 @@ class ChatMessage {
     required this.content,
     required this.timestamp,
     required this.isRead,
+    this.imageUrl,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    final String? img = (json['image_url'] ?? json['image']) as String?;
     return ChatMessage(
       id: json['id'] as int,
       // Parse the nested user objects using the MessageUser model
@@ -43,6 +46,7 @@ class ChatMessage {
       content: json['content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
       isRead: json['is_read'] as bool,
+      imageUrl: img,
     );
   }
 }

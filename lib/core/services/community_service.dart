@@ -1,4 +1,7 @@
 import 'package:transconnect/core/services/api_client.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/group.dart';
 import 'package:transconnect/models/post.dart';
@@ -16,6 +19,69 @@ class CommunityService extends ApiClient {
     
     final List<dynamic> data = result as List<dynamic>;
     return data.map((json) => Group.fromJson(json)).toList();
+  }
+
+  /// Adds a new comment with an optional single image (image) via multipart.
+  Future<Comment> addCommentMultipart({
+    required int postId,
+    required String content,
+    bool anonymous = false,
+    String? imageFilePath,
+  }) async {
+    final uri = Uri.parse('${ApiEndpoints.host}/api/comments/');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Token $authToken'
+      ..fields['post'] = postId.toString()
+      ..fields['content'] = content
+      ..fields['anonymous'] = anonymous.toString();
+
+    if (imageFilePath != null && imageFilePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('image', imageFilePath));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode != 201) {
+      throw Exception('Failed to add comment: ${response.statusCode} ${response.body}');
+    }
+    final Map<String, dynamic> json = jsonDecode(response.body) as Map<String, dynamic>;
+    return Comment.fromJson(json);
+  }
+
+  /// Creates a new post with optional images via multipart/form-data.
+  /// Field names follow the agreed contract: images[] for multiple images.
+  Future<Post> createPostMultipart({
+    required int groupId,
+    required String title,
+    required String body,
+    required String emoji,
+    required bool public,
+    bool anonymous = false,
+    List<String> imageFilePaths = const [],
+  }) async {
+    final uri = Uri.parse('${ApiEndpoints.host}/api/posts/');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Token $authToken'
+      ..fields['group'] = groupId.toString()
+      ..fields['title'] = title
+      ..fields['body'] = body
+      ..fields['emoji'] = emoji
+      ..fields['public'] = public.toString()
+      ..fields['anonymous'] = anonymous.toString();
+
+    // Attach up to 4 images (client should enforce limit; keep extra safety here)
+    final files = imageFilePaths.take(4);
+    for (final path in files) {
+      request.files.add(await http.MultipartFile.fromPath('images[]', path));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create post: ${response.statusCode} ${response.body}');
+    }
+    final Map<String, dynamic> json = jsonDecode(response.body) as Map<String, dynamic>;
+    return Post.fromJson(json);
   }
 
   /// Fetches all posts.

@@ -6,6 +6,7 @@ class User {
   final String email;
   final String? city;
   final String? statusMessage;
+  final DateTime? statusUpdatedAt;
   final String? flair;
   final String? profilePic;
   final List<Friend> friends;
@@ -19,6 +20,7 @@ class User {
     required this.email,
     this.city,
     this.statusMessage,
+    this.statusUpdatedAt,
     this.flair,
     this.profilePic,
     this.friends = const [],
@@ -45,12 +47,28 @@ class User {
         ? friendsData.map((friendJson) => Friend.fromJson(friendJson)).toList()
         : <Friend>[];
 
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v).toLocal(); } catch (_) { return null; }
+      }
+      return null;
+    }
+
     return User(
 id: parsedId,
       username: json['username'] as String,
       email: json['email'] as String? ?? '',
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
+      statusUpdatedAt: parseDate(
+        json['status_updated_at'] ??
+        json['statusUpdatedAt'] ??
+        json['status_updated'] ??
+        json['status_time'] ??
+        json['status_at'] ??
+        json['updated_at']
+      ),
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
       friends: friendsList,
@@ -74,6 +92,7 @@ class Friend {
   final String email;
   final String? city;
   final String? statusMessage;
+  final DateTime? statusUpdatedAt;
   final String? flair;
   final String? profilePic;
 
@@ -83,6 +102,7 @@ class Friend {
     required this.email,
     this.city,
     this.statusMessage,
+    this.statusUpdatedAt,
     this.flair,
     this.profilePic,
   });
@@ -99,12 +119,28 @@ class Friend {
       throw const FormatException('Invalid ID format');
     }
 
+    DateTime? parseDate(dynamic v) {
+      if (v == null) return null;
+      if (v is String && v.isNotEmpty) {
+        try { return DateTime.parse(v).toLocal(); } catch (_) { return null; }
+      }
+      return null;
+    }
+
     return Friend(
       id: parsedId,
       username: json['username'] as String,
       email: json['email'] as String? ?? '', // Handle missing email gracefully
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
+      statusUpdatedAt: parseDate(
+        json['status_updated_at'] ??
+        json['statusUpdatedAt'] ??
+        json['status_updated'] ??
+        json['status_time'] ??
+        json['status_at'] ??
+        json['updated_at']
+      ),
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
     );
@@ -112,8 +148,11 @@ class Friend {
 
   String? get fullProfilePicUrl {
     if (profilePic == null) return null;
-    // Check if the API accidently sent a full URL, otherwise append host
-    if (profilePic!.startsWith('http')) return profilePic; 
-    return ApiEndpoints.host + '/media/' + (profilePic ?? ""); // TODO Look into why friend profile pics do not add media folder
+    // If backend returns full URL, use it as-is
+    if (profilePic!.startsWith('http')) return profilePic;
+    // If backend returns a path that already begins with '/media', just prefix host
+    if (profilePic!.startsWith('/')) return ApiEndpoints.host + profilePic!;
+    // Otherwise assume it's a relative path under /media
+    return ApiEndpoints.host + '/media/' + profilePic!;
   }
 }

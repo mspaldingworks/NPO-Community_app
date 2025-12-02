@@ -13,6 +13,7 @@ class ProfileService {
     String? fullName,
     String? city,
     String? flair,
+    List<String> statusImagePaths = const [],
   }) async {
     // TODO MADDIE Expand this to use the update form to post a new photo. 
     /*
@@ -38,7 +39,7 @@ class ProfileService {
       throw Exception('User not authenticated');
     }
 
-    if (imagePath != null && imagePath.isNotEmpty) {
+    if ((imagePath != null && imagePath.isNotEmpty) || statusImagePaths.isNotEmpty) {
       final uri = Uri.parse('https://api.luxashome.com/api/profile/');
       final request = http.MultipartRequest('PATCH', uri)
         ..headers['Authorization'] = 'Token $token'
@@ -48,10 +49,12 @@ class ProfileService {
       if (city != null) request.fields['city'] = city;
       if (flair != null) request.fields['flair'] = flair;
 
-      request.files.add(await http.MultipartFile.fromPath(
-        'profile_pic',
-        imagePath,
-      ));
+      if (imagePath != null && imagePath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath('profile_pic', imagePath));
+      }
+      for (final path in statusImagePaths) {
+        request.files.add(await http.MultipartFile.fromPath('status_images[]', path));
+      }
 
       final streamed = await request.send();
       final response = await http.Response.fromStream(streamed);

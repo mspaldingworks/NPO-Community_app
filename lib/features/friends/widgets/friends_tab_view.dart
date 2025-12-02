@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/features/friends/controllers/friends_controller.dart';
 import 'package:transconnect/features/friends/widgets/pending_request_tile.dart';
+import 'package:transconnect/features/friends/widgets/pending_sent_tile.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 
 class FriendsTabView extends StatefulWidget {
@@ -49,6 +51,13 @@ class _FriendsTabViewState extends State<FriendsTabView> {
                   ),
                   const Divider(),
                 ],
+                if (controller.pendingSentRequests.isNotEmpty) ...[
+                  _buildSectionHeader('Requests You Sent'),
+                  ...controller.pendingSentRequests.map(
+                    (request) => PendingSentTile(request: request),
+                  ),
+                  const Divider(),
+                ],
                 if (controller.friends.isNotEmpty) ...[
                   _buildSectionHeader('Friends'),
                   ...controller.friends.map(
@@ -70,6 +79,14 @@ class _FriendsTabViewState extends State<FriendsTabView> {
     );
   }
 
+  Widget? _buildStatusSubtitle(Friend friend) {
+    final msg = friend.statusMessage;
+    final when = friend.statusUpdatedAt;
+    if (msg == null || msg.isEmpty) return null;
+    if (when == null) return Text(msg);
+    return Text('$msg • ${timeAgo(when)}');
+  }
+
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -86,12 +103,22 @@ class _FriendsTabViewState extends State<FriendsTabView> {
     return ListTile(
       leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
       title: Text(friend.username),
-      subtitle: friend.statusMessage != null ? Text(friend.statusMessage!) : null,
-      trailing: IconButton(
-        icon: const Icon(Icons.more_vert),
-        onPressed: () {
-          _showFriendOptions(context, friend);
-        },
+      subtitle: _buildStatusSubtitle(friend),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Message',
+            onPressed: () => GoRouter.of(context).push('/chat/${friend.id}'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              _showFriendOptions(context, friend);
+            },
+          ),
+        ],
       ),
     );
   }

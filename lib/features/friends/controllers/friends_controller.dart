@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/friend_service.dart';
+import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/models/friend_request.dart';
 import 'package:transconnect/models/user.dart';
 
@@ -9,6 +10,9 @@ class FriendsController with ChangeNotifier {
   // State for pending requests
   List<FriendRequest> _pendingRequests = [];
   List<FriendRequest> get pendingRequests => _pendingRequests;
+  // Outgoing (sent) pending requests
+  List<FriendRequest> _pendingSentRequests = [];
+  List<FriendRequest> get pendingSentRequests => _pendingSentRequests;
   bool _isLoadingPending = false;
   bool get isLoadingPending => _isLoadingPending;
   String? _pendingError;
@@ -43,9 +47,24 @@ class FriendsController with ChangeNotifier {
 
     try {
       final requests = await _friendService.listPendingRequests();
-      _pendingRequests = requests
-          .where((req) => req.status == null || req.status == 'pending')
-          .toList();
+      // Determine the current user so we can filter for incoming requests only.
+      String? me;
+      try {
+        me = (await AuthService().getCurrentUser()).username;
+      } catch (_) {}
+
+      final isPending = (FriendRequest req) => req.status == null || req.status == 'pending';
+      final isIncoming = (FriendRequest req) {
+        if (me == null) return true; // If we can't resolve current user, show all pending entries
+        // Prefer entries explicitly addressed to me
+        if (req.toUser?.username == me) return true;
+        // Some backends omit to_user; treat as incoming if the sender isn't me
+        if (req.fromUser.username != me) return true;
+        return false;
+      };
+
+      _pendingRequests = requests.where((r) => isPending(r) && isIncoming(r)).toList();
+      _pendingSentRequests = requests.where((r) => isPending(r) && me != null && r.fromUser.username == me).toList();
     } catch (e) {
       _pendingError = 'Failed to load pending requests. Please try again.';
     } finally {
@@ -86,7 +105,18 @@ class FriendsController with ChangeNotifier {
     notifyListeners();
 
     try {
-      _friends = await _friendService.listFriends();
+      final apiFriends = await _friendService.listFriends();
+      if (apiFriends.isNotEmpty) {
+        _friends = apiFriends;
+      } else {
+        // Fallback: many endpoints embed friends within the current user payload
+        try {
+          final me = await AuthService().getCurrentUser();
+          _friends = me.friends;
+        } catch (_) {
+          _friends = [];
+        }
+      }
     } catch (e) {
       _friendsError = 'Failed to load friends. Please try again.';
     } finally {

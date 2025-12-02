@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +9,8 @@ import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class PostDetailScreen extends StatefulWidget {
@@ -20,6 +23,12 @@ class PostDetailScreen extends StatefulWidget {
   State<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
+String _fullUrl(String path) {
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/')) return ApiEndpoints.host + path;
+  return ApiEndpoints.host + '/media/' + path;
+}
+
 class _PostDetailScreenState extends State<PostDetailScreen> {
   late Future<Post> _postFuture;
   final TextEditingController _commentController = TextEditingController();
@@ -27,6 +36,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final DateFormat _editedDateFormat = DateFormat('MMM d, yyyy h:mm a');
   final AuthService _authService = AuthService();
   Map<String, String?> _userPicByUsername = {};
+  final ImagePicker _commentImagePicker = ImagePicker();
+  File? _commentImage;
+  static const int _maxCommentImageBytes = 10 * 1024 * 1024;
 
   @override
   void initState() {
@@ -57,11 +69,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     if (_commentController.text.isEmpty) return;
 
     try {
-      await _communityService.addComment(
-        postId: widget.postId,
-        content: _commentController.text,
-      );
+      if (_commentImage != null) {
+        await _communityService.addCommentMultipart(
+          postId: widget.postId,
+          content: _commentController.text,
+          imageFilePath: _commentImage!.path,
+        );
+      } else {
+        await _communityService.addComment(
+          postId: widget.postId,
+          content: _commentController.text,
+        );
+      }
       _commentController.clear();
+      _commentImage = null;
       _loadPost(); // Refresh the post data to show the new comment
     } catch (e) {
       if (mounted) {
@@ -228,15 +249,71 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   void _showAddCommentDialog() {
     _commentController.clear();
+    _commentImage = null;
     showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Add a Comment'),
-          content: TextField(
-            controller: _commentController,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Your comment'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _commentController,
+                autofocus: true,
+                decoration: const InputDecoration(hintText: 'Your comment'),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final picked = await _commentImagePicker.pickImage(source: ImageSource.gallery);
+                      if (picked == null) return;
+                      final file = File(picked.path);
+                      final bytes = await file.length();
+                      if (bytes > _maxCommentImageBytes) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Image too large. Max 10MB.')),
+                          );
+                        }
+                        return;
+                      }
+                      setState(() {
+                        _commentImage = file;
+                      });
+                    },
+                    icon: const Icon(Icons.photo_camera_back_outlined),
+                    label: const Text('Attach photo'),
+                  ),
+                  if (_commentImage != null) ...[
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.file(_commentImage!, fit: BoxFit.cover, width: 48, height: 48),
+                          ),
+                          Positioned(
+                            right: -6,
+                            top: -10,
+                            child: IconButton(
+                              iconSize: 18,
+                              onPressed: () { setState(() { _commentImage = null; }); },
+                              icon: const Icon(Icons.close),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ]
+                ],
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -349,6 +426,25 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ),
                 const SizedBox(height: 16),
                 Text(post.body ?? '[No Content]'),
+                if (post.images.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: post.images.map((u) {
+                      final src = _fullUrl(u);
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          src,
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
                 const Divider(height: 32),
                 Text('Comments', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),

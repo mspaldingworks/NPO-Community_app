@@ -8,6 +8,7 @@ import 'package:transconnect/models/group.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/constants/api_endpoints.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -21,6 +22,12 @@ class PostListScreen extends StatefulWidget {
 
   @override
   State<PostListScreen> createState() => _PostListScreenState();
+}
+
+String _fullUrl(String path) {
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/')) return ApiEndpoints.host + path;
+  return ApiEndpoints.host + '/media/' + path;
 }
 
 class _PostListScreenState extends State<PostListScreen> {
@@ -235,6 +242,25 @@ class _PostListScreenState extends State<PostListScreen> {
                             Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 8),
                             Text(post.body ?? ''),
+                            if (post.images.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: post.images.map((u) {
+                                  final src = _fullUrl(u);
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      src,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
                           ],
                         ),
                       ),

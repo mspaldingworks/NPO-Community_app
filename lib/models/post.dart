@@ -17,6 +17,7 @@ class Post {
   final List<Comment> comments;
   final List<String> emojis;
   final bool isAnonymous;
+  final List<String> images;
 
   Post({
     required this.id,
@@ -35,6 +36,7 @@ class Post {
     required this.comments,
     this.emojis = const [],
     this.isAnonymous = false,
+    this.images = const [],
   });
 
   bool get isEdited =>
@@ -113,6 +115,12 @@ class Post {
         (json['is_anonymous'] as bool?) ??
         false;
 
+    // Parse images list if provided
+    final imagesData = json['images'] as List?;
+    final List<String> images = imagesData != null
+        ? imagesData.map((e) => e.toString()).toList()
+        : const <String>[];
+
     return Post(
       id: json['id'] as int,
       title: json['title'] as String?,
@@ -130,6 +138,7 @@ class Post {
       comments: comments,
       emojis: emojisList,
       isAnonymous: isAnonymous,
+      images: images,
     );
   }
 }

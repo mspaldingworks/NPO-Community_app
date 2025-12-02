@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
@@ -134,6 +135,28 @@ class ChatService extends ApiClient {
       );
     } catch (e) {
       throw Exception('Failed to send message to user $recipientId: $e');
+    }
+  }
+
+  Future<void> sendMessageMultipart({
+    required int recipientId,
+    String content = '',
+    String? imageFilePath,
+  }) async {
+    final uri = Uri.parse('${ApiEndpoints.host}/api/messages/');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Token $authToken'
+      ..fields['recipient'] = recipientId.toString()
+      ..fields['content'] = content;
+
+    if (imageFilePath != null && imageFilePath.isNotEmpty) {
+      request.files.add(await http.MultipartFile.fromPath('image', imageFilePath));
+    }
+
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode != 201) {
+      throw Exception('Failed to send message: ${response.statusCode} ${response.body}');
     }
   }
 

@@ -31,6 +31,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final CalendarService _calendarService = CalendarService();
   File? _profileImage;
   bool _saving = false;
+  final List<File> _statusImages = [];
+  static const int _maxStatusImages = 4;
+  static const int _maxStatusImageBytes = 10 * 1024 * 1024;
 
   @override
   void initState() {
@@ -70,6 +73,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _addStatusImage() async {
+    if (_statusImages.length >= _maxStatusImages) return;
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    final file = File(picked.path);
+    final bytes = await file.length();
+    if (bytes > _maxStatusImageBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image too large. Max 10MB.')),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _statusImages.add(file);
+    });
+  }
+
+  void _removeStatusImage(int index) {
+    setState(() {
+      _statusImages.removeAt(index);
+    });
+  }
+
   void _saveProfile() async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -79,6 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       fullName: _fullNameController.text,
       city: _cityController.text,
       flair: _pronounsController.text,
+      statusImagePaths: _statusImages.map((f) => f.path).toList(),
     );
     if (mounted) {
       setState(() => _saving = false);
@@ -177,6 +206,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 maxLength: 140,
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _saving || _statusImages.length >= _maxStatusImages ? null : _addStatusImage,
+                    icon: const Icon(Icons.photo_library_outlined),
+                    label: Text('Add status photos (${_statusImages.length}/$_maxStatusImages)'),
+                  ),
+                ],
+              ),
+              if (_statusImages.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(_statusImages.length, (i) {
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            _statusImages[i],
+                            width: 92,
+                            height: 92,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: IconButton(
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: _saving ? null : () => _removeStatusImage(i),
+                            icon: const CircleAvatar(
+                              radius: 10,
+                              child: Icon(Icons.close, size: 14),
+                            ),
+                          ),
+                        )
+                      ],
+                    );
+                  }),
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {

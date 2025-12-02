@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
@@ -27,6 +30,9 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _messageFocusNode = FocusNode();
   final List<ChatMessage> _messages = [];
+  final ImagePicker _picker = ImagePicker();
+  File? _attachedImage;
+  static const int _maxImageBytes = 10 * 1024 * 1024;
 
   bool _isLoading = true;
   bool _isSending = false;
@@ -39,6 +45,37 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  String _fullUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/')) return '${ApiEndpoints.host}$url';
+    return '${ApiEndpoints.host}/$url';
+  }
+
+  Future<void> _pickImageAttachment() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    final file = File(picked.path);
+    final size = await file.length();
+    if (size > _maxImageBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image too large. Max 10MB.')),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _attachedImage = file;
+    });
+  }
+
+  void _removeAttachment() {
+    setState(() {
+      _attachedImage = null;
+    });
   }
   
   // --- NEW HELPER METHOD ---
@@ -139,6 +176,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
              content: message.content,
              timestamp: message.timestamp,
              isRead: true, // Mark as read locally
+              imageUrl: message.imageUrl,
            );
            _messages[_messages.indexOf(message)] = updatedMessage;
          }
@@ -275,13 +313,27 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        message.content,
-                        style: TextStyle(
-                          color:
-                              isCurrentUser ? Colors.white : Colors.black,
+                      if (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              _fullUrl(message.imageUrl),
+                              width: 220,
+                              height: 220,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
-                      ),
+                      if (message.content.isNotEmpty)
+                        Text(
+                          message.content,
+                          style: TextStyle(
+                            color:
+                                isCurrentUser ? Colors.white : Colors.black,
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
@@ -331,7 +383,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
 
 Future<void> _sendMessage() async {
     final content = _messageController.text.trim();
-    if (content.isEmpty) return;
+    if (content.isEmpty && _attachedImage == null) return;
     
     // 1. Clear input and start loading
     final originalContent = _messageController.text;
@@ -339,11 +391,18 @@ Future<void> _sendMessage() async {
     setState(() => _isSending = true);
 
     try {
-      // Send message
-      await _chatService.sendMessage(
-        recipientId: int.parse(widget.conversationId),
-        content: content,
-      );      
+      if (_attachedImage != null) {
+        await _chatService.sendMessageMultipart(
+          recipientId: int.parse(widget.conversationId),
+          content: content,
+          imageFilePath: _attachedImage!.path,
+        );
+      } else {
+        await _chatService.sendMessage(
+          recipientId: int.parse(widget.conversationId),
+          content: content,
+        );
+      }
       // 2. SUCCESS: Reload messages from the API to display the new message
       await _fetchMessages(); 
 
@@ -359,7 +418,10 @@ Future<void> _sendMessage() async {
     } finally {
       if (mounted) {
         // 4. Stop loading indicator
-        setState(() => _isSending = false);
+        setState(() {
+          _isSending = false;
+          _attachedImage = null;
+        });
         _scrollToBottom(); // Scroll one last time just in case
       }
     }
@@ -390,47 +452,93 @@ Future<void> _sendMessage() async {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            IconButton(
-              icon: const Icon(Icons.emoji_emotions_outlined),
-              onPressed: _toggleEmojiPicker,
-            ),
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                focusNode: _messageFocusNode,
-                decoration: InputDecoration(
-                  hintText: 'Type a message...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).brightness == Brightness.light
-                      ? Colors.grey[200]
-                      : Colors.grey[800],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.photo_library_outlined),
+                  onPressed: _isSending ? null : () => _pickImageAttachment(),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.emoji_emotions_outlined),
+                  onPressed: _toggleEmojiPicker,
+                ),
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    focusNode: _messageFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).brightness == Brightness.light
+                          ? Colors.grey[200]
+                          : Colors.grey[800],
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    minLines: 1,
+                    maxLines: 5,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
-                minLines: 1,
-                maxLines: 5,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _sendMessage(),
+                IconButton(
+                  icon: _isSending
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send),
+                  onPressed: _isSending ? null : _sendMessage,
+                ),
+              ],
+            ),
+            if (_attachedImage != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+                child: Row(
+                  children: [
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            _attachedImage!,
+                            width: 72,
+                            height: 72,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: IconButton(
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: _isSending ? null : () => _removeAttachment(),
+                            icon: const CircleAvatar(
+                              radius: 10,
+                              child: Icon(Icons.close, size: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              icon: _isSending
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.send),
-              onPressed: _isSending ? null : _sendMessage,
-            ),
           ],
         ),
       ),

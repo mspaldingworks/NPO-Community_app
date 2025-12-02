@@ -15,66 +15,21 @@ class ChatListScreen extends StatefulWidget {
   State<ChatListScreen> createState() => _ChatListScreenState();
 }
 
-class _ChatListScreenState extends State<ChatListScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    // Add a listener to rebuild the FAB when the tab changes
-    _tabController.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Connect'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: 'Messages'),
-            Tab(text: 'Friends'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          ConversationList(),
-          const FriendsTabView(),
-        ],
+      body: const FriendsTabView(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => GoRouter.of(context).push('/user-search'),
+        child: const Icon(Icons.person_add),
+        tooltip: 'Add Friend',
       ),
-      floatingActionButton: _buildFloatingActionButton(),
     );
-  }
-
-  Widget? _buildFloatingActionButton() {
-    switch (_tabController.index) {
-      case 0: // Chats Tab
-        return FloatingActionButton(
-          onPressed: () => GoRouter.of(context).push('/chat/create'),
-          child: const Icon(Icons.add),
-          tooltip: 'Start a new chat',
-        );
-      case 1: // Friends Tab
-        return FloatingActionButton(
-          onPressed: () => GoRouter.of(context).push('/user-search'),
-          backgroundColor: AppColors.secondary, // Yellow color
-          child: const Icon(Icons.person_add),
-          tooltip: 'Add Friend',
-        );
-      default:
-        return null;
-    }
   }
 }
 

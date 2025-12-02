@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/foundation.dart' as foundation;
+import 'package:image_picker/image_picker.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final int groupId;
@@ -23,6 +25,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _emojiPickerShowing = false;
   bool _isAnonymous = false;
   String? _emojiError;
+  final ImagePicker _imagePicker = ImagePicker();
+  final List<File> _images = [];
+  static const int _maxImages = 4;
+  static const int _maxBytes = 10 * 1024 * 1024;
 
   @override
   void dispose() {
@@ -61,6 +67,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     });
   }
 
+  Future<void> _addImage() async {
+    if (_images.length >= _maxImages) return;
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    final file = File(picked.path);
+    final bytes = await file.length();
+    if (bytes > _maxBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image too large. Max 10MB.')),
+        );
+      }
+      return;
+    }
+    setState(() {
+      _images.add(file);
+    });
+  }
+
+  void _removeImage(int index) {
+    setState(() {
+      _images.removeAt(index);
+    });
+  }
+
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -78,16 +109,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     });
 
     try {
-      final derivedFeeling = _selectedEmojis.join(' ');
-
-      await _communityService.createPost(
+      final derivedEmoji = _selectedEmojis.isNotEmpty ? _selectedEmojis.first : '';
+      await _communityService.createPostMultipart(
         groupId: widget.groupId,
         title: _titleController.text.trim(),
         body: _bodyController.text.trim(),
-        feeling: derivedFeeling,
-        emojis: _selectedEmojis,
+        emoji: derivedEmoji,
         public: true,
         anonymous: _isAnonymous,
+        imageFilePaths: _images.map((f) => f.path).toList(),
       );
 
       if (mounted) {
@@ -200,6 +230,53 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16.0),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _images.length >= _maxImages || _isLoading ? null : _addImage,
+                          icon: const Icon(Icons.photo_library_outlined),
+                          label: Text('Add photos (${_images.length}/$_maxImages)'),
+                        ),
+                      ],
+                    ),
+                    if (_images.isNotEmpty) ...[
+                      const SizedBox(height: 8.0),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: List.generate(_images.length, (i) {
+                          return Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  _images[i],
+                                  width: 92,
+                                  height: 92,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  iconSize: 18,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: _isLoading ? null : () => _removeImage(i),
+                                  icon: const CircleAvatar(
+                                    radius: 10,
+                                    child: Icon(Icons.close, size: 14),
+                                  ),
+                                ),
+                              )
+                            ],
+                          );
+                        }),
+                      ),
+                    ],
                     const SizedBox(height: 24.0),
                     ElevatedButton(
                       onPressed: _isLoading ? null : _submitForm,
