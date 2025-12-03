@@ -46,7 +46,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   || n == 'greater lexington'
                   || n == 'central ky'
                   || n == 'eastern ky'
-                  || n == 'western ky';
+                  || n == 'western ky'
+                  || n == 'south-central ky'
+                  || n == 'south central ky'
+                  || n == 'northern ky'
+                  || n == 'northern kentucky';
             }
 
             final regionGroups = groups.where(isRegion).toList();
