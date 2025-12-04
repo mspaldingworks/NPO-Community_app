@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
- 
+import 'package:transconnect/theme/app_theme.dart';
 
 class MutualAidScreen extends StatelessWidget {
   const MutualAidScreen({super.key});
@@ -10,10 +10,11 @@ class MutualAidScreen extends StatelessWidget {
     final color = Theme.of(context).colorScheme.primary;
     return Scaffold(
       appBar: AppBar(title: const Text('Mutual Aid')),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(12),
-        children: [
-          Padding(
+        itemCount: 1,
+        itemBuilder: (context, index) {
+          return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: SizedBox(
               height: 140,
@@ -31,8 +32,8 @@ class MutualAidScreen extends StatelessWidget {
                 },
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
