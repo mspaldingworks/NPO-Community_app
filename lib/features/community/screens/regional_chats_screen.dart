@@ -110,58 +110,58 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
                 ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                sliver: SliverGrid(
+                sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final group = regionGroups[index];
                       final imgUrl = group.fullImageUrl;
-                      return InkWell(
-                        onTap: () => GoRouter.of(context).push('/community/group/${group.id}', extra: group.name),
-                        child: Card(
-                          clipBehavior: Clip.antiAlias,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              if (imgUrl != null)
-                                CachedNetworkImage(
-                                  imageUrl: imgUrl,
-                                  httpHeaders: headers,
-                                  fit: BoxFit.cover,
-                                )
-                              else
-                                Container(color: Theme.of(context).colorScheme.surfaceVariant),
-                              Container(
-                                alignment: Alignment.bottomLeft,
-                                padding: const EdgeInsets.all(8),
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Colors.transparent, Colors.black54],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          onTap: () => GoRouter.of(context).push('/community/group/${group.id}', extra: group.name),
+                          child: SizedBox(
+                            height: 140,
+                            child: Card(
+                              clipBehavior: Clip.antiAlias,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  if (imgUrl != null)
+                                    CachedNetworkImage(
+                                      imageUrl: imgUrl,
+                                      httpHeaders: headers,
+                                      fit: BoxFit.cover,
+                                    )
+                                  else
+                                    Container(color: Theme.of(context).colorScheme.surfaceVariant),
+                                  Container(
+                                    alignment: Alignment.bottomLeft,
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Colors.transparent, Colors.black54],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      group.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                child: Text(
-                                  group.name,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       );
                     },
                     childCount: regionGroups.length,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.2,
                   ),
                 ),
               ),

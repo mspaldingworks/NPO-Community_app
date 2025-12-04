@@ -65,25 +65,25 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
             _CardItem(title: 'Hobbies', icon: Icons.interests, group: hobbiesGroup),
           ];
 
-          return GridView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return _IconCard(
-                title: item.title,
-                iconData: item.icon,
-                onTap: () {
-                  if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
-                  }
-                },
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 140,
+                  child: _IconCard(
+                    title: item.title,
+                    iconData: item.icon,
+                    onTap: () {
+                      if (item.group != null) {
+                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                      }
+                    },
+                  ),
+                ),
               );
             },
           );
@@ -164,27 +164,27 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
             ),
           ];
 
-          return GridView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return _IconCard(
-                title: item.title,
-                iconData: item.icon,
-                onTap: () {
-                  if (item.route != null) {
-                    GoRouter.of(context).push(item.route!);
-                  } else if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
-                  }
-                },
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 140,
+                  child: _IconCard(
+                    title: item.title,
+                    iconData: item.icon,
+                    onTap: () {
+                      if (item.route != null) {
+                        GoRouter.of(context).push(item.route!);
+                      } else if (item.group != null) {
+                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                      }
+                    },
+                  ),
+                ),
               );
             },
           );
@@ -247,27 +247,27 @@ class _LegalChatsScreenState extends State<LegalChatsScreen> {
             _CardItem(title: 'Legal', icon: Icons.gavel, group: legalGroup),
           ];
 
-          return GridView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(12),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.2,
-            ),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return _IconCard(
-                title: item.title,
-                iconData: item.icon,
-                onTap: () {
-                  if (item.route != null) {
-                    GoRouter.of(context).push(item.route!);
-                  } else if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
-                  }
-                },
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: SizedBox(
+                  height: 140,
+                  child: _IconCard(
+                    title: item.title,
+                    iconData: item.icon,
+                    onTap: () {
+                      if (item.route != null) {
+                        GoRouter.of(context).push(item.route!);
+                      } else if (item.group != null) {
+                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                      }
+                    },
+                  ),
+                ),
               );
             },
           );

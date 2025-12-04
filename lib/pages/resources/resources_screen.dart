@@ -9,26 +9,11 @@ class ResourcesScreen extends StatefulWidget {
   State<ResourcesScreen> createState() => _ResourcesScreenState();
 }
 
-class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _ResourcesScreenState extends State<ResourcesScreen> {
   final GlobalKey<ResourceGuideScreenState> _guideKey = GlobalKey<ResourceGuideScreenState>();
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 1, vsync: this);
-    _tabController.addListener(_handleTabChange);
-  }
-
-  void _handleTabChange() {
-    if (!mounted) return;
-    setState(() {});
-  }
-
-  @override
   void dispose() {
-    _tabController.removeListener(_handleTabChange);
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -44,23 +29,12 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resource Guide'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.menu_book_outlined), text: 'Guide'),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _createResource,
         child: const Icon(Icons.add),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          ResourceGuideScreen(key: _guideKey),
-        ],
-      ),
+      body: ResourceGuideScreen(key: _guideKey),
     );
   }
 }
