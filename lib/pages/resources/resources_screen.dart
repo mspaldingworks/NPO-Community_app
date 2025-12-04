@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/pages/resources/resource_guide_screen.dart';
-import 'package:transconnect/pages/resources/resource_mutual_aid_screen.dart';
 
 class ResourcesScreen extends StatefulWidget {
   const ResourcesScreen({super.key});
@@ -17,7 +16,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 1, vsync: this);
     _tabController.addListener(_handleTabChange);
   }
 
@@ -44,26 +43,22 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_tabController.index == 0 ? 'Resource Guide' : 'Mutual Aid'),
+        title: const Text('Resource Guide'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.menu_book_outlined), text: 'Guide'),
-            Tab(icon: Icon(Icons.handshake_outlined), text: 'Mutual Aid'),
           ],
         ),
       ),
-      floatingActionButton: _tabController.index == 0
-          ? FloatingActionButton(
-              onPressed: _createResource,
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createResource,
+        child: const Icon(Icons.add),
+      ),
       body: TabBarView(
         controller: _tabController,
         children: [
           ResourceGuideScreen(key: _guideKey),
-          const ResourceMutualAidScreen(),
         ],
       ),
     );

@@ -13,6 +13,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/services/friend_service.dart';
+import 'package:transconnect/core/utils/time_ago.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -26,10 +28,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final CalendarService _calendarService = CalendarService();
   final FavoritesService _favoritesService = FavoritesService();
   final ProfileService _profileService = ProfileService();
+  final FriendService _friendService = FriendService();
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
   bool _isLoading = true;
   AffirmationQuote? _quote;
+  List<Friend> _friendStatusFeed = [];
+  bool _isLoadingFriendFeed = true;
 
   @override
   void initState() {
@@ -45,6 +50,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final quote = pickRandomQuote();
 
+    // Load friends and prepare status feed (descending by updated time)
+    var apiFriends = await _friendService.listFriends();
+    // Ensure auth/session is loaded, then retry once
+    if (apiFriends.isEmpty) {
+      try { await AuthService().getCurrentUser(); } catch (_) {}
+      apiFriends = await _friendService.listFriends();
+    }
+
+    // Merge with friends embedded in current user payload; prefer entries with non-empty status
+    List<Friend> meFriends = const [];
+    try { meFriends = (await AuthService().getCurrentUser()).friends; } catch (_) {}
+
+    final Map<int, Friend> friendsById = {};
+    void addOrPrefer(Friend f) {
+      final existing = friendsById[f.id];
+      if (existing == null) {
+        friendsById[f.id] = f;
+      } else {
+        final hasStatus = (f.statusMessage?.trim().isNotEmpty ?? false);
+        final existingHasStatus = (existing.statusMessage?.trim().isNotEmpty ?? false);
+        if (hasStatus && !existingHasStatus) {
+          friendsById[f.id] = f;
+        } else if (hasStatus == existingHasStatus) {
+          // If both or neither have status, prefer the newer update time
+          final fa = f.statusUpdatedAt;
+          final fb = existing.statusUpdatedAt;
+          if (fa != null && (fb == null || fa.isAfter(fb))) {
+            friendsById[f.id] = f;
+          }
+        }
+      }
+    }
+
+    for (final f in apiFriends) addOrPrefer(f);
+    for (final f in meFriends) addOrPrefer(f);
+
+    final mergedFriends = friendsById.values.toList();
+    final statuses = mergedFriends
+        .where((f) => (f.statusMessage?.trim().isNotEmpty ?? false))
+        .toList();
+    statuses.sort((a, b) {
+      final A = a.statusUpdatedAt;
+      final B = b.statusUpdatedAt;
+      if (A == null && B == null) return 0;
+      if (A == null) return 1; // nulls last
+      if (B == null) return -1;
+      return B.compareTo(A); // newest first
+    });
+
     final upcomingFavoritedEvents = allEvents.where((event) {
       final isFavorited = favoriteIds.contains(event.uid);
       final isUpcoming = event.start.isAfter(now);
@@ -59,6 +113,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
         _isLoading = false;
         _quote = quote;
+        _friendStatusFeed = statuses;
+        _isLoadingFriendFeed = false;
       });
     }
   }
@@ -129,6 +185,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildProfileAvatar(),
             SizedBox(height: 16),
             _buildEditProfileButton(),
+            SizedBox(height: 24),
+            _buildFriendsStatusUpdates(),
           ],
         ),
       ),
@@ -255,6 +313,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: Text('Edit Profile'),
       ),
+    );
+  }
+
+  Widget _buildFriendsStatusUpdates() {
+    if (_isLoadingFriendFeed) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Friends Status Updates',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 12),
+        if (_friendStatusFeed.isEmpty)
+          Center(child: Text('No recent status updates.'))
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _friendStatusFeed.length,
+            itemBuilder: (context, index) {
+              final friend = _friendStatusFeed[index];
+              final when = friend.statusUpdatedAt;
+              final msg = friend.statusMessage?.trim() ?? '';
+              return Card(
+                margin: EdgeInsets.only(bottom: 8.0),
+                child: ListTile(
+                  leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+                  title: Text(friend.username),
+                  subtitle: Text(
+                    when == null ? msg : '$msg • ${timeAgo(when)}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 
