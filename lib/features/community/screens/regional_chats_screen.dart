@@ -98,6 +98,174 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
             return null;
           }
 
+          double zoomForRegion(String key) {
+            switch (key) {
+              case 'louisville':
+                return 1.5;
+              case 'northern ky':
+                return 1.45;
+              case 'central ky':
+                return 1.35;
+              case 'south-central ky':
+                return 1.30;
+              case 'eastern ky':
+                return 1.30;
+              case 'western ky':
+                return 1.25;
+            }
+            return 1.25;
+          }
+
+          // Normalize a group name to our region key set
+          String? regionKeyForGroupName(String name) {
+            final n = name.trim().toLowerCase();
+            if (n.contains('kentuckiana')) return 'louisville';
+            if (n.contains('central ky') || n.contains('greater lexington')) return 'central ky';
+            if (n.contains('eastern ky')) return 'eastern ky';
+            if (n.contains('western ky')) return 'western ky';
+            if (n.contains('south-central ky') || n.contains('south central ky')) return 'south-central ky';
+            if (n.contains('northern ky') || n.contains('northern kentucky')) return 'northern ky';
+            return null;
+          }
+
+          // Compute an Alignment (-1..1) for the region center, based on the hotspot rectangles above
+          Alignment? alignmentForRegion(String key) {
+            switch (key) {
+              case 'western ky': {
+                final cx = 0.02 + 0.35 / 2; // representative of the larger western block
+                final cy = 0.42 + 0.40 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+              case 'louisville': {
+                final cx = 0.44 + 0.17 / 2;
+                final cy = 0.28 + 0.36 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+              case 'northern ky': {
+                final cx = 0.62 + 0.12 / 2;
+                final cy = 0.12 + 0.20 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+              case 'central ky': {
+                final cx = 0.60 + 0.16 / 2;
+                final cy = 0.30 + 0.33 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+              case 'eastern ky': {
+                final cx = 0.76 + 0.20 / 2;
+                final cy = 0.24 + 0.56 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+              case 'south-central ky': {
+                final cx = 0.38 + 0.45 / 2; // use the larger bottom band
+                final cy = 0.62 + 0.22 / 2;
+                return Alignment((cx - 0.5) * 2, (cy - 0.5) * 2);
+              }
+            }
+            return null;
+          }
+
+          // Try to load an asset image for the region. If not found, fall back to
+          // the statewide map with alignment. Finally, fall back to gradient.
+          Widget regionImageWidget({required String key, required Alignment? align}) {
+            final slug = () {
+              switch (key) {
+                case 'western ky': return 'western_ky';
+                case 'south-central ky': return 'south_central_ky';
+                case 'louisville': return 'louisville_ky';
+                case 'northern ky': return 'northern_ky';
+                case 'eastern ky': return 'eastern_ky';
+                case 'central ky': return 'central_ky';
+              }
+              return key.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_');
+            }();
+
+            final Alignment effectiveAlign = align ?? Alignment.center;
+            final double zoom = zoomForRegion(key);
+
+            // Prefer the explicit filenames added in pubspec.yaml, then ky_* fallbacks,
+            // then a local statewide map, finally network fallback.
+            final List<String> candidates = () {
+              switch (key) {
+                case 'western ky':
+                  return [
+                    'assets/media/WKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+                case 'south-central ky':
+                  return [
+                    'assets/media/SouthCentralKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+                case 'louisville':
+                  return [
+                    'assets/media/Kentuckiana-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/louisville_ky_southern_indiana.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+                case 'northern ky':
+                  return [
+                    'assets/media/NorthernKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+                case 'eastern ky':
+                  return [
+                    'assets/media/EasternKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+                case 'central ky':
+                  return [
+                    'assets/media/CentalKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/CentralKY-Regions-Map-2048x1046.jpg',
+                    'assets/media/ky_$slug.jpg',
+                    'assets/media/ky_$slug.png',
+                  ];
+              }
+              return [
+                'assets/media/ky_$slug.jpg',
+                'assets/media/ky_$slug.png',
+              ];
+            }();
+
+            Widget networkFallback() => CachedNetworkImage(
+                  imageUrl: kyMapUrl,
+                  httpHeaders: null,
+                  fit: BoxFit.cover,
+                  alignment: effectiveAlign,
+                );
+
+            Widget localMapFallback() => Image.asset(
+                  'assets/media/Regions-Map-2048x1046.jpg',
+                  fit: BoxFit.cover,
+                  alignment: effectiveAlign,
+                  errorBuilder: (context, error, stack) => networkFallback(),
+                );
+
+            Widget tryAssetAt(int i) {
+              if (i >= candidates.length) {
+                return localMapFallback();
+              }
+              final path = candidates[i];
+              return Image.asset(
+                path,
+                fit: BoxFit.cover,
+                alignment: effectiveAlign,
+                errorBuilder: (context, error, stack) => tryAssetAt(i + 1),
+              );
+            }
+
+            return Transform.scale(
+              scale: zoom,
+              alignment: effectiveAlign,
+              child: tryAssetAt(0),
+            );
+          }
+
           Widget kyMapWithHotspots() {
             final List<_Hotspot> spots = [
               _Hotspot('western ky', 0.02, 0.42, 0.35, 0.40),
@@ -169,6 +337,8 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
                     (context, index) {
                       final group = regionGroups[index];
                       final imgUrl = group.fullImageUrl;
+                      final regionKey = regionKeyForGroupName(group.name);
+                      final regionAlignment = regionKey != null ? alignmentForRegion(regionKey) : null;
                       return InkWell(
                         onTap: () => GoRouter.of(context).push('/community/group/${group.id}', extra: group.name),
                         child: Card(
@@ -182,8 +352,21 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
                                   httpHeaders: headers,
                                   fit: BoxFit.cover,
                                 )
+                              else if (regionKey != null)
+                                regionImageWidget(key: regionKey, align: regionAlignment)
                               else
-                                Container(color: Theme.of(context).colorScheme.surfaceVariant),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Theme.of(context).colorScheme.primary.withOpacity(0.12),
+                                        Theme.of(context).colorScheme.primary.withOpacity(0.28),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                  ),
+                                ),
                               Container(
                                 alignment: Alignment.bottomLeft,
                                 padding: const EdgeInsets.all(8),
