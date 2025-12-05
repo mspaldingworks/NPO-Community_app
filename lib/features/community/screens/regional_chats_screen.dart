@@ -5,6 +5,15 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/models/group.dart';
 
+class _Hotspot {
+  final String region; // key used by idForRegion
+  final double x; // left as fraction of width (0..1)
+  final double y; // top as fraction of height (0..1)
+  final double w; // width as fraction of width (0..1)
+  final double h; // height as fraction of height (0..1)
+  const _Hotspot(this.region, this.x, this.y, this.w, this.h);
+}
+
 class RegionalChatsScreen extends StatefulWidget {
   const RegionalChatsScreen({super.key});
 
@@ -56,112 +65,157 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
           const String kyMapUrl = 'https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/Regions-Map-2048x1046-1.jpg';
           final String bannerImageUrl = kyMapUrl;
 
+          String? idForRegion(String key) {
+            String k = key.trim().toLowerCase();
+            Group find(bool Function(Group) test) => regionGroups.firstWhere(
+                  test,
+                  orElse: () => Group(id: 0, name: ''),
+                );
+            if (k == 'western ky') {
+              final g = find((g) => g.name.toLowerCase().contains('western ky'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            if (k == 'central ky') {
+              final g = find((g) => g.name.toLowerCase().contains('central ky') || g.name.toLowerCase().contains('greater lexington'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            if (k == 'eastern ky') {
+              final g = find((g) => g.name.toLowerCase().contains('eastern ky'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            if (k == 'south-central ky') {
+              final g = find((g) => g.name.toLowerCase().contains('south-central ky') || g.name.toLowerCase().contains('south central ky'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            if (k == 'northern ky') {
+              final g = find((g) => g.name.toLowerCase().contains('northern ky') || g.name.toLowerCase().contains('northern kentucky'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            if (k == 'louisville') {
+              final g = find((g) => g.name.toLowerCase().contains('kentuckiana'));
+              return g.id == 0 ? null : g.id.toString();
+            }
+            return null;
+          }
+
+          Widget kyMapWithHotspots() {
+            final List<_Hotspot> spots = [
+              _Hotspot('western ky', 0.02, 0.42, 0.35, 0.40),
+              _Hotspot('western ky', 0.30, 0.42, 0.12, 0.25),
+              _Hotspot('louisville', 0.44, 0.28, 0.17, 0.36),
+              _Hotspot('northern ky', 0.62, 0.12, 0.12, 0.20),
+              _Hotspot('central ky', 0.60, 0.30, 0.16, 0.33),
+              _Hotspot('eastern ky', 0.76, 0.24, 0.20, 0.56),
+              _Hotspot('south-central ky', 0.56, 0.50, 0.10, 0.09),
+              _Hotspot('south-central ky', 0.38, 0.62, 0.45, 0.22),
+            ];
+
+            return Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: AspectRatio(
+                  aspectRatio: 2048 / 1046,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final w = constraints.maxWidth;
+                      final h = constraints.maxHeight;
+                      return Stack(
+                        children: [
+                          CachedNetworkImage(
+                            imageUrl: bannerImageUrl,
+                            httpHeaders: null,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                          for (final s in spots)
+                            if (idForRegion(s.region) != null)
+                              Positioned(
+                                left: w * s.x,
+                                top: h * s.y,
+                                width: w * s.w,
+                                height: h * s.h,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      final id = idForRegion(s.region);
+                                      if (id != null) {
+                                        GoRouter.of(context).push('/community/group/$id', extra: s.region);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          }
+
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: InkWell(
-                      onTap: () {},
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Stack(
-                          children: [
-                            CachedNetworkImage(
-                              imageUrl: bannerImageUrl,
-                              httpHeaders: null,
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                            Container(
-                              height: 180,
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [Colors.transparent, Colors.black54],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              left: 12,
-                              bottom: 12,
-                              right: 12,
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Regional Map',
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                child: kyMapWithHotspots(),
+              ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                sliver: SliverList(
+                sliver: SliverGrid(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final group = regionGroups[index];
                       final imgUrl = group.fullImageUrl;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          onTap: () => GoRouter.of(context).push('/community/group/${group.id}', extra: group.name),
-                          child: SizedBox(
-                            height: 140,
-                            child: Card(
-                              clipBehavior: Clip.antiAlias,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  if (imgUrl != null)
-                                    CachedNetworkImage(
-                                      imageUrl: imgUrl,
-                                      httpHeaders: headers,
-                                      fit: BoxFit.cover,
-                                    )
-                                  else
-                                    Container(color: Theme.of(context).colorScheme.surfaceVariant),
-                                  Container(
-                                    alignment: Alignment.bottomLeft,
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [Colors.transparent, Colors.black54],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      group.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
+                      return InkWell(
+                        onTap: () => GoRouter.of(context).push('/community/group/${group.id}', extra: group.name),
+                        child: Card(
+                          clipBehavior: Clip.antiAlias,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (imgUrl != null)
+                                CachedNetworkImage(
+                                  imageUrl: imgUrl,
+                                  httpHeaders: headers,
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                Container(color: Theme.of(context).colorScheme.surfaceVariant),
+                              Container(
+                                alignment: Alignment.bottomLeft,
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.transparent, Colors.black54],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
                                   ),
-                                ],
+                                ),
+                                child: Text(
+                                  group.name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                       );
                     },
                     childCount: regionGroups.length,
+                  ),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.2,
                   ),
                 ),
               ),

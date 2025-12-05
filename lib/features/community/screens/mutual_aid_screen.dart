@@ -10,30 +10,27 @@ class MutualAidScreen extends StatelessWidget {
     final color = Theme.of(context).colorScheme.primary;
     return Scaffold(
       appBar: AppBar(title: const Text('Mutual Aid')),
-      body: ListView.builder(
+      body: GridView.count(
         padding: const EdgeInsets.all(12),
-        itemCount: 1,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: SizedBox(
-              height: 140,
-              child: _IconCard(
-                title: 'Request Help',
-                iconData: Icons.handshake_outlined,
-                color: color,
-                onTap: () async {
-                  final result = await context.push<bool>('/forms/lgl');
-                  if (result == true && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Thanks for submitting the form!')),
-                    );
-                  }
-                },
-              ),
-            ),
-          );
-        },
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.2,
+        children: [
+          _IconCard(
+            title: 'Request Help',
+            iconData: Icons.handshake_outlined,
+            color: color,
+            onTap: () async {
+              final result = await context.push<bool>('/forms/lgl');
+              if (result == true && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Thanks for submitting the form!')),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }

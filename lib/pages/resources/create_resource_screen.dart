@@ -43,6 +43,15 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   ];
   final Set<String> _selectedSuggestedTags = {};
 
+  @override
+  void initState() {
+    super.initState();
+    _tagsController.addListener(() {
+      // Rebuild so the Selected Tags chips reflect manual edits
+      setState(() {});
+    });
+  }
+
   List<String> _parseControllerTags() {
     return _tagsController.text
         .split(',')
@@ -54,6 +63,116 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   void _syncTagsController() {
     final combined = <String>{..._parseControllerTags(), ..._selectedSuggestedTags};
     _tagsController.text = combined.join(', ');
+  }
+
+  Color _colorForTag(String tag) {
+    // Derive a stable, high-contrast color per tag using HSL
+    final hash = tag.hashCode & 0xFFFFFF;
+    final hue = (hash % 360).toDouble();
+    // Ensure strong saturation and darker lightness for white text contrast
+    final hsl = HSLColor.fromAHSL(1.0, hue, 0.72, 0.42);
+    return hsl.toColor();
+  }
+
+  void _removeTag(String tag) {
+    final controllerTags = _parseControllerTags().toSet();
+    controllerTags.remove(tag);
+    _selectedSuggestedTags.remove(tag);
+    _tagsController.text = controllerTags.join(', ');
+    setState(() {});
+  }
+
+  Future<void> _openTagsPicker() async {
+    final initial = <String>{..._selectedSuggestedTags, ..._parseControllerTags()};
+    final picked = await showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final temp = Set<String>.from(initial);
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text('Select Tags', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () => setModalState(() => temp.clear()),
+                          child: const Text('Clear all'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SingleChildScrollView(
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: -8,
+                        children: _suggestedTags.map((tag) {
+                          final selected = temp.contains(tag);
+                          final color = _colorForTag(tag);
+                          return FilterChip(
+                            label: Text(
+                              tag,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                            ),
+                            selected: selected,
+                            selectedColor: color,
+                            // Use a slightly lighter (but still saturated) variant for unselected state
+                            backgroundColor: HSLColor.fromColor(color).withLightness(0.50).toColor(),
+                            shape: const StadiumBorder(),
+                            checkmarkColor: Colors.white,
+                            onSelected: (value) => setModalState(() {
+                              if (value) {
+                                temp.add(tag);
+                              } else {
+                                temp.remove(tag);
+                              }
+                            }),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () => Navigator.of(context).pop(temp),
+                        child: const Text('Done'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedSuggestedTags
+          ..clear()
+          ..addAll(picked);
+        _syncTagsController();
+      });
+    }
   }
 
   @override
@@ -190,29 +309,56 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                 decoration: const InputDecoration(labelText: 'Tags (comma-separated)'),
               ),
               const SizedBox(height: 12.0),
-              const Text('Suggested Tags'),
+              // Multi-select dropdown-style control
+              Builder(builder: (context) {
+                final selectedAll = <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    InkWell(
+                      onTap: _openTagsPicker,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Select Tags',
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.arrow_drop_down),
+                        ),
+                        child: Text(
+                          selectedAll.isEmpty ? 'Choose one or more' : '${selectedAll.length} selected',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+              const SizedBox(height: 12.0),
+              // Selected tags as removable, colored chips
+              Builder(builder: (context) {
+                final selectedAll = <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList();
+                if (selectedAll.isEmpty) return const SizedBox.shrink();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selected Tags', style: Theme.of(context).textTheme.labelLarge),
+                    const SizedBox(height: 8.0),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: -8,
+                      children: selectedAll.map((tag) {
+                        final color = _colorForTag(tag);
+                        return InputChip(
+                          label: Text(tag, style: const TextStyle(color: Colors.white)),
+                          backgroundColor: color,
+                          onDeleted: () => _removeTag(tag),
+                          deleteIconColor: Colors.white,
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                );
+              }),
               const SizedBox(height: 8.0),
-              Wrap(
-                spacing: 8,
-                runSpacing: -8,
-                children: _suggestedTags.map((tag) {
-                  final selected = _selectedSuggestedTags.contains(tag);
-                  return FilterChip(
-                    label: Text(tag),
-                    selected: selected,
-                    onSelected: (value) {
-                      setState(() {
-                        if (value) {
-                          _selectedSuggestedTags.add(tag);
-                        } else {
-                          _selectedSuggestedTags.remove(tag);
-                        }
-                        _syncTagsController();
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
               const SizedBox(height: 16.0),
               SwitchListTile(
                 title: const Text('Make Public'),
@@ -225,6 +371,12 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 24.0),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading
                     ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
