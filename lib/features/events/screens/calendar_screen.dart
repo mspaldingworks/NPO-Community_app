@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/features/events/services/favorites_service.dart';
 import 'package:transconnect/models/event.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -20,6 +21,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   bool _isLoading = true;
+
+  Future<void> _openPublicCalendar() async {
+    final url = Uri.parse('https://calendar.google.com/calendar/embed?src=louisvilleyouthgroup.org_dsuqb6s982mabolcjioivdu5pk%40group.calendar.google.com&ctz=America%2FNew_York');
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
 
   @override
   void initState() {
@@ -72,6 +78,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Events Calendar'),
+        actions: [
+          IconButton(
+            tooltip: 'Open public calendar',
+            icon: const Icon(Icons.public),
+            onPressed: _openPublicCalendar,
+          ),
+        ],
       ),
       body: Column(
         children: [

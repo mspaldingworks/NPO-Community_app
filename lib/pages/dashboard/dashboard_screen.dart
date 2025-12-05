@@ -99,15 +99,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return B.compareTo(A); // newest first
     });
 
-    final upcomingFavoritedEvents = allEvents.where((event) {
-      final isFavorited = favoriteIds.contains(event.uid);
-      final isUpcoming = event.start.isAfter(now);
-      return isFavorited && isUpcoming;
-    }).toList();
+    // Today-only events in chronological order
+    final todaysEvents = allEvents.where((event) {
+      final d = event.start.toLocal();
+      return d.year == now.year && d.month == now.month && d.day == now.day;
+    }).toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+
+    // Show only favorited events on the dashboard
+    final todaysFavoritedEvents = todaysEvents
+        .where((e) => favoriteIds.contains(e.uid))
+        .toList();
 
     if (mounted) {
       setState(() {
-        _upcomingFavoritedEvents = upcomingFavoritedEvents;
+        _upcomingFavoritedEvents = todaysFavoritedEvents;
         if (imagePath != null) {
           _profileImage = File(imagePath);
         }
@@ -259,7 +265,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (_upcomingFavoritedEvents.isEmpty) {
       return Center(
-        child: Text('No upcoming favorited events.'),
+        child: Text('No events today.'),
       );
     }
 
@@ -267,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Your Upcoming Events',
+          "Today's Events",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 12),

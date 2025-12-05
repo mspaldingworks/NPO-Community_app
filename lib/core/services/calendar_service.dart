@@ -3,7 +3,7 @@ import 'package:icalendar_parser/icalendar_parser.dart';
 import 'package:transconnect/models/event.dart';
 
 class CalendarService {
-  final String _calenderUrl = 'https://calendar.google.com/calendar/ical/c_5e1fb913d97c3279485d1cb25013c8947232eed0bbc5068ed003be9cebf4c58a%40group.calendar.google.com/public/basic.ics';
+  final String _calenderUrl = 'https://calendar.google.com/calendar/ical/louisvilleyouthgroup.org_dsuqb6s982mabolcjioivdu5pk%40group.calendar.google.com/public/basic.ics';
 
   Future<List<Event>> fetchEvents() async {
     try {
