@@ -205,24 +205,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        ActionChip(
-                          avatar: const Icon(Icons.add, size: 18),
-                          label: const Text('Request a new group'),
-                          onPressed: () async {
-                            await launchUrl(Uri.parse(addGroupFormUrl), mode: LaunchMode.externalApplication);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
                     child: Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       child: Padding(
@@ -272,6 +254,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         final navCards = [
                           {'title': 'Gender Identity', 'icon': Icons.transgender, 'route': '/community/gender'},
                           {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
+                          {'title': 'Sexual Health', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
                         ];
                         if (index < navCards.length) {
                           final item = navCards[index];
@@ -349,7 +332,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         );
                       },
-                      childCount: 2 + otherGroups.length,
+                      childCount: 3 + otherGroups.length,
                     ),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
