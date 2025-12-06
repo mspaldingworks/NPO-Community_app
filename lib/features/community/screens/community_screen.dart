@@ -4,6 +4,7 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/group.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -73,6 +74,7 @@ class _IconCard extends StatelessWidget {
 class _CommunityScreenState extends State<CommunityScreen> {
   late Future<List<Group>> _groupsFuture;
   late final CommunityService _communityService;
+  static const String addGroupFormUrl = 'https://secure.lglforms.com/form_engine/s/mXMyAB13_0grfkW5rl3IUQ';
 
   @override
   void initState() {
@@ -81,11 +83,26 @@ class _CommunityScreenState extends State<CommunityScreen> {
     _groupsFuture = _communityService.fetchGroups();
   }
 
+  IconData _iconForGroupName(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('general')) return Icons.forum;
+    if (n.contains('kink')) return Icons.favorite;
+    if (n.contains('hugbox') || n.contains('hug box') || n.contains('photo') || n.contains('image') || n.contains('pic')) return Icons.photo_library;
+    if (n.contains('hug')) return Icons.volunteer_activism;
+    if (n.contains('gaming') || n.contains('game')) return Icons.sports_esports;
+    if (n.contains('art') || n.contains('creative')) return Icons.palette;
+    if (n.contains('music')) return Icons.music_note;
+    if (n.contains('fitness') || n.contains('sports')) return Icons.fitness_center;
+    if (n.contains('study') || n.contains('book') || n.contains('edu')) return Icons.menu_book;
+    if (n.contains('support')) return Icons.support_agent;
+    return Icons.groups; // sensible default
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community Groups'),
+        title: const Text('Community'),
       ),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
@@ -187,6 +204,59 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
+                    padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        ActionChip(
+                          avatar: const Icon(Icons.add, size: 18),
+                          label: const Text('Request a new group'),
+                          onPressed: () async {
+                            await launchUrl(Uri.parse(addGroupFormUrl), mode: LaunchMode.externalApplication);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    child: Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Request a new group', style: Theme.of(context).textTheme.titleMedium),
+                                  SizedBox(height: 4),
+                                  Text('Ask admins to add or approve a new community group.', style: Theme.of(context).textTheme.bodySmall),
+                                ],
+                              ),
+                            ),
+                            ElevatedButton.icon(
+                              onPressed: () async { await launchUrl(Uri.parse(addGroupFormUrl), mode: LaunchMode.externalApplication); },
+                              icon: Icon(Icons.add),
+                              label: Text('Request'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.pink,
+                                foregroundColor: Colors.white,
+                                shape: const StadiumBorder(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
                     padding: EdgeInsets.fromLTRB(12, 8, 12, 8),
                     child: Text(
                       'All other groups',
@@ -202,7 +272,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         final navCards = [
                           {'title': 'Gender Identity', 'icon': Icons.transgender, 'route': '/community/gender'},
                           {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
-                          {'title': 'Mutual Aid', 'icon': Icons.handshake_outlined, 'route': '/community/mutual-aid'},
                         ];
                         if (index < navCards.length) {
                           final item = navCards[index];
@@ -214,6 +283,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         }
                         final group = otherGroups[index - navCards.length];
                         final imgUrl = group.fullImageUrl;
+                        final displayName = group.name.toLowerCase().contains('hugbox') || group.name.toLowerCase().contains('hug box')
+                            ? 'Photo Share'
+                            : group.name;
                         return InkWell(
                           onTap: () {
                             GoRouter.of(context).push('/community/group/${group.id}', extra: group.name);
@@ -245,28 +317,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                 if (imgUrl == null)
                                   Center(
                                     child: Icon(
-                                      Icons.groups,
+                                      _iconForGroupName(group.name),
                                       size: 64,
                                       color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
                                     ),
                                   ),
-                                Container(
+                                Align(
                                   alignment: Alignment.bottomLeft,
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [Colors.transparent, Colors.black54],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Colors.transparent, Colors.black54],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    group.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
+                                    child: Text(
+                                      displayName,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -275,7 +349,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         );
                       },
-                      childCount: 3 + otherGroups.length,
+                      childCount: 2 + otherGroups.length,
                     ),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,

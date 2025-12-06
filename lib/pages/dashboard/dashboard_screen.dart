@@ -15,6 +15,7 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
+import 'package:transconnect/core/services/chat_service.dart';
 
 
 class DashboardScreen extends StatefulWidget {
@@ -29,17 +30,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final ProfileService _profileService = ProfileService();
   final FriendService _friendService = FriendService();
+  final ChatService _chatService = ChatService();
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
   bool _isLoading = true;
   AffirmationQuote? _quote;
   List<Friend> _friendStatusFeed = [];
   bool _isLoadingFriendFeed = true;
+  final Map<int, TextEditingController> _statusCommentCtrls = {};
+
+  TextEditingController _ctrlFor(int friendId)
+      => _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _statusCommentCtrls.values) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _loadDashboardData() async {
@@ -348,13 +362,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final msg = friend.statusMessage?.trim() ?? '';
               return Card(
                 margin: EdgeInsets.only(bottom: 8.0),
-                child: ListTile(
-                  leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
-                  title: Text(friend.username),
-                  subtitle: Text(
-                    when == null ? msg : '$msg • ${timeAgo(when)}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+                        title: Text(friend.username),
+                        subtitle: Text(
+                          when == null ? msg : '$msg • ${timeAgo(when)}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          DisplayProfilePic(
+                            radius: 16,
+                            imageUrl: Provider.of<AuthService>(context, listen: false).currentUser?.fullProfilePicUrl,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              controller: _ctrlFor(friend.id),
+                              decoration: InputDecoration(
+                                hintText: "Comment on ${friend.username}'s status...",
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.send),
+                                  color: Colors.pink,
+                                  onPressed: () async {
+                                    final text = _ctrlFor(friend.id).text.trim();
+                                    if (text.isEmpty) return;
+                                    try {
+                                      await _chatService.sendMessage(recipientId: friend.id, content: text);
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Comment sent to ${friend.username}')),
+                                      );
+                                      _ctrlFor(friend.id).clear();
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Failed to send: $e')),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               );
