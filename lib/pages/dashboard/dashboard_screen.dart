@@ -38,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Friend> _friendStatusFeed = [];
   bool _isLoadingFriendFeed = true;
   final Map<int, TextEditingController> _statusCommentCtrls = {};
+  int _todaysEventsCount = 0;
 
   TextEditingController _ctrlFor(int friendId)
       => _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
@@ -128,6 +129,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) {
       setState(() {
         _upcomingFavoritedEvents = todaysFavoritedEvents;
+        _todaysEventsCount = todaysEvents.length;
         if (imagePath != null) {
           _profileImage = File(imagePath);
         }
@@ -189,18 +191,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
                 _buildInfoCard(
                   Icons.calendar_today_outlined,
-                  _isLoading ? '...' : '${_upcomingFavoritedEvents.length} upcoming events',
+                  _isLoading ? '...' : '$_todaysEventsCount upcoming events',
                   onTap: () {
                     context.push('/events/calendar');
                   },
-                  isHighlighted: _upcomingFavoritedEvents.isNotEmpty,
+                  isHighlighted: _todaysEventsCount > 0,
                 ),
               ],
             ),
             SizedBox(height: 24),
             _buildQuoteCard(),
-            SizedBox(height: 24),
-            _buildUpcomingFavoritedEvents(),
             SizedBox(height: 24),
             _buildProfileAvatar(),
             SizedBox(height: 16),
