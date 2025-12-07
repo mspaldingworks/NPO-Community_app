@@ -21,6 +21,7 @@ import 'package:transconnect/features/community/screens/regional_chats_screen.da
 import 'package:transconnect/features/community/screens/gender_chats_screen.dart';
 import 'package:transconnect/features/community/screens/mutual_aid_screen.dart';
 import 'package:transconnect/features/community/screens/sexual_health_screen.dart';
+import 'package:transconnect/features/community/screens/photo_album_screen.dart';
 import 'package:transconnect/features/friends/screens/user_search_screen.dart';
 import 'package:transconnect/features/chat/screens/chat_test_screen.dart'; // Add this import
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
@@ -124,6 +125,10 @@ class AppRouter {
                   GoRoute(
                     path: 'sexual-health',
                     builder: (context, state) => const SexualHealthScreen(),
+                  ),
+                  GoRoute(
+                    path: 'photo-album',
+                    builder: (context, state) => const PhotoAlbumScreen(),
                   ),
                   GoRoute(
                     path: 'mutual-aid',

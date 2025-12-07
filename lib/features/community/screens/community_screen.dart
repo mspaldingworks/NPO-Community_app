@@ -146,8 +146,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
               return n.contains('hobbies') || n.contains('hobby');
             }
 
+            bool isPhotoAlbumGroup(Group g) {
+              final n = g.name.trim().toLowerCase();
+              return n.contains('hugbox') || n.contains('hug box') || n.contains('honest improvement');
+            }
+
             final regionGroups = groups.where(isRegion).toList();
-            final otherGroups = groups.where((g) => !isRegion(g) && !isGender(g) && !isLegal(g) && !isHobbies(g)).toList();
+            final otherGroups = groups.where((g) => !isRegion(g) && !isGender(g) && !isLegal(g) && !isHobbies(g) && !isPhotoAlbumGroup(g)).toList();
 
             final token = SharedPreferencesService().getData('user_token');
             final headers = token != null ? {'Authorization': 'Token $token'} : null;
@@ -255,6 +260,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           {'title': 'Gender Identity', 'icon': Icons.transgender, 'route': '/community/gender'},
                           {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
                           {'title': 'Sexual Health', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
+                          {'title': 'Photo Album', 'icon': Icons.photo_library, 'route': '/community/photo-album'},
                         ];
                         if (index < navCards.length) {
                           final item = navCards[index];
@@ -266,9 +272,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         }
                         final group = otherGroups[index - navCards.length];
                         final imgUrl = group.fullImageUrl;
-                        final displayName = group.name.toLowerCase().contains('hugbox') || group.name.toLowerCase().contains('hug box')
-                            ? 'Photo Share'
-                            : group.name;
                         return InkWell(
                           onTap: () {
                             GoRouter.of(context).push('/community/group/${group.id}', extra: group.name);
@@ -317,7 +320,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                       ),
                                     ),
                                     child: Text(
-                                      displayName,
+                                      group.name,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -332,7 +335,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         );
                       },
-                      childCount: 3 + otherGroups.length,
+                      childCount: 4 + otherGroups.length,
                     ),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
