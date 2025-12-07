@@ -40,7 +40,7 @@ class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('General')),
+      appBar: AppBar(title: const Text('Affinity')),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
         builder: (context, snapshot) {
@@ -52,14 +52,12 @@ class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
           }
           final groups = snapshot.data ?? [];
 
-          final general = _findByNames(groups, ['general']);
           final bipoc = _findByNames(groups, ['bipoc']);
           final neuro = _findByNames(groups, ['neurospicy', 'neurodivergent', 'neurodivergence']);
           final under30 = _findByNames(groups, ['under 30', 'u30', 'under30']);
           final over60 = _findByNames(groups, ['60+', '60 plus', 'senior', 'older']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'General Chat', icon: Icons.forum, group: general),
             _CardItem(title: 'BIPOC', icon: Icons.groups, group: bipoc),
             _CardItem(title: 'Neurospicy', icon: Icons.psychology, group: neuro),
             _CardItem(title: 'Under 30 chat', icon: Icons.cake, group: under30),

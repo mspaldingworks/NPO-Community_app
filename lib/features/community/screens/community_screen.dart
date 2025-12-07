@@ -160,8 +160,32 @@ class _CommunityScreenState extends State<CommunityScreen> {
               return false;
             }
 
+            bool isSexualHealthGroup(Group g) {
+              final n = g.name.trim().toLowerCase();
+              if (n.contains('kink') || n.contains('bdsm') || n.contains('fetish')) return true;
+              if (n.contains('prep') || n.contains('pep')) return true;
+              if (n.contains('sti') || n.contains('std') || n.contains('testing') || n.contains('clinic')) return true;
+              if (n.contains('safer sex') || n.contains('sex ed') || n.contains('sex education')) return true;
+              if (n.contains('consent') || n.contains('boundaries')) return true;
+              if (n.contains('sexual health') || n.contains('sexual wellness')) return true;
+              return false;
+            }
+
+            bool isGeneralGroup(Group g) {
+              final n = g.name.trim().toLowerCase();
+              return n == 'general' || n == 'general chat' || n.startsWith('general ');
+            }
+
             final regionGroups = groups.where(isRegion).toList();
-            final otherGroups = groups.where((g) => !isRegion(g) && !isGender(g) && !isLegal(g) && !isHobbies(g) && !isPhotoAlbumGroup(g) && !isGeneralAffinity(g)).toList();
+            final otherGroups = groups.where((g) =>
+              !isRegion(g)
+              && !isGender(g)
+              && !isLegal(g)
+              && !isHobbies(g)
+              && !isPhotoAlbumGroup(g)
+              && !isGeneralAffinity(g)
+              && !isSexualHealthGroup(g)
+            ).toList();
 
             final token = SharedPreferencesService().getData('user_token');
             final headers = token != null ? {'Authorization': 'Token $token'} : null;
@@ -268,9 +292,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                         final navCards = [
                           {'title': 'Gender Identity', 'icon': Icons.transgender, 'route': '/community/gender'},
                           {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
-                          {'title': 'Sexual Health', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
+                          {'title': 'Sexual Wellness', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
                           {'title': 'Photo Album', 'icon': Icons.photo_library, 'route': '/community/photo-album'},
-                          {'title': 'General', 'icon': Icons.forum, 'route': '/community/general'},
+                          {'title': 'Affinity', 'icon': Icons.forum, 'route': '/community/general'},
                         ];
                         if (index < navCards.length) {
                           final item = navCards[index];

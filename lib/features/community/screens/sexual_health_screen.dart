@@ -40,7 +40,7 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sexual Health')),
+      appBar: AppBar(title: const Text('Sexual Wellness')),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
         builder: (context, snapshot) {
@@ -65,7 +65,7 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
           final consent = _findByNames(groups, ['consent', 'boundaries']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'Sexual Health (General)', icon: Icons.favorite, group: sexualHealth),
+            _CardItem(title: 'Sexual Wellness (General)', icon: Icons.favorite, group: sexualHealth),
             _CardItem(title: 'Kink', icon: Icons.favorite_border, group: kink),
             _CardItem(title: 'PrEP & PEP Access', icon: Icons.medication, group: prepPep),
             _CardItem(title: 'STI Testing & Clinics', icon: Icons.medical_services, group: stiTesting),
