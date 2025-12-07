@@ -151,8 +151,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
               return n.contains('hugbox') || n.contains('hug box') || n.contains('honest improvement');
             }
 
+            bool isGeneralAffinity(Group g) {
+              final n = g.name.trim().toLowerCase();
+              if (n.contains('bipoc')) return true;
+              if (n.contains('neurospicy') || n.contains('neurodivergent') || n.contains('neurodivergence')) return true;
+              if (n.contains('under 30') || n.contains('u30') || n.contains('under30')) return true;
+              if (n.contains('60+') || n.contains('60 plus') || n.contains('senior') || n.contains('older')) return true;
+              return false;
+            }
+
             final regionGroups = groups.where(isRegion).toList();
-            final otherGroups = groups.where((g) => !isRegion(g) && !isGender(g) && !isLegal(g) && !isHobbies(g) && !isPhotoAlbumGroup(g)).toList();
+            final otherGroups = groups.where((g) => !isRegion(g) && !isGender(g) && !isLegal(g) && !isHobbies(g) && !isPhotoAlbumGroup(g) && !isGeneralAffinity(g)).toList();
 
             final token = SharedPreferencesService().getData('user_token');
             final headers = token != null ? {'Authorization': 'Token $token'} : null;
@@ -261,6 +270,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
                           {'title': 'Sexual Health', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
                           {'title': 'Photo Album', 'icon': Icons.photo_library, 'route': '/community/photo-album'},
+                          {'title': 'General', 'icon': Icons.forum, 'route': '/community/general'},
                         ];
                         if (index < navCards.length) {
                           final item = navCards[index];
@@ -335,7 +345,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         );
                       },
-                      childCount: 4 + otherGroups.length,
+                      childCount: 5 + otherGroups.length,
                     ),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,

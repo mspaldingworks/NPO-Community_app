@@ -3,14 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/group.dart';
 
-class SexualHealthScreen extends StatefulWidget {
-  const SexualHealthScreen({super.key});
+class GeneralCommunityScreen extends StatefulWidget {
+  const GeneralCommunityScreen({super.key});
 
   @override
-  State<SexualHealthScreen> createState() => _SexualHealthScreenState();
+  State<GeneralCommunityScreen> createState() => _GeneralCommunityScreenState();
 }
 
-class _SexualHealthScreenState extends State<SexualHealthScreen> {
+class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
   late final CommunityService _communityService;
   late Future<List<Group>> _groupsFuture;
 
@@ -40,7 +40,7 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sexual Health')),
+      appBar: AppBar(title: const Text('General')),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
         builder: (context, snapshot) {
@@ -51,26 +51,19 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final groups = snapshot.data ?? [];
-          final sexualHealth = _findByNames(groups, [
-            'sexual health',
-            'sexual-health',
-            'sexual wellness',
-            'sexual health & wellness',
-            'sexual'
-          ]);
-          final kink = _findByNames(groups, ['kink', 'kinky', 'bdsm', 'fetish']);
-          final prepPep = _findByNames(groups, ['prep', 'pep', 'hiv prevention', 'prep & pep', 'prep/pep']);
-          final stiTesting = _findByNames(groups, ['sti testing', 'std testing', 'testing', 'clinics']);
-          final saferSex = _findByNames(groups, ['safer sex', 'sex ed', 'sex education']);
-          final consent = _findByNames(groups, ['consent', 'boundaries']);
+
+          final general = _findByNames(groups, ['general']);
+          final bipoc = _findByNames(groups, ['bipoc']);
+          final neuro = _findByNames(groups, ['neurospicy', 'neurodivergent', 'neurodivergence']);
+          final under30 = _findByNames(groups, ['under 30', 'u30', 'under30']);
+          final over60 = _findByNames(groups, ['60+', '60 plus', 'senior', 'older']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'Sexual Health (General)', icon: Icons.favorite, group: sexualHealth),
-            _CardItem(title: 'Kink', icon: Icons.favorite_border, group: kink),
-            _CardItem(title: 'PrEP & PEP Access', icon: Icons.medication, group: prepPep),
-            _CardItem(title: 'STI Testing & Clinics', icon: Icons.medical_services, group: stiTesting),
-            _CardItem(title: 'Safer Sex Tips', icon: Icons.health_and_safety, group: saferSex),
-            _CardItem(title: 'Consent & Boundaries', icon: Icons.rule, group: consent),
+            _CardItem(title: 'General Chat', icon: Icons.forum, group: general),
+            _CardItem(title: 'BIPOC', icon: Icons.groups, group: bipoc),
+            _CardItem(title: 'Neurospicy', icon: Icons.psychology, group: neuro),
+            _CardItem(title: 'Under 30 chat', icon: Icons.cake, group: under30),
+            _CardItem(title: '60+ chat', icon: Icons.elderly, group: over60),
           ];
 
           return GridView.builder(
