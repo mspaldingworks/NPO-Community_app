@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
-import 'package:transconnect/features/events/services/favorites_service.dart';
+import 'package:transconnect/core/services/favorites_service.dart';
 import 'package:transconnect/models/event.dart';
 import 'package:url_launcher/url_launcher.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/pages/resources/resource_guide_screen.dart';
-import 'package:transconnect/features/community/screens/mutual_aid_screen.dart';
+import 'package:transconnect/pages/community/mutual_aid_screen.dart';
 
 class ResourcesScreen extends StatefulWidget {
   const ResourcesScreen({super.key});

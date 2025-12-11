@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/features/friends/controllers/friends_controller.dart';
-import 'package:transconnect/features/friends/widgets/pending_request_tile.dart';
-import 'package:transconnect/features/friends/widgets/pending_sent_tile.dart';
+import 'package:transconnect/core/services/friends_controller.dart';
+import 'pending_request_tile.dart';
+import 'pending_sent_tile.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';

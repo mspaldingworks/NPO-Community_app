@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/features/friends/widgets/friends_tab_view.dart';
+import 'package:transconnect/widgets/friends/friends_tab_view.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/models/user.dart';

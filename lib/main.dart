@@ -7,7 +7,7 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/navigation/app_router.dart';
 import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/features/dev/dev_menu.dart';
+import 'package:transconnect/widgets/dev/dev_menu.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

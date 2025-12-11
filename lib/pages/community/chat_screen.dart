@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/features/community/models/message_model.dart';
+import 'package:transconnect/models/message_model.dart';
 import 'package:transconnect/models/chat_message.dart';
 
 class ChatScreen extends StatefulWidget {

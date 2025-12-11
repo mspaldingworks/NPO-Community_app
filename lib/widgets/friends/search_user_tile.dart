@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/features/friends/controllers/friends_controller.dart';
+import 'package:transconnect/core/services/friends_controller.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 
