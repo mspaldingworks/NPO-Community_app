@@ -5,13 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 
+import 'package:transconnect/core/services/api_client_interface.dart';
+
 /// A parent class for making generic API calls, now handling authentication 
 /// token retrieval and standardized response processing.
-class ApiClient {
+class ApiClient implements ApiClientInterface {
   final String _baseUrl = 'https://api.luxashome.com';
   final Logger _logger = Logger();
   
-  static const String _authTokenKey = 'user_token'; 
+  static const String _authTokenKey = 'user_token';
   final SharedPreferencesService _prefsService; 
 
   ApiClient() : _prefsService = SharedPreferencesService(); 
