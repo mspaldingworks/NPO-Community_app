@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:io';
 import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/ws_message.dart';
 
 Future<void> main() async {
   print('🚀 Starting Chat Service Test...');

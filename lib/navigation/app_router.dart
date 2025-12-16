@@ -35,6 +35,7 @@ import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/pages/forms/lgl_form_screen.dart';
 import 'package:transconnect/pages/events/calendar_screen.dart';
+import 'package:transconnect/pages/admin/moderation_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -232,6 +233,11 @@ class AppRouter {
       GoRoute(
         path: '/forms/lgl',
         builder: (context, state) => const LglFormScreen(),
+      ),
+
+      GoRoute(
+        path: '/admin/moderation',
+        builder: (context, state) => const ModerationScreen(),
       ),
       
       // Development-only routes

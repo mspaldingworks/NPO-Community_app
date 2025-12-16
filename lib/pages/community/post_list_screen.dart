@@ -11,6 +11,8 @@ import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -213,6 +215,7 @@ class _PostListScreenState extends State<PostListScreen> {
                   final displayAuthor = post.isAnonymous
                       ? 'Anonymous'
                       : (post.authorUsername ?? 'Unknown user');
+                  final isOwner = currentUser != null && currentUser.id == post.author;
 
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -270,29 +273,56 @@ class _PostListScreenState extends State<PostListScreen> {
                                       style: const TextStyle(fontSize: 48),
                                     ),
                                   ),
-                                if (currentUser != null && currentUser.id == post.author)
-                                  PopupMenuButton<String>(
-                                    onSelected: (value) async {
-                                      if (value == 'delete') {
-                                        _showDeleteConfirmationDialog(post.id);
-                                      } else if (value == 'edit') {
-                                        final result = await context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
-                                        if (result == true && mounted) {
-                                          _refreshPosts();
-                                        }
+                                PopupMenuButton<String>(
+                                  onSelected: (value) async {
+                                    if (value == 'report') {
+                                      await showReportDialog(
+                                        context: context,
+                                        baseRequest: ReportRequest(
+                                          type: ReportTargetType.post,
+                                          reason: '',
+                                          targetId: post.id,
+                                          targetUsername: displayAuthor,
+                                          details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    if (!isOwner) return;
+                                    if (value == 'delete') {
+                                      _showDeleteConfirmationDialog(post.id);
+                                    } else if (value == 'edit') {
+                                      final result = await context.push(
+                                        '/community/group/${widget.groupId}/post/${post.id}/edit',
+                                        extra: post,
+                                      );
+                                      if (result == true && mounted) {
+                                        _refreshPosts();
                                       }
-                                    },
-                                    itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
-                                      PopupMenuItem<String>(
-                                        value: 'edit',
-                                        child: Text('Edit'),
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    final items = <PopupMenuEntry<String>>[
+                                      const PopupMenuItem<String>(
+                                        value: 'report',
+                                        child: Text('Report'),
                                       ),
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text('Delete'),
-                                      ),
-                                    ],
-                                  ),
+                                    ];
+                                    if (isOwner) {
+                                      items.addAll(const <PopupMenuEntry<String>>[
+                                        PopupMenuItem<String>(
+                                          value: 'edit',
+                                          child: Text('Edit'),
+                                        ),
+                                        PopupMenuItem<String>(
+                                          value: 'delete',
+                                          child: Text('Delete'),
+                                        ),
+                                      ]);
+                                    }
+                                    return items;
+                                  },
+                                ),
                               ],
                             ),
                             const SizedBox(height: 12),
@@ -308,11 +338,26 @@ class _PostListScreenState extends State<PostListScreen> {
                                   final src = _fullUrl(u);
                                   return ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      src,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
+                                    child: GestureDetector(
+                                      onLongPress: () async {
+                                        await showReportDialog(
+                                          context: context,
+                                          baseRequest: ReportRequest(
+                                            type: ReportTargetType.photo,
+                                            reason: '',
+                                            targetId: post.id,
+                                            targetUsername: displayAuthor,
+                                            targetUrl: src,
+                                            details: 'Post photo',
+                                          ),
+                                        );
+                                      },
+                                      child: Image.network(
+                                        src,
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
                                   );
                                 }).toList(),

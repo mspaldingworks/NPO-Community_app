@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -179,6 +181,18 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                               ? Text(friend.city!)
                               : null),
                       trailing: _buildActionButton(friend, status),
+                      onLongPress: () async {
+                        await showReportDialog(
+                          context: context,
+                          baseRequest: ReportRequest(
+                            type: ReportTargetType.user,
+                            reason: '',
+                            targetUserId: friend.id,
+                            targetUsername: friend.username,
+                            details: friend.statusMessage,
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

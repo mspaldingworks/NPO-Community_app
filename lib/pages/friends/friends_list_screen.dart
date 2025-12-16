@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -72,6 +74,18 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                       : null,
                   onTap: () {
                     GoRouter.of(context).push('/chat/${friend.id}');
+                  },
+                  onLongPress: () async {
+                    await showReportDialog(
+                      context: context,
+                      baseRequest: ReportRequest(
+                        type: ReportTargetType.user,
+                        reason: '',
+                        targetUserId: friend.id,
+                        targetUsername: friend.username,
+                        details: friend.statusMessage,
+                      ),
+                    );
                   },
                 );
               },

@@ -6,6 +6,8 @@ import 'package:transconnect/core/services/resource_service.dart';
 import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 Color _getColorFromTag(String tag) {
   final hash = tag.hashCode;
@@ -242,6 +244,23 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                       child: const Text('Edit'),
                     ),
                   const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Report',
+                    onPressed: () async {
+                      await showReportDialog(
+                        context: context,
+                        baseRequest: ReportRequest(
+                          type: ReportTargetType.resource,
+                          reason: '',
+                          targetId: resource.id,
+                          targetUsername: resource.user,
+                          targetUrl: resource.url,
+                          details: '${resource.name ?? ''}\n\n${resource.description ?? ''}'.trim(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.flag_outlined),
+                  ),
                   ElevatedButton(
                     onPressed: () => _launchURL(resource.url),
                     child: const Text('More Info'),

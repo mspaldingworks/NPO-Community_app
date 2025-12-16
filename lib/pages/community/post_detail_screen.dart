@@ -12,6 +12,8 @@ import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final int groupId;
@@ -351,6 +353,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 return Row(
                   children: [
                     IconButton(
+                      icon: const Icon(Icons.flag_outlined),
+                      onPressed: () async {
+                        await showReportDialog(
+                          context: context,
+                          baseRequest: ReportRequest(
+                            type: ReportTargetType.post,
+                            reason: '',
+                            targetId: post.id,
+                            targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
+                            details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
                         context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
@@ -363,7 +380,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ],
                 );
               }
-              return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.flag_outlined),
+                onPressed: () async {
+                  await showReportDialog(
+                    context: context,
+                    baseRequest: ReportRequest(
+                      type: ReportTargetType.post,
+                      reason: '',
+                      targetId: post.id,
+                      targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
+                      details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                    ),
+                  );
+                },
+              );
             },
           ),
         ],
@@ -435,11 +466,26 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       final src = _fullUrl(u);
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          src,
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.cover,
+                        child: GestureDetector(
+                          onLongPress: () async {
+                            await showReportDialog(
+                              context: context,
+                              baseRequest: ReportRequest(
+                                type: ReportTargetType.photo,
+                                reason: '',
+                                targetId: post.id,
+                                targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
+                                targetUrl: src,
+                                details: 'Post photo',
+                              ),
+                            );
+                          },
+                          child: Image.network(
+                            src,
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       );
                     }).toList(),
@@ -504,6 +550,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   ),
                                 const SizedBox(height: 4),
                                 Text(comment.content),
+                                TextButton(
+                                  onPressed: () async {
+                                    await showReportDialog(
+                                      context: context,
+                                      baseRequest: ReportRequest(
+                                        type: ReportTargetType.comment,
+                                        reason: '',
+                                        targetId: comment.id,
+                                        targetUsername: comment.authorUsername,
+                                        details: comment.content,
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Report'),
+                                ),
                                 if (isCommentAuthor)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 4.0),

@@ -25,6 +25,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/chat_message.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class _PathPoint {
   final double t;
@@ -1349,6 +1351,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   }
                                   await _showStatusDmCommentsSheet(friend);
                                 },
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.flag_outlined),
+                            onPressed: () async {
+                              final p = _statusPostByFriendId[friend.id];
+                              final msg = friend.statusMessage?.trim() ?? '';
+                              await showReportDialog(
+                                context: context,
+                                baseRequest: ReportRequest(
+                                  type: ReportTargetType.status,
+                                  reason: '',
+                                  targetId: p?.id,
+                                  targetUserId: friend.id,
+                                  targetUsername: friend.username,
+                                  details: msg,
+                                ),
                               );
                             },
                           ),

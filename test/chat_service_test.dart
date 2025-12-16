@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/ws_message.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class MockWebSocketChannel extends Mock implements WebSocketChannel {}
 

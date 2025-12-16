@@ -9,6 +9,8 @@ import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/loading_indicator.dart';
+import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/widgets/report_dialog.dart';
 
 class ChatMessageScreen extends StatefulWidget {
   final String conversationId;
@@ -275,94 +277,118 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
 
     // ... (rest of _buildMessage remains the same, except for the removed showUsername logic in the Column)
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
-        mainAxisAlignment:
-            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Avatar logic remains, but simplified
-          if (showAvatar)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundImage: null, // profilePic logic removed as it's not in MessageUser model
-                child: Text(message.sender.username[0].toUpperCase()), // Use first letter
+    return GestureDetector(
+      onLongPress: () async {
+        final otherUserId = int.tryParse(widget.conversationId);
+        final targetUserId = isCurrentUser ? otherUserId : message.sender.id;
+        final targetUsername = isCurrentUser ? _otherUsername : message.sender.username;
+
+        await showReportDialog(
+          context: context,
+          baseRequest: ReportRequest(
+            type: (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+                ? ReportTargetType.photo
+                : ReportTargetType.comment,
+            reason: '',
+            targetId: message.id,
+            targetUserId: targetUserId,
+            targetUsername: targetUsername,
+            targetUrl: message.imageUrl != null && message.imageUrl!.isNotEmpty
+                ? _fullUrl(message.imageUrl)
+                : null,
+            details: message.content,
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisAlignment:
+              isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            // Avatar logic remains, but simplified
+            if (showAvatar)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundImage: null, // profilePic logic removed as it's not in MessageUser model
+                  child: Text(message.sender.username[0].toUpperCase()), // Use first letter
+                ),
               ),
-            ),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: isCurrentUser
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                // REMOVED: if (showUsername) block is removed
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isCurrentUser
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+            Flexible(
+              child: Column(
+                crossAxisAlignment: isCurrentUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                children: [
+                  // REMOVED: if (showUsername) block is removed
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isCurrentUser
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                _fullUrl(message.imageUrl),
+                                width: 220,
+                                height: 220,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        if (message.content.isNotEmpty)
+                          Text(
+                            message.content,
+                            style: TextStyle(
+                              color:
+                                  isCurrentUser ? Colors.white : Colors.black,
+                            ),
+                          ),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              _fullUrl(message.imageUrl),
-                              width: 220,
-                              height: 220,
-                              fit: BoxFit.cover,
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            _formatMessageTime(message.timestamp),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isCurrentUser
+                                  ? Colors.white70
+                                  : Colors.grey[600],
                             ),
                           ),
                         ),
-                      if (message.content.isNotEmpty)
-                        Text(
-                          message.content,
-                          style: TextStyle(
-                            color:
-                                isCurrentUser ? Colors.white : Colors.black,
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          _formatMessageTime(message.timestamp),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isCurrentUser
-                                ? Colors.white70
-                                : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          // Read status for current user's messages
-          if (isCurrentUser)
-            Padding(
-              padding: const EdgeInsets.only(left: 4.0),
-              child: Icon(
-                message.isRead ? Icons.done_all : Icons.done,
-                size: 16,
-                color: message.isRead ? AppColors.secondary : Colors.grey,
+                ],
               ),
             ),
-        ],
+            // Read status for current user's messages
+            if (isCurrentUser)
+              Padding(
+                padding: const EdgeInsets.only(left: 4.0),
+                child: Icon(
+                  message.isRead ? Icons.done_all : Icons.done,
+                  size: 16,
+                  color: message.isRead ? AppColors.secondary : Colors.grey,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
