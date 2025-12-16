@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,13 +10,52 @@ import 'package:transconnect/core/services/favorites_service.dart';
 import 'package:transconnect/core/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
 import 'package:transconnect/theme/app_theme.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:transconnect/models/post.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/services/friend_service.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
+import 'package:transconnect/core/services/community_service.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:video_player/video_player.dart';
+import 'package:transconnect/widgets/emergency_alert_banner.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:transconnect/core/services/chat_service.dart';
+import 'package:transconnect/models/chat_message.dart';
+
+class _PathPoint {
+  final double t;
+  final double x;
+  final double y;
+  const _PathPoint(this.t, this.x, this.y);
+}
+
+class _ToggleCalibrationIntent extends Intent {
+  const _ToggleCalibrationIntent();
+}
+
+class _ToggleVideoPauseIntent extends Intent {
+  const _ToggleVideoPauseIntent();
+}
+
+class _SeekBackwardIntent extends Intent {
+  const _SeekBackwardIntent();
+}
+
+class _SeekForwardIntent extends Intent {
+  const _SeekForwardIntent();
+}
+
+class _SeekBackwardLargeIntent extends Intent {
+  const _SeekBackwardLargeIntent();
+}
+
+class _SeekForwardLargeIntent extends Intent {
+  const _SeekForwardLargeIntent();
+}
 
 
 class DashboardScreen extends StatefulWidget {
@@ -30,6 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FavoritesService _favoritesService = FavoritesService();
   final ProfileService _profileService = ProfileService();
   final FriendService _friendService = FriendService();
+  final CommunityService _communityService = CommunityService();
   final ChatService _chatService = ChatService();
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
@@ -38,7 +79,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Friend> _friendStatusFeed = [];
   bool _isLoadingFriendFeed = true;
   final Map<int, TextEditingController> _statusCommentCtrls = {};
+  final Map<int, Post> _statusPostByFriendId = {};
+  final Map<int, List<ChatMessage>> _statusDmCommentsByFriendId = {};
+  bool _isLoadingStatusPosts = false;
+  bool _updatingProfilePic = false;
   int _todaysEventsCount = 0;
+
+  static const String _statusDmPrefix = '[STATUS_COMMENT] ';
+
+  bool _quoteVisible = false;
+  Timer? _quoteTimer;
+
+  final double _hotspotCycleSeconds = 10.0;
+  final double _hotspotMarginSeconds = 1.0;
+  final double _hotspotWidthFraction = 0.18;
+  final double _hotspotPauseSeconds = 10.0;
+  final double _hotspotPhaseOffsetSeconds = 0.0;
+
+  VideoPlayerController? _videoCtrl;
+  bool _videoReady = false;
+  bool _videoWaitingForRestart = false;
+  Timer? _videoPauseTimer;
+  final double _videoPlaybackSpeed = 1.0;
+  bool _animVisible = true;
+  bool _suppressUntilNextLoop = false;
+  final double _hotspotHeightFraction = 0.15;
+  bool _calibrationMode = false;
+
+  final List<_PathPoint> _hotspotPath = const [
+    _PathPoint(0.000, 0.000, 0.696),
+    _PathPoint(0.079, 0.000, 0.696),
+    _PathPoint(0.129, 0.000, 0.752),
+    _PathPoint(0.179, 0.000, 0.581),
+    _PathPoint(0.219, 0.077, 0.503),
+    _PathPoint(0.269, 0.196, 0.378),
+    _PathPoint(0.299, 0.259, 0.382),
+    _PathPoint(0.339, 0.320, 0.547),
+    _PathPoint(0.379, 0.366, 0.665),
+    _PathPoint(0.419, 0.408, 0.514),
+    _PathPoint(0.449, 0.374, 0.430),
+    _PathPoint(0.469, 0.358, 0.479),
+    _PathPoint(0.509, 0.398, 0.662),
+    _PathPoint(0.539, 0.444, 0.689),
+    _PathPoint(0.569, 0.571, 0.456),
+    _PathPoint(0.589, 0.580, 0.454),
+    _PathPoint(0.609, 0.614, 0.511),
+    _PathPoint(0.629, 0.662, 0.585),
+    _PathPoint(0.659, 0.723, 0.649),
+    _PathPoint(0.669, 0.765, 0.700),
+    _PathPoint(0.699, 0.780, 0.612),
+    _PathPoint(0.719, 0.782, 0.582),
+    _PathPoint(0.819, 1.000, 0.627),
+    _PathPoint(0.849, 1.000, 0.679),
+    _PathPoint(0.879, 1.000, 0.761),
+    _PathPoint(0.899, 1.000, 0.797),
+    _PathPoint(1.000, 1.000, 0.797),
+  ];
+
+  double get _effectiveCycleSeconds {
+    if (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized) {
+      final durMs = _videoCtrl!.value.duration.inMilliseconds;
+      if (durMs > 0) {
+        final playedSeconds = (durMs / 1000.0) / (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed);
+        // Force the cycle to 10s if the video is longer than that.
+        return playedSeconds > _hotspotCycleSeconds ? _hotspotCycleSeconds : playedSeconds;
+      }
+    }
+    return _hotspotCycleSeconds;
+  }
+
+  Future<void> _showStatusDmCommentsSheet(Friend friend) async {
+    List<ChatMessage> msgs = _statusDmCommentsByFriendId[friend.id] ?? const [];
+    if (msgs.isEmpty) {
+      try {
+        final all = await _chatService.getConversation(friend.id);
+        msgs = _filterStatusDmMessages(all);
+        _statusDmCommentsByFriendId[friend.id] = msgs;
+        if (mounted) setState(() {});
+      } catch (_) {}
+    }
+
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final height = MediaQuery.of(context).size.height;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+          child: SizedBox(
+            height: height * 0.6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comments',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                if (msgs.isEmpty)
+                  const Text('No comments yet.')
+                else
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: msgs.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, i) {
+                        final m = msgs[i];
+                        final content = m.content.startsWith(_statusDmPrefix)
+                            ? m.content.substring(_statusDmPrefix.length)
+                            : m.content;
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text('${m.sender.username}: $content'),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Offset _samplePath(double t) {
+    if (_hotspotPath.isEmpty) return const Offset(0.5, 0.5);
+    final clamped = t.clamp(0.0, 1.0);
+    for (int i = 0; i < _hotspotPath.length - 1; i++) {
+      final a = _hotspotPath[i];
+      final b = _hotspotPath[i + 1];
+      if (clamped >= a.t && clamped <= b.t) {
+        final span = (b.t - a.t).abs() < 1e-6 ? 1.0 : (clamped - a.t) / (b.t - a.t);
+        final x = a.x + (b.x - a.x) * span;
+        final y = a.y + (b.y - a.y) * span;
+        return Offset(x, y);
+      }
+    }
+    final last = _hotspotPath.last;
+    return Offset(last.x, last.y);
+  }
 
   TextEditingController _ctrlFor(int friendId)
       => _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
@@ -46,15 +244,126 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _initVideo();
     _loadDashboardData();
   }
 
   @override
   void dispose() {
+    _quoteTimer?.cancel();
+    _videoPauseTimer?.cancel();
+    awaitDisposeVideo();
     for (final c in _statusCommentCtrls.values) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  void awaitDisposeVideo() {
+    try {
+      _videoCtrl?.removeListener(_onVideoTick);
+      _videoCtrl?.dispose();
+    } catch (_) {}
+    _videoCtrl = null;
+  }
+
+  Future<void> _initVideo() async {
+    try {
+      VideoPlayerController? ctrl;
+      try {
+        final c1 = VideoPlayerController.asset('assets/animations/blue_butterfly.mp4');
+        await c1.initialize();
+        ctrl = c1;
+      } catch (e) {
+        debugPrint('[DashboardScreen] VideoPlayerController.asset init failed: $e');
+        try {
+          final data = await rootBundle.load('assets/animations/blue_butterfly.mp4');
+          final dir = await getTemporaryDirectory();
+          final f = File('${dir.path}/blue_butterfly.mp4');
+          await f.writeAsBytes(data.buffer.asUint8List(), flush: true);
+          final c2 = VideoPlayerController.file(f);
+          await c2.initialize();
+          ctrl = c2;
+        } catch (e) {
+          debugPrint('[DashboardScreen] VideoPlayerController.file init failed: $e');
+          if (!mounted) return;
+          setState(() { _videoReady = false; });
+          return;
+        }
+      }
+      await ctrl.setLooping(false);
+      await ctrl.setVolume(0.0);
+      try { await ctrl.setPlaybackSpeed(_videoPlaybackSpeed); } catch (_) {}
+      ctrl.addListener(_onVideoTick);
+      if (!mounted) return;
+      setState(() {
+        _videoCtrl = ctrl;
+        _videoReady = true;
+      });
+      final readyCtrl = ctrl;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || _videoCtrl != readyCtrl) return;
+        try {
+          await readyCtrl.play();
+        } catch (e) {
+          debugPrint('[DashboardScreen] Video play failed: $e');
+        }
+      });
+    } catch (e) {
+      debugPrint('[DashboardScreen] _initVideo unexpected failure: $e');
+      if (!mounted) return;
+      setState(() {
+        _videoReady = false;
+      });
+    }
+  }
+
+  void _onVideoTick() {
+    final c = _videoCtrl;
+    if (c == null || !_videoReady) return;
+    final v = c.value;
+    if (!v.isInitialized) return;
+    // Loop end in CONTENT time that corresponds to 10s in REAL time at current playback speed
+    final loopEndContentMs = (v.duration.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000))
+        ? v.duration.inMilliseconds
+        : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round();
+    final loopEndContent = Duration(milliseconds: loopEndContentMs);
+    final remaining = loopEndContent - v.position;
+    if (remaining <= const Duration(milliseconds: 80) || (!v.isPlaying && v.position >= loopEndContent && !_calibrationMode)) {
+      _handleVideoCompleted();
+    }
+  }
+
+  void _handleVideoCompleted() {
+    if (_videoWaitingForRestart) return;
+    final c = _videoCtrl;
+    if (c == null) return;
+    _videoWaitingForRestart = true;
+    c.pause();
+    _videoPauseTimer?.cancel();
+    // Compute pause to make the full cycle exactly _hotspotCycleSeconds in REAL time
+    final contentMs = c.value.duration.inMilliseconds; // content ms
+    final playedContentMs = (
+      contentMs < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+        ? contentMs
+        : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
+    );
+    final playedRealMs = (playedContentMs / (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed)).round();
+    final targetRealMs = (_hotspotCycleSeconds * 1000).round();
+    final remainingToTenMs = (targetRealMs - playedRealMs).clamp(0, targetRealMs);
+    final pauseMs = remainingToTenMs + (_hotspotPauseSeconds * 1000).round();
+    _videoPauseTimer = Timer(Duration(milliseconds: pauseMs), () async {
+      if (!mounted) return;
+      await c.seekTo(Duration.zero);
+      _videoWaitingForRestart = false;
+      if (_suppressUntilNextLoop) {
+        setState(() {
+          _animVisible = true;
+          _suppressUntilNextLoop = false;
+        });
+      }
+      await c.play();
+    });
   }
 
   Future<void> _loadDashboardData() async {
@@ -98,8 +407,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     }
 
-    for (final f in apiFriends) addOrPrefer(f);
-    for (final f in meFriends) addOrPrefer(f);
+    for (final f in apiFriends) {
+      addOrPrefer(f);
+    }
+    for (final f in meFriends) {
+      addOrPrefer(f);
+    }
 
     final mergedFriends = friendsById.values.toList();
     final statuses = mergedFriends
@@ -139,16 +452,253 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _isLoadingFriendFeed = false;
       });
     }
+
+    await _loadStatusPostsFor(statuses);
+    await _loadStatusDmCountsFor(statuses);
+  }
+
+  List<ChatMessage> _filterStatusDmMessages(List<ChatMessage> msgs) {
+    return msgs.where((m) => m.content.startsWith(_statusDmPrefix)).toList();
+  }
+
+  Future<void> _loadStatusDmCountsFor(List<Friend> statuses) async {
+    try {
+      final futures = statuses.map((f) async {
+        try {
+          final msgs = await _chatService.getConversation(f.id);
+          final filtered = _filterStatusDmMessages(msgs);
+          _statusDmCommentsByFriendId[f.id] = filtered;
+        } catch (_) {
+          _statusDmCommentsByFriendId[f.id] = const [];
+        }
+      }).toList();
+      if (futures.isNotEmpty) {
+        await Future.wait(futures);
+      }
+      if (!mounted) return;
+      setState(() {});
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  DateTime _postSortDate(Post p) {
+    final raw = (p.updatedAt ?? '').isNotEmpty ? p.updatedAt : p.pubDate;
+    if (raw == null || raw.isEmpty) return DateTime.fromMillisecondsSinceEpoch(0);
+    try {
+      return DateTime.parse(raw).toUtc();
+    } catch (_) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
+  }
+
+  Future<void> _loadStatusPostsFor(List<Friend> statuses) async {
+    if (_isLoadingStatusPosts) return;
+    setState(() {
+      _isLoadingStatusPosts = true;
+    });
+
+    try {
+      final posts = await _communityService.fetchAllPosts();
+
+      final Map<String, List<Post>> byAuthorUsername = {};
+      for (final p in posts) {
+        final sm = (p.statusMessage ?? '').trim();
+        if (sm.isEmpty) continue;
+        final u = (p.authorUsername ?? '').trim().toLowerCase();
+        if (u.isEmpty) continue;
+        byAuthorUsername.putIfAbsent(u, () => <Post>[]).add(p);
+      }
+
+      final Map<int, Post> selected = {};
+      for (final f in statuses) {
+        final candidates = byAuthorUsername[f.username.trim().toLowerCase()];
+        if (candidates == null || candidates.isEmpty) continue;
+        final want = (f.statusMessage ?? '').trim();
+        Post? best;
+        for (final p in candidates) {
+          if (want.isNotEmpty && (p.statusMessage ?? '').trim() != want) {
+            continue;
+          }
+          if (best == null || _postSortDate(p).isAfter(_postSortDate(best))) {
+            best = p;
+          }
+        }
+        best ??= candidates.reduce((a, b) => _postSortDate(a).isAfter(_postSortDate(b)) ? a : b);
+        selected[f.id] = best;
+      }
+
+      final Map<int, Post> hydrated = {};
+      final futures = <Future<void>>[];
+      selected.forEach((friendId, post) {
+        futures.add(
+          _communityService.fetchPostById(post.id).then((full) {
+            hydrated[friendId] = full;
+          }).catchError((_) {
+            hydrated[friendId] = post;
+          }),
+        );
+      });
+      if (futures.isNotEmpty) {
+        await Future.wait(futures);
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _statusPostByFriendId
+          ..clear()
+          ..addAll(hydrated.isEmpty ? selected : hydrated);
+      });
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingStatusPosts = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadProfilePic() async {
+    if (_updatingProfilePic) return;
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final me = auth.currentUser;
+    if (me == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    late final XFile picked;
+    if (Platform.isMacOS) {
+      try {
+        final typeGroup = XTypeGroup(
+          label: 'images',
+          extensions: const ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+        );
+        final f = await openFile(acceptedTypeGroups: [typeGroup]);
+        if (f == null) return;
+        picked = f;
+      } catch (e) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Unable to open file picker: $e')),
+        );
+        return;
+      }
+    } else {
+      final picker = ImagePicker();
+      try {
+        final f = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+        if (f == null) return;
+        picked = f;
+      } catch (e) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Unable to open photo picker: $e')),
+        );
+        return;
+      }
+    }
+
+    setState(() {
+      _updatingProfilePic = true;
+    });
+
+    try {
+      final currentStatus = (me.statusMessage ?? '').trim();
+      await _profileService.saveProfile(currentStatus, picked.path);
+      await auth.getProfile();
+      if (!mounted) return;
+      setState(() {
+        _profileImage = File(picked.path);
+      });
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Profile picture updated.')),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to update profile picture: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updatingProfilePic = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showStatusCommentsSheet(Post post) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+        final comments = post.comments;
+        final height = MediaQuery.of(context).size.height;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomInset),
+          child: SizedBox(
+            height: height * 0.6,
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Comments',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              if (comments.isEmpty)
+                const Text('No comments yet.')
+              else
+                Expanded(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: comments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) {
+                      final c = comments[i];
+                      return Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text('${c.authorUsername}: ${c.content}'),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final me = Provider.of<AuthService>(context, listen: true).currentUser;
+    final isAdmin = me?.username == 'Mad.E' ||
+        me?.username == 'Mad.E.Made' ||
+        me?.username == 'pmaxwell';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_outlined),
             onPressed: () {
               context.push('/profile/settings');
             },
@@ -158,8 +708,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: _loadDashboardData,
         child: ListView(
-          padding: EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16.0),
           children: [
+            const EmergencyAlertBanner(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -178,7 +729,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.chat, size: 30, color: Colors.grey[600]),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Friends',
                           textAlign: TextAlign.center,
@@ -199,17 +750,370 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            SizedBox(height: 24),
-            _buildQuoteCard(),
-            SizedBox(height: 24),
+            if (isAdmin) ...[
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.admin_panel_settings_outlined),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Admin Portal',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      OutlinedButton(
+                        onPressed: () {
+                          context.push('/admin/moderation');
+                        },
+                        child: const Text('Open'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            _buildAffirmationGif(),
+            const SizedBox(height: 24),
             _buildProfileAvatar(),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildEditProfileButton(),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAffirmationGif() {
+    final double aspect = (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized && _videoCtrl!.value.aspectRatio > 0)
+        ? _videoCtrl!.value.aspectRatio
+        : (644 / 144);
+    final quote = _quote ?? pickRandomQuote();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = width / aspect;
+        final vc = _videoCtrl;
+        Rect? hotspotRect;
+        double hotspotCenterX = 0;
+        double hotspotCenterY = 0;
+        String? calibrationText;
+        if (_calibrationMode && _videoReady && vc != null && vc.value.isInitialized) {
+          final cycle = _effectiveCycleSeconds;
+          final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+          final dur = vc.value.duration;
+          final pos = vc.value.position;
+          final cycleContentMs = (
+            dur.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+              ? dur.inMilliseconds
+              : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
+          );
+          final double baseP = cycleContentMs == 0 ? 0.0 : pos.inMilliseconds / cycleContentMs;
+          final phase = cycle <= 0 ? 0.0 : (_hotspotPhaseOffsetSeconds / cycle);
+          final rawP = baseP + phase;
+          final p = vc.value.isPlaying
+              ? ((rawP % 1.0) == 0.0 && rawP > 0.0 ? 1.0 : (rawP % 1.0))
+              : rawP.clamp(0.0, 1.0);
+          final Offset center = _samplePath(p);
+          final centerX = (margin + center.dx * (1 - 2 * margin)).clamp(0.0, 1.0);
+          final centerY = center.dy.clamp(0.0, 1.0);
+          hotspotCenterX = centerX;
+          hotspotCenterY = centerY;
+          final halfW = _hotspotWidthFraction / 2;
+          final halfH = _hotspotHeightFraction / 2;
+          final left = ((centerX - halfW) * width).clamp(0.0, width);
+          final top = ((centerY - halfH) * height).clamp(0.0, height);
+          final right = ((centerX + halfW) * width).clamp(0.0, width);
+          final bottom = ((centerY + halfH) * height).clamp(0.0, height);
+          hotspotRect = Rect.fromLTRB(left, top, right, bottom);
+          calibrationText = 'calibration: ON   p=${p.toStringAsFixed(3)}   x=${centerX.toStringAsFixed(3)}   y=${centerY.toStringAsFixed(3)}';
+        }
+
+        return FocusableActionDetector(
+          autofocus: true,
+          shortcuts: {
+            LogicalKeySet(LogicalKeyboardKey.keyC): _ToggleCalibrationIntent(),
+            LogicalKeySet(LogicalKeyboardKey.space): _ToggleVideoPauseIntent(),
+            LogicalKeySet(LogicalKeyboardKey.arrowLeft): _SeekBackwardIntent(),
+            LogicalKeySet(LogicalKeyboardKey.arrowRight): _SeekForwardIntent(),
+            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): _SeekBackwardLargeIntent(),
+            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): _SeekForwardLargeIntent(),
+          },
+          actions: {
+            _ToggleCalibrationIntent: CallbackAction<_ToggleCalibrationIntent>(
+              onInvoke: (intent) {
+                setState(() {
+                  _calibrationMode = !_calibrationMode;
+                });
+                return null;
+              },
+            ),
+            _ToggleVideoPauseIntent: CallbackAction<_ToggleVideoPauseIntent>(
+              onInvoke: (intent) async {
+                if (!_calibrationMode) return null;
+                final c = _videoCtrl;
+                if (c == null || !c.value.isInitialized) return null;
+                try {
+                  if (c.value.isPlaying) {
+                    await c.pause();
+                  } else {
+                    await c.play();
+                  }
+                } catch (_) {}
+                return null;
+              },
+            ),
+            _SeekBackwardIntent: CallbackAction<_SeekBackwardIntent>(
+              onInvoke: (intent) async {
+                if (!_calibrationMode) return null;
+                final c = _videoCtrl;
+                if (c == null || !c.value.isInitialized) return null;
+                final cur = c.value.position;
+                final next = cur - const Duration(milliseconds: 100);
+                try {
+                  await c.seekTo(next < Duration.zero ? Duration.zero : next);
+                } catch (_) {}
+                return null;
+              },
+            ),
+            _SeekForwardIntent: CallbackAction<_SeekForwardIntent>(
+              onInvoke: (intent) async {
+                if (!_calibrationMode) return null;
+                final c = _videoCtrl;
+                if (c == null || !c.value.isInitialized) return null;
+                final dur = c.value.duration;
+                final cur = c.value.position;
+                final next = cur + const Duration(milliseconds: 100);
+                try {
+                  await c.seekTo(next > dur ? dur : next);
+                } catch (_) {}
+                return null;
+              },
+            ),
+            _SeekBackwardLargeIntent: CallbackAction<_SeekBackwardLargeIntent>(
+              onInvoke: (intent) async {
+                if (!_calibrationMode) return null;
+                final c = _videoCtrl;
+                if (c == null || !c.value.isInitialized) return null;
+                final cur = c.value.position;
+                final next = cur - const Duration(milliseconds: 500);
+                try {
+                  await c.seekTo(next < Duration.zero ? Duration.zero : next);
+                } catch (_) {}
+                return null;
+              },
+            ),
+            _SeekForwardLargeIntent: CallbackAction<_SeekForwardLargeIntent>(
+              onInvoke: (intent) async {
+                if (!_calibrationMode) return null;
+                final c = _videoCtrl;
+                if (c == null || !c.value.isInitialized) return null;
+                final dur = c.value.duration;
+                final cur = c.value.position;
+                final next = cur + const Duration(milliseconds: 500);
+                try {
+                  await c.seekTo(next > dur ? dur : next);
+                } catch (_) {}
+                return null;
+              },
+            ),
+          },
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (details) {
+                final vc = _videoCtrl;
+                final isVideoActive = _videoReady && _animVisible && vc != null && vc.value.isInitialized;
+                if (!isVideoActive) {
+                  return;
+                }
+
+                final dx = details.localPosition.dx / width;
+                final dy = details.localPosition.dy / height;
+                final cycle = _effectiveCycleSeconds;
+                final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+
+                final dur = vc.value.duration;
+                final pos = vc.value.position;
+                final cycleContentMs = (
+                  dur.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+                    ? dur.inMilliseconds
+                    : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
+                );
+                final double baseP = cycleContentMs == 0 ? 0.0 : pos.inMilliseconds / cycleContentMs;
+
+                final phase = cycle <= 0 ? 0.0 : (_hotspotPhaseOffsetSeconds / cycle);
+                final rawP = baseP + phase;
+                final p = vc.value.isPlaying
+                    ? ((rawP % 1.0) == 0.0 && rawP > 0.0 ? 1.0 : (rawP % 1.0))
+                    : rawP.clamp(0.0, 1.0);
+
+                if (_calibrationMode) {
+                  final denom = (1 - 2 * margin);
+                  final px = (denom <= 0) ? dx : ((dx - margin) / denom).clamp(0.0, 1.0);
+                  final py = dy.clamp(0.0, 1.0);
+                  debugPrint('_PathPoint(${p.toStringAsFixed(3)}, ${px.toStringAsFixed(3)}, ${py.toStringAsFixed(3)}),');
+                  return;
+                }
+
+                final Offset center = _samplePath(p);
+                final centerX = margin + center.dx * (1 - 2 * margin);
+                final centerY = center.dy;
+                final halfW = _hotspotWidthFraction / 2;
+                final halfH = _hotspotHeightFraction / 2;
+                final inX = (dx - centerX).abs() <= halfW;
+                final inY = (dy - centerY).abs() <= halfH;
+                final inHotspot = inX && inY;
+                if (inHotspot) {
+                  _quoteTimer?.cancel();
+                  setState(() {
+                    _quote = pickRandomQuote();
+                    _quoteVisible = true;
+                    _animVisible = false;
+                    _suppressUntilNextLoop = true;
+                  });
+                  _quoteTimer = Timer(const Duration(seconds: 10), () {
+                    if (!mounted) return;
+                    setState(() {
+                      _quoteVisible = false;
+                      _quote = pickRandomQuote();
+                    });
+                  });
+                }
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  opacity: _animVisible ? 1.0 : 0.0,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized
+                        ? FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _videoCtrl!.value.size.width,
+                              height: _videoCtrl!.value.size.height,
+                              child: VideoPlayer(_videoCtrl!),
+                            ),
+                          )
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                  ),
+                ),
+                if (_calibrationMode && hotspotRect != null)
+                  Positioned(
+                    left: hotspotRect.left,
+                    top: hotspotRect.top,
+                    width: hotspotRect.width,
+                    height: hotspotRect.height,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.red, width: 2),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_calibrationMode && hotspotRect != null)
+                  Positioned(
+                    left: (hotspotCenterX * width) - 3,
+                    top: (hotspotCenterY * height) - 3,
+                    width: 6,
+                    height: 6,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (_calibrationMode && calibrationText != null)
+                  Positioned(
+                    left: 8,
+                    bottom: 8,
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          calibrationText,
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  top: 10,
+                  child: IgnorePointer(
+                    ignoring: true,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeInOut,
+                      opacity: _quoteVisible ? 1.0 : 0.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '"${quote.text}"',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Text(
+                                '- ${quote.author}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -247,7 +1151,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final quote = _quote ?? pickRandomQuote();
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.deepPurple.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
@@ -257,14 +1161,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Text(
             '"${quote.text}"',
-            style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+            style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.bottomRight,
             child: Text(
               '- ${quote.author}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -274,11 +1178,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildUpcomingFavoritedEvents() {
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_upcomingFavoritedEvents.isEmpty) {
-      return Center(
+      return const Center(
         child: Text('No events today.'),
       );
     }
@@ -286,19 +1190,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           "Today's Events",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         ListView.builder(
           shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+          physics: const NeverScrollableScrollPhysics(),
           itemCount: _upcomingFavoritedEvents.length,
           itemBuilder: (context, index) {
             final event = _upcomingFavoritedEvents[index];
             return Card(
-              margin: EdgeInsets.only(bottom: 8.0),
+              margin: const EdgeInsets.only(bottom: 8.0),
               child: ListTile(
                 title: Text(event.summary),
                 subtitle: Text('${event.start.toLocal()}'),
@@ -316,7 +1220,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final imageUrl = currentUser?.fullProfilePicUrl;
 
     return Center(
-      child: DisplayProfilePic(radius: 40, imageUrl: imageUrl),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: _updatingProfilePic ? null : _pickAndUploadProfilePic,
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              if (_profileImage != null)
+                CircleAvatar(
+                  radius: 40,
+                  backgroundImage: FileImage(_profileImage!),
+                )
+              else
+                DisplayProfilePic(radius: 40, imageUrl: imageUrl),
+              if (_updatingProfilePic)
+                const Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                const Positioned(
+                  bottom: 2,
+                  right: 2,
+                  child: CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Colors.black54,
+                    child: Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -329,9 +1271,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
           foregroundColor: AppColors.textBlack,
-          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
         ),
-        child: Text('Edit Profile'),
+        child: const Text('Edit Profile'),
       ),
     );
   }
@@ -344,24 +1286,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'Friends Status Updates',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         if (_friendStatusFeed.isEmpty)
-          Center(child: Text('No recent status updates.'))
+          const Center(child: Text('No recent status updates.'))
         else
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: _friendStatusFeed.length,
             itemBuilder: (context, index) {
               final friend = _friendStatusFeed[index];
               final when = friend.statusUpdatedAt;
               final msg = friend.statusMessage?.trim() ?? '';
               return Card(
-                margin: EdgeInsets.only(bottom: 8.0),
+                margin: const EdgeInsets.only(bottom: 8.0),
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -381,6 +1323,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          Builder(
+                            builder: (context) {
+                              final p = _statusPostByFriendId[friend.id];
+                              final dmCount = _statusDmCommentsByFriendId[friend.id]?.length ?? 0;
+                              final count = (p?.comments.length ?? 0) + (p == null ? dmCount : 0);
+                              final hasComments = count > 0;
+                              return IconButton(
+                                icon: const Icon(Icons.add_circle_outline),
+                                color: hasComments ? Colors.amber : Colors.grey,
+                                onPressed: () async {
+                                  if (p != null) {
+                                    try {
+                                      final refreshed = await _communityService.fetchPostById(p.id);
+                                      if (!mounted) return;
+                                      setState(() {
+                                        _statusPostByFriendId[friend.id] = refreshed;
+                                      });
+                                      _showStatusCommentsSheet(refreshed);
+                                      return;
+                                    } catch (_) {
+                                      _showStatusCommentsSheet(p);
+                                      return;
+                                    }
+                                  }
+                                  await _showStatusDmCommentsSheet(friend);
+                                },
+                              );
+                            },
+                          ),
                           DisplayProfilePic(
                             radius: 16,
                             imageUrl: Provider.of<AuthService>(context, listen: false).currentUser?.fullProfilePicUrl,
@@ -395,22 +1366,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
                                 suffixIcon: IconButton(
-                                  icon: const Icon(Icons.send),
-                                  color: Colors.pink,
+                                  icon: const Icon(Icons.arrow_upward_rounded),
+                                  color: Colors.red,
                                   onPressed: () async {
+                                    final messenger = ScaffoldMessenger.of(context);
                                     final text = _ctrlFor(friend.id).text.trim();
                                     if (text.isEmpty) return;
                                     try {
-                                      await _chatService.sendMessage(recipientId: friend.id, content: text);
+                                      final post = _statusPostByFriendId[friend.id];
+                                      if (post == null) {
+                                        await _chatService.sendMessage(
+                                          recipientId: friend.id,
+                                          content: '$_statusDmPrefix$text',
+                                        );
+                                        try {
+                                          final all = await _chatService.getConversation(friend.id);
+                                          final filtered = _filterStatusDmMessages(all);
+                                          _statusDmCommentsByFriendId[friend.id] = filtered;
+                                          if (mounted) setState(() {});
+                                        } catch (_) {}
+                                        messenger.showSnackBar(
+                                          SnackBar(content: Text('Comment posted on ${friend.username}\'s status')),
+                                        );
+                                        _ctrlFor(friend.id).clear();
+                                        return;
+                                      }
+                                      await _communityService.addComment(postId: post.id, content: text);
+                                      final refreshed = await _communityService.fetchPostById(post.id);
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Comment sent to ${friend.username}')),
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Comment posted on ${friend.username}\'s status')),
                                       );
                                       _ctrlFor(friend.id).clear();
+                                      setState(() {
+                                        _statusPostByFriendId[friend.id] = refreshed;
+                                      });
                                     } catch (e) {
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Failed to send: $e')),
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Failed to comment: $e')),
                                       );
                                     }
                                   },

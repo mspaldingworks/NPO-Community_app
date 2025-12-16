@@ -31,20 +31,26 @@ dependencies:
   scoped_model: ^2.0.0
   webview_flutter: ^4.7.0
   video_player: ^2.9.1
+  path_provider: ^2.1.4
   cached_network_image: ^3.4.0
+  file_selector: ^1.0.4
   json_annotation: ^4.9.0
   build_runner: ^2.10.4
   json_serializable: ^6.11.3
 
+  logging: any
+  meta: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+  mockito: any
 flutter:
   uses-material-design: true
   assets:
     - assets/animations/trans_connect_open_video.mp4
+    - assets/animations/blue_butterfly.mp4
     - assets/media/twc_primary_logo.png
     - assets/media/NorthernKY-Regions-Map-2048x1046.jpg
     - assets/media/Kentuckiana-Regions-Map-2048x1046.jpg
@@ -53,4 +59,8 @@ flutter:
     - assets/media/CentalKY-Regions-Map-2048x1046.jpg
     - assets/media/WKY-Regions-Map-2048x1046.jpg
     - assets/media/Regions-Map-2048x1046.jpg
+    - lib/data/group.json
+    - lib/data/posts.json
+    - lib/data/comments.json
+    - lib/data/resources.json
 
