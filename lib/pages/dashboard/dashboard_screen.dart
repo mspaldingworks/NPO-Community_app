@@ -902,6 +902,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildAffirmationGif(),
             const SizedBox(height: 24),
             _buildProfileAvatar(),
+            Builder(
+              builder: (context) {
+                final authService = Provider.of<AuthService>(context, listen: false);
+                final mutualAid = (FlairUtils.extractMutualAidEmojis(authService.currentUser?.flair) ?? '').trim();
+                if (mutualAid.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Center(
+                    child: Text(
+                      mutualAid,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 16),
             _buildEditProfileButton(),
             const SizedBox(height: 24),
