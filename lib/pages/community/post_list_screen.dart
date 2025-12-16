@@ -13,6 +13,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -39,6 +40,7 @@ class _PostListScreenState extends State<PostListScreen> {
   late final CommunityService _communityService;
   final AuthService _authService = AuthService();
   Map<String, String?> _userPicByUsername = {};
+  Map<String, String?> _userFlairByUsername = {};
   late Future<Group> _groupFuture;
 
   @override
@@ -63,6 +65,9 @@ class _PostListScreenState extends State<PostListScreen> {
       setState(() {
         _userPicByUsername = {
           for (final u in users) u.username: u.fullProfilePicUrl,
+        };
+        _userFlairByUsername = {
+          for (final u in users) u.username: u.flair,
         };
       });
     } catch (_) {
@@ -215,6 +220,15 @@ class _PostListScreenState extends State<PostListScreen> {
                   final displayAuthor = post.isAnonymous
                       ? 'Anonymous'
                       : (post.authorUsername ?? 'Unknown user');
+                  final authorFlair = _userFlairByUsername[post.authorUsername ?? ''];
+                  final authorIsPrivate = FlairUtils.isProfilePrivate(authorFlair);
+                  final String? pronounsDisplay = post.isAnonymous || authorIsPrivate
+                      ? null
+                      : (FlairUtils.extractPronouns(authorFlair) ?? '')
+                          .split(RegExp(r'[\n,]'))
+                          .map((p) => p.trim())
+                          .where((p) => p.isNotEmpty)
+                          .join(' • ');
                   final isOwner = currentUser != null && currentUser.id == post.author;
 
                   return Card(
@@ -234,9 +248,16 @@ class _PostListScreenState extends State<PostListScreen> {
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                DisplayProfilePic(
-                                  radius: 20,
-                                  imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                                GestureDetector(
+                                  onTap: () {
+                                    if (post.isAnonymous) return;
+                                    if (post.author == null) return;
+                                    context.push('/users/${post.author}');
+                                  },
+                                  child: DisplayProfilePic(
+                                    radius: 20,
+                                    imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -245,7 +266,14 @@ class _PostListScreenState extends State<PostListScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(displayAuthor, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          GestureDetector(
+                                            onTap: () {
+                                              if (post.isAnonymous) return;
+                                              if (post.author == null) return;
+                                              context.push('/users/${post.author}');
+                                            },
+                                            child: Text(displayAuthor, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                          ),
                                           if (post.authorIsStaff)
                                             Padding(
                                               padding: const EdgeInsets.only(left: 8.0),
@@ -258,6 +286,14 @@ class _PostListScreenState extends State<PostListScreen> {
                                             ),
                                         ],
                                       ),
+                                      if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            pronounsDisplay,
+                                            style: Theme.of(context).textTheme.bodySmall,
+                                          ),
+                                        ),
                                       Text(
                                         'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${timeago.format(postDate)}$editedLabel',
                                         style: const TextStyle(color: Colors.grey, fontSize: 12),

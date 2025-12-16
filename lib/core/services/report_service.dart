@@ -6,6 +6,7 @@ enum ReportTargetType {
   post,
   comment,
   status,
+  statusComment,
   resource,
   resourceReview,
   photo,
@@ -61,7 +62,8 @@ class ReportService {
     if (request.type == ReportTargetType.user) {
       targetLine = 'userId=${request.targetUserId ?? 'unknown'} username=${request.targetUsername ?? 'unknown'}';
     } else {
-      targetLine = 'id=${request.targetId ?? 'unknown'} username=${request.targetUsername ?? 'unknown'} url=${request.targetUrl ?? ''}';
+      final userIdPart = request.targetUserId != null ? ' userId=${request.targetUserId}' : '';
+      targetLine = 'id=${request.targetId ?? 'unknown'}$userIdPart username=${request.targetUsername ?? 'unknown'} url=${request.targetUrl ?? ''}';
     }
 
     final message = StringBuffer()

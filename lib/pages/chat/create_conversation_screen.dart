@@ -10,6 +10,7 @@ import 'package:transconnect/models/user.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/loading_indicator.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({super.key});
@@ -340,7 +341,12 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                 children: [
                   Stack(
                     children: [
-                      DisplayProfilePic(radius: 32, imageUrl: user.fullProfilePicUrl),
+                      GestureDetector(
+                        onTap: () {
+                          context.push('/users/${user.id}');
+                        },
+                        child: DisplayProfilePic(radius: 32, imageUrl: user.fullProfilePicUrl),
+                      ),
                       Positioned(
                         right: 0,
                         top: 0,
@@ -361,12 +367,17 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                   const SizedBox(height: 4),
                   SizedBox(
                     width: 64,
-                    child: Text(
-                      user.username.split(' ')[0],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 12),
+                    child: GestureDetector(
+                      onTap: () {
+                        context.push('/users/${user.id}');
+                      },
+                      child: Text(
+                        user.username.split(' ')[0],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
                   ),
                 ],
@@ -418,9 +429,41 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final user = _searchResults[index];
+        final isPrivate = FlairUtils.isProfilePrivate(user.flair);
+        final String? pronounsDisplay = isPrivate
+            ? null
+            : (FlairUtils.extractPronouns(user.flair) ?? '')
+                .split(RegExp(r'[\n,]'))
+                .map((p) => p.trim())
+                .where((p) => p.isNotEmpty)
+                .join(' • ');
         return ListTile(
-          leading: DisplayProfilePic(radius: 20, imageUrl: user.fullProfilePicUrl),
-          title: Text(user.username),
+          leading: GestureDetector(
+            onTap: () {
+              context.push('/users/${user.id}');
+            },
+            child: DisplayProfilePic(radius: 20, imageUrl: user.fullProfilePicUrl),
+          ),
+          title: GestureDetector(
+            onTap: () {
+              context.push('/users/${user.id}');
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(user.username),
+                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      pronounsDisplay,
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ),
           onTap: _isCreatingGroup
               ? () => _toggleUserSelection(user)
               : () => _createDirectChat(user),
@@ -496,9 +539,41 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
           }
 
           final friend = _friends[index - 2];
+          final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
+          final String? pronounsDisplay = isPrivate
+              ? null
+              : (FlairUtils.extractPronouns(friend.flair) ?? '')
+                  .split(RegExp(r'[\n,]'))
+                  .map((p) => p.trim())
+                  .where((p) => p.isNotEmpty)
+                  .join(' • ');
           return ListTile(
-            leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
-            title: Text(friend.username),
+            leading: GestureDetector(
+              onTap: () {
+                context.push('/users/${friend.id}');
+              },
+              child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+            ),
+            title: GestureDetector(
+              onTap: () {
+                context.push('/users/${friend.id}');
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(friend.username),
+                  if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        pronounsDisplay,
+                        style: Theme.of(context).textTheme.bodySmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+            ),
             subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
                 ? Text(friend.statusMessage!, maxLines: 1, overflow: TextOverflow.ellipsis)
                 : (friend.city != null && friend.city!.isNotEmpty

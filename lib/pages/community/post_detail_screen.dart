@@ -14,6 +14,7 @@ import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final int groupId;
@@ -38,6 +39,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final DateFormat _editedDateFormat = DateFormat('MMM d, yyyy h:mm a');
   final AuthService _authService = AuthService();
   Map<String, String?> _userPicByUsername = {};
+  Map<String, String?> _userFlairByUsername = {};
   final ImagePicker _commentImagePicker = ImagePicker();
   File? _commentImage;
   static const int _maxCommentImageBytes = 10 * 1024 * 1024;
@@ -61,6 +63,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       if (!mounted) return;
       setState(() {
         _userPicByUsername = {for (final u in users) u.username: u.fullProfilePicUrl};
+        _userFlairByUsername = {for (final u in users) u.username: u.flair};
       });
     } catch (_) {
       // Ignore; avatars will stay placeholders
@@ -416,6 +419,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           }
 
           final post = snapshot.data!;
+          final authorFlair = _userFlairByUsername[post.authorUsername ?? ''];
+          final authorIsPrivate = FlairUtils.isProfilePrivate(authorFlair);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -427,14 +432,53 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DisplayProfilePic(
-                      radius: 20,
-                      imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                    GestureDetector(
+                      onTap: () {
+                        if (post.isAnonymous) return;
+                        if (post.author == null) return;
+                        context.push('/users/${post.author}');
+                      },
+                      child: DisplayProfilePic(
+                        radius: 20,
+                        imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
+                      child: Builder(
+                        builder: (context) {
+                          final String? pronounsDisplay = post.isAnonymous || authorIsPrivate
+                              ? null
+                              : (FlairUtils.extractPronouns(authorFlair) ?? '')
+                                  .split(RegExp(r'[\n,]'))
+                                  .map((p) => p.trim())
+                                  .where((p) => p.isNotEmpty)
+                                  .join(' • ');
+
+                          return GestureDetector(
+                            onTap: () {
+                              if (post.isAnonymous) return;
+                              if (post.author == null) return;
+                              context.push('/users/${post.author}');
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
+                                ),
+                                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      pronounsDisplay,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
                     if (post.emojis.isNotEmpty)
@@ -502,15 +546,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   itemBuilder: (context, index) {
                     final comment = post.comments[index];
                     final isCommentAuthor = comment.authorId == currentUserId;
+                    final commentFlair = _userFlairByUsername[comment.authorUsername];
+                    final commentIsPrivate = FlairUtils.isProfilePrivate(commentFlair);
+                    final String? pronounsDisplay = commentIsPrivate
+                        ? null
+                        : (FlairUtils.extractPronouns(commentFlair) ?? '')
+                            .split(RegExp(r'[\n,]'))
+                            .map((p) => p.trim())
+                            .where((p) => p.isNotEmpty)
+                            .join(' • ');
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          DisplayProfilePic(
-                            radius: 20,
-                            imageUrl: comment.authorProfilePic ?? _userPicByUsername[comment.authorUsername],
+                          GestureDetector(
+                            onTap: () {
+                              if (comment.authorId <= 0) return;
+                              context.push('/users/${comment.authorId}');
+                            },
+                            child: DisplayProfilePic(
+                              radius: 20,
+                              imageUrl: comment.authorProfilePic ?? _userPicByUsername[comment.authorUsername],
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -519,9 +578,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      comment.authorUsername,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    GestureDetector(
+                                      onTap: () {
+                                        if (comment.authorId <= 0) return;
+                                        context.push('/users/${comment.authorId}');
+                                      },
+                                      child: Text(
+                                        comment.authorUsername,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
                                     ),
                                     if (comment.authorIsStaff)
                                       Padding(
@@ -536,6 +601,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       ),
                                   ],
                                 ),
+                                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      pronounsDisplay,
+                                      style: Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ),
                                 Text(
                                   _formatRelative(comment.pubDate),
                                   style: const TextStyle(color: Colors.grey, fontSize: 12),

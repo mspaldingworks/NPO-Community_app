@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
@@ -12,6 +11,7 @@ import 'package:transconnect/models/event.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,20 +20,307 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+class _MutualAidOption {
+  final String emoji;
+  final String label;
+
+  const _MutualAidOption({required this.emoji, required this.label});
+}
+
 class _ProfileScreenState extends State<ProfileScreen> {
   final _statusController = TextEditingController();
   final _fullNameController = TextEditingController();
   final _cityController = TextEditingController();
   final _pronounsController = TextEditingController();
+  final TextEditingController _customPronounController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final ProfileService _profileService = ProfileService();
-  final FavoritesService _favoritesService = FavoritesService();
-  final CalendarService _calendarService = CalendarService();
   File? _profileImage;
   bool _saving = false;
+  bool _isProfilePrivate = false;
   final List<File> _statusImages = [];
   static const int _maxStatusImages = 4;
   static const int _maxStatusImageBytes = 10 * 1024 * 1024;
+  static const int _maxPronounSelections = 5;
+
+  static const List<String> _availablePronouns = [
+    'She/Her',
+    'He/Him',
+    'They/Them',
+    'Any Pronouns',
+    'No Pronouns',
+    'Ask for Pronouns',
+    'She/They',
+    'He/They',
+    'They/He',
+    'They/She',
+    'She/He',
+    'She/Xe',
+    'He/Xe',
+    'They/Xe',
+    'Xe/Xem',
+    'Ze/Hir',
+    'Ze/Zir',
+    'Zie/Hir',
+    'Ze/Zem',
+    'Xe/Xyr',
+    'Fae/Faer',
+    'Fae/Them',
+    'Ae/Aer',
+    'Ey/Em',
+    'Ne/Nem',
+    'Per/Per',
+    'Ve/Ver',
+    'Ve/Vem',
+    'It/Its',
+    'Thon/Thons',
+  ];
+
+  static const List<_MutualAidOption> _mutualAidOptions = <_MutualAidOption>[
+    _MutualAidOption(emoji: '🛻', label: 'Moving / transport help'),
+    _MutualAidOption(emoji: '🚗', label: 'Rides / appointments'),
+    _MutualAidOption(emoji: '🍲', label: 'Meals / groceries'),
+    _MutualAidOption(emoji: '🏠', label: 'Housing navigation'),
+    _MutualAidOption(emoji: '💸', label: 'Emergency funds / microgrants'),
+    _MutualAidOption(emoji: '🧾', label: 'Paperwork / forms'),
+    _MutualAidOption(emoji: '💻', label: 'Tech help'),
+    _MutualAidOption(emoji: '👕', label: 'Clothes / supplies'),
+    _MutualAidOption(emoji: '🤝', label: 'Peer support'),
+    _MutualAidOption(emoji: '📣', label: 'Amplify / share requests'),
+  ];
+
+  final Set<String> _selectedMutualAidEmojis = <String>{};
+  final Set<String> _selectedPronouns = <String>{};
+  final List<String> _customPronouns = <String>[];
+
+  bool _startsOrContainsToken(String value, String token) {
+    final v = value.toLowerCase();
+    final t = token.toLowerCase();
+    return v.startsWith(t) || v.contains('/$t') || v.contains('$t/');
+  }
+
+  Color _contrastTextColor(List<Color> colors) {
+    if (colors.isEmpty) return Colors.white;
+    final avgLuminance = colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) / colors.length;
+    return avgLuminance > 0.55 ? Colors.black : Colors.white;
+  }
+
+  List<Color> _pronounColors(String pronoun) {
+    final p = pronoun.trim().toLowerCase();
+
+    if (p.contains('genderfluid') || p.contains('gender fluid')) {
+      return const [
+        Color(0xFFFF69B4),
+        Color(0xFFFFFFFF),
+        Color(0xFF9C27B0),
+        Color(0xFF000000),
+        Color(0xFF2196F3),
+      ];
+    }
+
+    if (p.contains('any pronouns')) {
+      return const [
+        Color(0xFFFF69B4),
+        Color(0xFF2196F3),
+        Color(0xFFFFEB3B),
+        Color(0xFF4CAF50),
+        Color(0xFF9C27B0),
+      ];
+    }
+
+    if (p.contains('no pronouns') || p.contains('agender')) {
+      return const [Colors.black];
+    }
+
+    if (p.contains('ask for pronouns')) {
+      return const [Color(0xFF9E9E9E)];
+    }
+
+    const femPink = Color(0xFFFF69B4);
+    const mascBlue = Color(0xFF2196F3);
+    const nbYellow = Color(0xFFFFEB3B);
+    const xeGreen = Color(0xFF4CAF50);
+    const zePurple = Color(0xFF9C27B0);
+    const faeLightGreen = Color(0xFF8BC34A);
+    const aeSilver = Color(0xFFC0C0C0);
+    const eyLightYellow = Color(0xFFFFF59D);
+    const neBrown = Color(0xFF8D6E63);
+    const perOrange = Color(0xFFFF9800);
+    const itDarkRed = Color(0xFF8B0000);
+    const veTeal = Color(0xFF26C6DA);
+    const thonIndigo = Color(0xFF3F51B5);
+
+    Color? colorForPart(String part) {
+      final t = part.trim().toLowerCase();
+      if (t.isEmpty) return null;
+
+      if (t == 'she' || t == 'her') return femPink;
+      if (t == 'he' || t == 'him') return mascBlue;
+      if (t == 'they' || t == 'them') return nbYellow;
+
+      if (t == 'xe' || t == 'xem' || t == 'xyr') return xeGreen;
+      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') return zePurple;
+      if (t == 'fae' || t == 'faer') return faeLightGreen;
+      if (t == 'ae' || t == 'aer') return aeSilver;
+      if (t == 'ey' || t == 'em') return eyLightYellow;
+      if (t == 'ne' || t == 'nem') return neBrown;
+      if (t == 'per') return perOrange;
+      if (t == 'it' || t == 'its') return itDarkRed;
+      if (t == 've' || t == 'ver' || t == 'vem') return veTeal;
+      if (t == 'thon' || t == 'thons') return thonIndigo;
+
+      return null;
+    }
+
+    final hasShe = _startsOrContainsToken(pronoun, 'she') || _startsOrContainsToken(pronoun, 'her');
+    final hasHe = _startsOrContainsToken(pronoun, 'he') || _startsOrContainsToken(pronoun, 'him');
+    final hasThey = _startsOrContainsToken(pronoun, 'they') || _startsOrContainsToken(pronoun, 'them');
+    if (hasShe && hasHe && hasThey) {
+      return const [femPink, mascBlue, nbYellow];
+    }
+
+    final parts = pronoun.split('/').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final colors = <Color>[];
+    for (final part in parts) {
+      final c = colorForPart(part);
+      if (c != null && !colors.contains(c)) {
+        colors.add(c);
+      }
+    }
+
+    return colors.isNotEmpty ? colors : const [nbYellow];
+  }
+
+  void _syncPronounsController() {
+    _pronounsController.text = _selectedPronouns.join(', ');
+  }
+
+  void _togglePronounSelection(String pronoun) {
+    if (_saving) return;
+    setState(() {
+      if (_selectedPronouns.contains(pronoun)) {
+        _selectedPronouns.remove(pronoun);
+      } else {
+        if (_selectedPronouns.length >= _maxPronounSelections) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+          );
+          return;
+        }
+        _selectedPronouns.add(pronoun);
+      }
+      _syncPronounsController();
+    });
+  }
+
+  void _addCustomPronoun() {
+    if (_saving) return;
+    final custom = _customPronounController.text.trim();
+    if (custom.isEmpty) return;
+
+    if (!_selectedPronouns.contains(custom) && _selectedPronouns.length >= _maxPronounSelections) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+      );
+      return;
+    }
+
+    setState(() {
+      if (!_customPronouns.contains(custom)) {
+        _customPronouns.add(custom);
+      }
+      _selectedPronouns.add(custom);
+      _customPronounController.clear();
+      _syncPronounsController();
+    });
+  }
+
+  void _removeCustomPronoun(String pronoun) {
+    if (_saving) return;
+    setState(() {
+      _customPronouns.remove(pronoun);
+      _selectedPronouns.remove(pronoun);
+      _syncPronounsController();
+    });
+  }
+
+  Widget _buildPronounChip(String pronoun) {
+    final isSelected = _selectedPronouns.contains(pronoun);
+    final baseColors = _pronounColors(pronoun);
+    final opacity = isSelected ? 0.95 : 0.35;
+    final colors = baseColors.map((c) => c.withOpacity(opacity)).toList();
+    final textColor = _contrastTextColor(baseColors);
+    final borderColor = isSelected ? Colors.white : Colors.white54;
+
+    final BorderSide borderSide = BorderSide(color: borderColor, width: 1.2);
+    final BorderRadius borderRadius = BorderRadius.circular(28);
+
+    if (colors.length > 1) {
+      return Semantics(
+        button: true,
+        selected: isSelected,
+        label: pronoun,
+        hint: isSelected ? 'Selected pronouns' : 'Tap to select pronouns',
+        child: InkWell(
+          borderRadius: borderRadius,
+          onTap: () => _togglePronounSelection(pronoun),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: colors,
+              ),
+              borderRadius: borderRadius,
+              border: Border.all(color: borderSide.color, width: borderSide.width),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Text(
+              pronoun,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: pronoun,
+      hint: isSelected ? 'Selected pronouns' : 'Tap to select pronouns',
+      child: FilterChip(
+        label: Text(
+          pronoun,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        selected: isSelected,
+        onSelected: (_) => _togglePronounSelection(pronoun),
+        backgroundColor: colors.first,
+        selectedColor: colors.first,
+        showCheckmark: false,
+        side: borderSide,
+        shape: RoundedRectangleBorder(
+          borderRadius: borderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+    );
+  }
+
+  String get _mutualAidEmojiString {
+    return _mutualAidOptions
+        .where((o) => _selectedMutualAidEmojis.contains(o.emoji))
+        .map((o) => o.emoji)
+        .join(' ')
+        .trim();
+  }
 
   @override
   void initState() {
@@ -49,6 +336,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final auth = Provider.of<AuthService>(context, listen: false);
       user = auth.currentUser ?? await auth.getCurrentUser();
     } catch (_) {}
+
+    final flair = user?.flair;
+    final pronouns = FlairUtils.extractPronouns(flair) ?? '';
+    final mutualAidLine = FlairUtils.extractMutualAidEmojis(flair) ?? '';
+    final isPrivateProfile = FlairUtils.isProfilePrivate(flair);
+    final selectedMutualAidEmojis = _mutualAidOptions
+        .where((o) => mutualAidLine.contains(o.emoji))
+        .map((o) => o.emoji)
+        .toSet();
+
     setState(() {
       if (status != null) {
         _statusController.text = status;
@@ -59,7 +356,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user != null) {
         _fullNameController.text = user.fullName ?? '';
         _cityController.text = user.city ?? '';
-        _pronounsController.text = user.flair ?? '';
+        _pronounsController.text = pronouns;
+        _selectedPronouns
+          ..clear()
+          ..addAll(
+            pronouns
+                .split(RegExp(r'[\n,]'))
+                .map((p) => p.trim())
+                .where((p) => p.isNotEmpty),
+          );
+        _isProfilePrivate = isPrivateProfile;
+
+        _selectedMutualAidEmojis
+          ..clear()
+          ..addAll(selectedMutualAidEmojis);
       }
     });
   }
@@ -101,12 +411,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _saveProfile() async {
     if (_saving) return;
     setState(() => _saving = true);
+
+    final flair = FlairUtils.buildFlair(
+      pronouns: _pronounsController.text,
+      mutualAidEmojis: _mutualAidEmojiString,
+      isPrivateProfile: _isProfilePrivate,
+    );
+
     await _profileService.saveProfile(
       _statusController.text,
       _profileImage?.path,
       fullName: _fullNameController.text,
       city: _cityController.text,
-      flair: _pronounsController.text,
+      flair: flair,
       statusImagePaths: _statusImages.map((f) => f.path).toList(),
     );
     if (mounted) {
@@ -123,6 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fullNameController.dispose();
     _cityController.dispose();
     _pronounsController.dispose();
+    _customPronounController.dispose();
     super.dispose();
   }
 
@@ -142,6 +460,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Private profile'),
+                subtitle: const Text('Hide your profile details from other users.'),
+                value: _isProfilePrivate,
+                onChanged: _saving
+                    ? null
+                    : (v) {
+                        setState(() {
+                          _isProfilePrivate = v;
+                        });
+                      },
+              ),
               const SizedBox(height: 32),
               Center(
                 child: Stack(
@@ -162,40 +493,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              if (currentUser != null)
-                Text(
-                  currentUser.username,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _fullNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Full name',
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _pronounsController,
-                decoration: const InputDecoration(
-                  labelText: 'Pronouns',
-                  hintText: 'e.g., She/Her, They/Them',
-                  border: OutlineInputBorder(),
-                ),
-                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -253,6 +550,135 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                 ),
               ],
+              const SizedBox(height: 24),
+              if (currentUser != null)
+                Text(
+                  currentUser.username,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              if (_mutualAidEmojiString.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  _mutualAidEmojiString,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ],
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _fullNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Full name',
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _cityController,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  border: OutlineInputBorder(),
+                ),
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _pronounsController,
+                decoration: const InputDecoration(
+                  labelText: 'Pronouns (read-only)',
+                  hintText: 'Select pronouns below',
+                  border: OutlineInputBorder(),
+                ),
+                readOnly: true,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Pronouns (select up to 5)',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _availablePronouns.map(_buildPronounChip).toList(),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _customPronounController,
+                      decoration: const InputDecoration(
+                        labelText: 'Add custom pronouns',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => _addCustomPronoun(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: _saving ? null : _addCustomPronoun,
+                    child: const Text('Add'),
+                  ),
+                ],
+              ),
+              if (_customPronouns.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _customPronouns.map((pronoun) {
+                    final baseColors = _pronounColors(pronoun);
+                    final colors = baseColors.map((c) => c.withOpacity(0.95)).toList();
+                    final textColor = _contrastTextColor(baseColors);
+                    return InputChip(
+                      label: Text(
+                        pronoun,
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      backgroundColor: colors.first,
+                      deleteIconColor: textColor.withOpacity(0.8),
+                      onDeleted: () => _removeCustomPronoun(pronoun),
+                    );
+                  }).toList(),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                'Mutual aid I can help with',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    children: _mutualAidOptions.map((o) {
+                      final selected = _selectedMutualAidEmojis.contains(o.emoji);
+                      return CheckboxListTile(
+                        value: selected,
+                        dense: true,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        title: Text('${o.emoji}  ${o.label}'),
+                        onChanged: _saving
+                            ? null
+                            : (v) {
+                                setState(() {
+                                  if (v == true) {
+                                    _selectedMutualAidEmojis.add(o.emoji);
+                                  } else {
+                                    _selectedMutualAidEmojis.remove(o.emoji);
+                                  }
+                                });
+                              },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {

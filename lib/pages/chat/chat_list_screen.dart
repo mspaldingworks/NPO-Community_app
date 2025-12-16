@@ -7,6 +7,7 @@ import 'package:transconnect/widgets/friends/friends_tab_view.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/models/user.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class ChatListScreen extends StatefulWidget {
   ChatListScreen({super.key});
@@ -44,8 +45,8 @@ class ConversationList extends StatefulWidget {
 class _ConversationListState extends State<ConversationList> {
   late Future<List<ConversationPreview>> _conversationsFuture;
   late final ChatService _chatService;
-  // AuthService is no longer strictly necessary since we only need the other user's info
-  // final AuthService _authService = Provider.of<AuthService>(context, listen: false); 
+  final AuthService _authService = AuthService();
+  Map<int, String?> _userFlairById = {};
 
   @override
   void initState() {
@@ -53,6 +54,19 @@ class _ConversationListState extends State<ConversationList> {
     _chatService = ChatService();
     // Start fetching the list of other participants immediately
     _conversationsFuture = _chatService.getAllConversations();
+    _loadUserFlairMap();
+  }
+
+  Future<void> _loadUserFlairMap() async {
+    try {
+      final users = await _authService.getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _userFlairById = {for (final u in users) u.id: u.flair};
+      });
+    } catch (_) {
+      // Ignore silently; pronouns will not be displayed
+    }
   }
 
   Future<void> _loadConversations() async {
@@ -62,6 +76,7 @@ class _ConversationListState extends State<ConversationList> {
       setState(() {
         _conversationsFuture = Future.value(conversations);
       });
+      await _loadUserFlairMap();
     } catch (e) {
       if (!mounted) return;
       // Show error in a SnackBar
@@ -106,6 +121,15 @@ class _ConversationListState extends State<ConversationList> {
               itemBuilder: (context, index) {
                 final otherUser = conversations[index];
                 final displayName = otherUser.username;
+                final flair = _userFlairById[otherUser.id];
+                final isPrivate = FlairUtils.isProfilePrivate(flair);
+                final String? pronounsDisplay = isPrivate
+                    ? null
+                    : (FlairUtils.extractPronouns(flair) ?? '')
+                        .split(RegExp(r'[\n,]'))
+                        .map((p) => p.trim())
+                        .where((p) => p.isNotEmpty)
+                        .join(' • ');
 
                 // All previous logic for lastMessage, unreadCount, isGroup,
                 // and multi-participants has been REMOVED.
@@ -114,19 +138,43 @@ class _ConversationListState extends State<ConversationList> {
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   elevation: 1,
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: AppColors.textWhite,
-                      // Display the first letter of the username
-                      child: Text(displayName[0].toUpperCase()),
-                    ),
-                    title: Text(
-                      displayName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    leading: GestureDetector(
+                      onTap: () {
+                        GoRouter.of(context).push('/users/${otherUser.id}');
+                      },
+                      child: CircleAvatar(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: AppColors.textWhite,
+                        // Display the first letter of the username
+                        child: Text(displayName[0].toUpperCase()),
                       ),
-                      overflow: TextOverflow.ellipsis,
+                    ),
+                    title: GestureDetector(
+                      onTap: () {
+                        GoRouter.of(context).push('/users/${otherUser.id}');
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                pronounsDisplay,
+                                style: Theme.of(context).textTheme.bodySmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                     // subtitle is removed as there is no last message data
                     // trailing is removed as there is no unread count data

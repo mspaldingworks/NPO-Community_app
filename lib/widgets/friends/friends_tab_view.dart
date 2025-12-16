@@ -7,6 +7,7 @@ import 'pending_sent_tile.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class FriendsTabView extends StatefulWidget {
   const FriendsTabView({Key? key}) : super(key: key);
@@ -100,9 +101,36 @@ class _FriendsTabViewState extends State<FriendsTabView> {
   }
 
   Widget _buildFriendTile(Friend friend) {
+    final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
+    final String? pronounsDisplay = isPrivate
+        ? null
+        : (FlairUtils.extractPronouns(friend.flair) ?? '')
+            .split(RegExp(r'[\n,]'))
+            .map((p) => p.trim())
+            .where((p) => p.isNotEmpty)
+            .join(' • ');
+
     return ListTile(
-      leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
-      title: Text(friend.username),
+      leading: GestureDetector(
+        onTap: () {
+          context.push('/users/${friend.id}');
+        },
+        child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(friend.username),
+          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                pronounsDisplay,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+        ],
+      ),
       subtitle: _buildStatusSubtitle(friend),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

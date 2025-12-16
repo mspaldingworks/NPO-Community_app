@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/pages/auth/signin_screen.dart';
 import 'package:transconnect/pages/auth/register_screen.dart';
 import 'package:transconnect/pages/auth/onboarding_screen.dart';
@@ -31,6 +29,8 @@ import 'package:transconnect/pages/resources/create_resource_screen.dart';
 import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/pages/profile/profile_screen.dart';
+import 'package:transconnect/pages/profile/public_user_profile_screen.dart';
+import 'package:transconnect/pages/settings/settings_screen.dart';
 import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/pages/forms/lgl_form_screen.dart';
@@ -40,9 +40,12 @@ import 'package:transconnect/pages/admin/moderation_screen.dart';
 class AppRouter {
   final AuthService authService;
 
+  static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+
   AppRouter({required this.authService});
 
   late final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     refreshListenable: GoRouterRefreshStream(authService.authStateChanges),
     initialLocation: '/splash',
     routes: [
@@ -78,12 +81,7 @@ class AppRouter {
             path: ':id',
             builder: (context, state) {
               final conversationId = state.pathParameters['id']!;
-              final conversation = state.extra is ConversationPreview
-                  ? state.extra as ConversationPreview
-                  : null;
-              return ChatMessageScreen(
-                conversationId: conversationId
-              );
+              return ChatMessageScreen(conversationId: conversationId);
             },
           ),
         ],
@@ -229,6 +227,19 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/users/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) {
+          final userId = int.parse(state.pathParameters['id']!);
+          return PublicUserProfileScreen(userId: userId);
+        },
       ),
       GoRoute(
         path: '/forms/lgl',

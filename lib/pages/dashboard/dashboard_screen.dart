@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/data/affirmation_quotes.dart';
-import 'package:transconnect/core/services/favorites_service.dart';
-import 'package:transconnect/core/services/profile_service.dart';
+import 'package:transconnect/features/events/services/favorites_service.dart';
+import 'package:transconnect/features/profile/services/profile_service.dart';
 import 'package:transconnect/models/event.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/models/post.dart';
@@ -27,6 +27,7 @@ import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/core/utils/flair_utils.dart';
 
 class _PathPoint {
   final double t;
@@ -74,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FriendService _friendService = FriendService();
   final CommunityService _communityService = CommunityService();
   final ChatService _chatService = ChatService();
+  Map<int, String?> _userFlairById = {};
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
   bool _isLoading = true;
@@ -196,13 +198,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         final content = m.content.startsWith(_statusDmPrefix)
                             ? m.content.substring(_statusDmPrefix.length)
                             : m.content;
+                        final flair = _userFlairById[m.sender.id];
+                        final isPrivate = FlairUtils.isProfilePrivate(flair);
+                        final String? pronounsDisplay = isPrivate
+                            ? null
+                            : (FlairUtils.extractPronouns(flair) ?? '')
+                                .split(RegExp(r'[\n,]'))
+                                .map((p) => p.trim())
+                                .where((p) => p.isNotEmpty)
+                                .join(' • ');
                         return Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text('${m.sender.username}: $content'),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      m.sender.username,
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                    if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Text(
+                                          pronounsDisplay,
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    Text(content),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Report comment',
+                                icon: const Icon(Icons.flag_outlined, size: 18),
+                                onPressed: () async {
+                                  await showReportDialog(
+                                    context: context,
+                                    baseRequest: ReportRequest(
+                                      type: ReportTargetType.statusComment,
+                                      reason: '',
+                                      targetId: m.id,
+                                      targetUserId: m.sender.id,
+                                      targetUsername: m.sender.username,
+                                      details: content,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
@@ -243,10 +297,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   TextEditingController _ctrlFor(int friendId)
       => _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
 
+  Future<void> _loadUserFlairMap() async {
+    try {
+      final users = await AuthService().getAllUsers();
+      if (!mounted) return;
+      setState(() {
+        _userFlairById = {for (final u in users) u.id: u.flair};
+      });
+    } catch (_) {
+      // Ignore silently; pronouns will not be displayed
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _initVideo();
+    _loadUserFlairMap();
     _loadDashboardData();
   }
 
@@ -369,6 +436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
+    await _loadUserFlairMap();
     final allEvents = await _calendarService.fetchEvents();
     final favoriteIds = await _favoritesService.getFavorites();
     final imagePath = await _profileService.getImagePath();
@@ -661,13 +729,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, i) {
                       final c = comments[i];
+                      final flair = _userFlairById[c.authorId];
+                      final isPrivate = FlairUtils.isProfilePrivate(flair);
+                      final String? pronounsDisplay = isPrivate
+                          ? null
+                          : (FlairUtils.extractPronouns(flair) ?? '')
+                              .split(RegExp(r'[\n,]'))
+                              .map((p) => p.trim())
+                              .where((p) => p.isNotEmpty)
+                              .join(' • ');
                       return Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text('${c.authorUsername}: ${c.content}'),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    c.authorUsername,
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(
+                                        pronounsDisplay,
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  const SizedBox(height: 4),
+                                  Text(c.content),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Report comment',
+                              icon: const Icon(Icons.flag_outlined, size: 18),
+                              onPressed: () async {
+                                await showReportDialog(
+                                  context: context,
+                                  baseRequest: ReportRequest(
+                                    type: ReportTargetType.statusComment,
+                                    reason: '',
+                                    targetId: c.id,
+                                    targetUserId: c.authorId,
+                                    targetUsername: c.authorUsername,
+                                    details: c.content,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -1304,6 +1424,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final friend = _friendStatusFeed[index];
               final when = friend.statusUpdatedAt;
               final msg = friend.statusMessage?.trim() ?? '';
+              final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
+              final String? pronounsDisplay = isPrivate
+                  ? null
+                  : (FlairUtils.extractPronouns(friend.flair) ?? '')
+                      .split(RegExp(r'[\n,]'))
+                      .map((p) => p.trim())
+                      .where((p) => p.isNotEmpty)
+                      .join(' • ');
               return Card(
                 margin: const EdgeInsets.only(bottom: 8.0),
                 child: Padding(
@@ -1313,8 +1441,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
-                        title: Text(friend.username),
+                        leading: GestureDetector(
+                          onTap: () {
+                            context.push('/users/${friend.id}');
+                          },
+                          child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+                        ),
+                        title: GestureDetector(
+                          onTap: () {
+                            context.push('/users/${friend.id}');
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(friend.username),
+                              if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    pronounsDisplay,
+                                    style: Theme.of(context).textTheme.bodySmall,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                         subtitle: Text(
                           when == null ? msg : '$msg • ${timeAgo(when)}',
                           maxLines: 2,
