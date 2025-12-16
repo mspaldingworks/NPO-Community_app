@@ -76,6 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final CommunityService _communityService = CommunityService();
   final ChatService _chatService = ChatService();
   Map<int, String?> _userFlairById = {};
+  Map<int, String?> _userPicById = {};
   List<Event> _upcomingFavoritedEvents = [];
   File? _profileImage;
   bool _isLoading = true;
@@ -216,6 +217,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              DisplayProfilePic(
+                                radius: 20,
+                                imageUrl: _userPicById[m.sender.id],
+                              ),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,6 +309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       setState(() {
         _userFlairById = {for (final u in users) u.id: u.flair};
+        _userPicById = {for (final u in users) u.id: u.fullProfilePicUrl};
       });
     } catch (_) {
       // Ignore silently; pronouns will not be displayed
@@ -747,6 +754,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            DisplayProfilePic(
+                              radius: 20,
+                              imageUrl: c.authorProfilePic ?? _userPicById[c.authorId],
+                            ),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
