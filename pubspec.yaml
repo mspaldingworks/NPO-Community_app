@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  crypto: ^3.0.3
   go_router: ^14.8.1
   provider: ^6.0.3
   http: ^1.5.0
@@ -37,6 +38,15 @@ dependencies:
   json_annotation: ^4.9.0
   build_runner: ^2.10.4
   json_serializable: ^6.11.3
+
+  flutter_map: ^6.1.0
+  flutter_map_marker_cluster: ^1.3.6
+  latlong2: ^0.9.1
+  geolocator: ^11.1.0
+  flutter_markdown: ^0.7.4
+  sqflite: ^2.4.0
+  path: ^1.9.0
+  uuid: ^4.5.1
 
   logging: any
   meta: any
@@ -63,4 +73,5 @@ flutter:
     - lib/data/posts.json
     - lib/data/comments.json
     - lib/data/resources.json
+    - lib/data/pins.json
 

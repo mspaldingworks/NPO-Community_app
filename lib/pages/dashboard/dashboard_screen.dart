@@ -28,6 +28,7 @@ import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
 
 class _PathPoint {
   final double t;
@@ -78,6 +79,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<int, String?> _userFlairById = {};
   Map<int, String?> _userPicById = {};
   List<Event> _upcomingFavoritedEvents = [];
+
+  bool _hasUnreadCacheCollections = false;
+
+  Future<void> _loadUnreadCacheCollections() async {
+    final hasUnread = await CacheCollections.hasUnread();
+    if (!mounted) return;
+    setState(() {
+      _hasUnreadCacheCollections = hasUnread;
+    });
+  }
   File? _profileImage;
   bool _isLoading = true;
   AffirmationQuote? _quote;
@@ -322,6 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _initVideo();
     _loadUserFlairMap();
     _loadDashboardData();
+    _loadUnreadCacheCollections();
   }
 
   @override
@@ -443,6 +455,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
+    await _loadUnreadCacheCollections();
     await _loadUserFlairMap();
     final allEvents = await _calendarService.fetchEvents();
     final favoriteIds = await _favoritesService.getFavorites();
@@ -910,6 +923,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.map_outlined),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Caches',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    if (isAdmin)
+                      IconButton(
+                        tooltip: 'Cache Admin',
+                        icon: Icon(
+                          Icons.admin_panel_settings_outlined,
+                          color: _hasUnreadCacheCollections ? Colors.pinkAccent : null,
+                        ),
+                        onPressed: () async {
+                          await context.push('/geocaching/admin');
+                          await _loadUnreadCacheCollections();
+                        },
+                      ),
+                    OutlinedButton(
+                      onPressed: () {
+                        context.push('/geocaching');
+                      },
+                      child: const Text('Open'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             _buildAffirmationGif(),
             const SizedBox(height: 24),

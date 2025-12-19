@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:transconnect/features/geocaching/repositories/geocache_repository.dart';
+import 'package:transconnect/features/geocaching/repositories/local_geocache_repository.dart';
 import 'package:transconnect/navigation/app_router.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/dev/dev_menu.dart';
@@ -32,6 +34,14 @@ class MyApp extends StatelessWidget {
         ),
         Provider<CommunityService>(
           create: (context) => CommunityService(),
+        ),
+        Provider<GeocacheRepository>(
+          create: (context) => LocalGeocacheRepository(),
+          dispose: (context, repo) {
+            if (repo is LocalGeocacheRepository) {
+              repo.dispose();
+            }
+          },
         ),
       ],
       child: Builder(

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "pin_0001",
+    "title": "Louisville Waterfront",
+    "descriptionMd": "### Waterfront\nA nice spot by the river.\n\n- Good lighting\n- Easy access",
+    "status": "active",
+    "password": "waterfront",
+    "lat": 38.2570,
+    "lng": -85.7516,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "pin_0002",
+    "title": "Cherokee Park",
+    "descriptionMd": "Quiet paths and lots of trees.\n\n**Tip:** bring water.",
+    "status": "active",
+    "password": "cherokee",
+    "lat": 38.2309,
+    "lng": -85.7076,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "pin_0003",
+    "title": "Lexington Downtown",
+    "descriptionMd": "Small downtown pin for testing clusters.",
+    "status": "active",
+    "password": "lexington",
+    "lat": 38.0406,
+    "lng": -84.5037,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "pin_0004",
+    "title": "Frankfort Capitol Area",
+    "descriptionMd": null,
+    "status": "active",
+    "password": "frankfort",
+    "lat": null,
+    "lng": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "pin_0006",
+    "title": "Bowling Green (prefilled, no pin yet)",
+    "descriptionMd": "This cache is prefilled but has no pin yet.\n\nOpen it and add a pin by long-pressing the map.",
+    "status": "active",
+    "password": "bowlinggreen",
+    "lat": null,
+    "lng": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  {
+    "id": "pin_0005",
+    "title": "Hidden test pin",
+    "descriptionMd": "This pin is **hidden** (use Filters → status = hidden to see it).",
+    "status": "hidden",
+    "password": "hidden",
+    "lat": 38.2527,
+    "lng": -85.7585,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+]

@@ -1,10 +1,45 @@
 # transconnect
 
-A new Flutter project.
+TransConnect is a Flutter app.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Run:
+
+- `flutter pub get`
+- `flutter run`
+
+### Local Caches + Pins (local-only)
+
+This app includes a **local-only caches + pins** feature:
+
+- **Map provider**: OpenStreetMap tiles via `flutter_map`
+- **Storage**: local SQLite (`sqflite`)
+- **Description**: optional **Markdown** (`flutter_markdown`)
+- **Admin-only**: set/move/delete pins and edit cache info (admin usernames are hardcoded in the app)
+- **Per-cache password**: each cache is locked and must be unlocked by non-admin users
+
+#### How it works
+
+- Open **Caches** (Dashboard card)
+- Tap a cache to open its details
+- Each cache has a **single-pin map** (only that cache)
+- Admins can place/move the pin by **long-pressing the map**
+- Map includes **Zoom + / Zoom −** buttons
+- Non-admins must enter the cache password to **unlock** it before viewing details/map
+
+#### Seed / mock data
+
+On first use, if the local caches table is empty, the app seeds a small Kentucky dataset from:
+
+- `lib/data/pins.json`
+
+The seed includes a couple of caches with **no pin placed yet** (null `lat/lng`) so you can test the flow.
+
+Passwords are seeded for development via a `password` field in `lib/data/pins.json` and stored in SQLite as a hash.
+Unlock state is remembered locally (via `SharedPreferences`) until an admin changes the cache password.
+
+If you change the schema or want to reset local data during development, uninstall/reinstall the app (or clear app storage) to recreate the local database.
 
 A few resources to get you started if this is your first Flutter project:
 

@@ -36,6 +36,13 @@ import 'package:transconnect/models/post.dart';
 import 'package:transconnect/pages/forms/lgl_form_screen.dart';
 import 'package:transconnect/pages/events/calendar_screen.dart';
 import 'package:transconnect/pages/admin/moderation_screen.dart';
+import 'package:transconnect/features/geocaching/models/geopoint.dart';
+import 'package:transconnect/features/geocaching/models/geocache_query.dart';
+import 'package:transconnect/features/geocaching/screens/cache_details_screen.dart';
+import 'package:transconnect/features/geocaching/screens/cache_admin_screen.dart';
+import 'package:transconnect/features/geocaching/screens/geocache_filter_screen.dart';
+import 'package:transconnect/features/geocaching/screens/geocache_list_screen.dart';
+import 'package:transconnect/features/geocaching/screens/place_cache_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -250,6 +257,45 @@ class AppRouter {
         path: '/admin/moderation',
         builder: (context, state) => const ModerationScreen(),
       ),
+
+      GoRoute(
+        path: '/geocaching',
+        builder: (context, state) => const GeocacheListScreen(),
+        routes: [
+          GoRoute(
+            path: 'admin',
+            builder: (context, state) => const CacheAdminScreen(),
+          ),
+          GoRoute(
+            path: 'filters',
+            builder: (context, state) {
+              final initial = state.extra as GeocacheQuery;
+              return GeocacheFilterScreen(initial: initial);
+            },
+          ),
+          GoRoute(
+            path: 'place',
+            builder: (context, state) {
+              final location = state.extra as GeoPoint;
+              return PlaceCacheScreen(location: location);
+            },
+          ),
+          GoRoute(
+            path: 'edit/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return PlaceCacheScreen(cacheId: id);
+            },
+          ),
+          GoRoute(
+            path: 'cache/:id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return CacheDetailsScreen(cacheId: id);
+            },
+          ),
+        ],
+      ),
       
       // Development-only routes
       if (const bool.fromEnvironment('dart.vm.product') == false) 
@@ -264,11 +310,26 @@ class AppRouter {
       final bool onAuthRoute = location == '/login' || location == '/signup';
       final bool onSplashOrOnboarding = location == '/splash' || location == '/onboarding';
 
+      const adminUsernames = <String>[
+        'Mad.E',
+        'Mad.E.Made',
+        'pmaxwell',
+      ];
+      final isAdmin = adminUsernames.contains(authService.currentUser?.username);
+
       if (!loggedIn && !onAuthRoute && !onSplashOrOnboarding) {
         return '/splash';
       }
       if (loggedIn && (onAuthRoute || onSplashOrOnboarding)) {
         return '/home';
+      }
+
+      if (location.startsWith('/admin') && !isAdmin) {
+        return '/home';
+      }
+
+      if (location.startsWith('/geocaching/admin') && !isAdmin) {
+        return '/geocaching';
       }
       return null;
     },
