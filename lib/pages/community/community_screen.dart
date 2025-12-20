@@ -5,6 +5,7 @@ import 'package:transconnect/models/group.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -296,89 +297,92 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          GoRouter.of(context).push('/community/group/${generalGroup!.id}', extra: generalGroup!.name);
-                        },
-                        child: AspectRatio(
-                          aspectRatio: 2048 / 1046,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                                        Theme.of(context).colorScheme.primary.withOpacity(0.35),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                ),
-                                Center(
-                                  child: SizedBox(
-                                    width: 160,
-                                    height: 110,
-                                    child: Stack(
-                                      children: [
-                                        Positioned(
-                                          left: 8,
-                                          top: 38,
-                                          child: Icon(
-                                            Icons.chat_bubble,
-                                            size: 58,
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.45),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 42,
-                                          top: 10,
-                                          child: Icon(
-                                            Icons.chat_bubble_outline,
-                                            size: 72,
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.85),
-                                          ),
-                                        ),
-                                        Positioned(
-                                          left: 94,
-                                          top: 42,
-                                          child: Icon(
-                                            Icons.chat,
-                                            size: 56,
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomLeft,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
+                      child: TourAnchor(
+                        name: 'General Chat',
+                        child: GestureDetector(
+                          onTap: () {
+                            GoRouter.of(context).push('/community/group/${generalGroup!.id}', extra: generalGroup!.name);
+                          },
+                          child: AspectRatio(
+                            aspectRatio: 2048 / 1046,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
                                       gradient: LinearGradient(
-                                        colors: [Colors.transparent, Colors.black54],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'General Chat',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
+                                        colors: [
+                                          Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                                          Theme.of(context).colorScheme.primary.withOpacity(0.35),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                  Center(
+                                    child: SizedBox(
+                                      width: 160,
+                                      height: 110,
+                                      child: Stack(
+                                        children: [
+                                          Positioned(
+                                            left: 8,
+                                            top: 38,
+                                            child: Icon(
+                                              Icons.chat_bubble,
+                                              size: 58,
+                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.45),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: 42,
+                                            top: 10,
+                                            child: Icon(
+                                              Icons.chat_bubble_outline,
+                                              size: 72,
+                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.85),
+                                            ),
+                                          ),
+                                          Positioned(
+                                            left: 94,
+                                            top: 42,
+                                            child: Icon(
+                                              Icons.chat,
+                                              size: 56,
+                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Align(
+                                    alignment: Alignment.bottomLeft,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [Colors.transparent, Colors.black54],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'General Chat',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),

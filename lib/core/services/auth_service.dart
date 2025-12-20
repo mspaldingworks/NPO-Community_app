@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:transconnect/core/services/api_client.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:transconnect/features/onboarding_tour/services/onboarding_tour_storage.dart';
 
 class AuthService extends ApiClient with ChangeNotifier {
   static final AuthService _instance = AuthService._internal();
@@ -91,7 +92,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   }
 
   // Private method to save user data.
-  Future<void> _saveUser(User user, String token, {String? password}) async {
+  Future<void> _saveUser(User user, String token, {String? password, bool setTourPending = false}) async {
     _currentUser = user;
     _authStateController.add(user);
 
@@ -100,6 +101,16 @@ class AuthService extends ApiClient with ChangeNotifier {
     await prefsService.saveData(_usernameKey, user.username);
     if (password != null) {
       await prefsService.saveData(_passwordKey, password);
+    }
+
+    if (setTourPending) {
+      final username = user.username;
+      if (username.trim().isNotEmpty) {
+        final seen = await OnboardingTourStorage.hasSeen(username);
+        if (!seen) {
+          await OnboardingTourStorage.markPendingStart(username);
+        }
+      }
     }
     notifyListeners(); // Notify listeners of the change
   }
@@ -244,7 +255,7 @@ class AuthService extends ApiClient with ChangeNotifier {
       final user = User.fromJson(userData);
       
       // Save the user data including the token and (unrecommended) password.
-      await _saveUser(user, token, password: password);
+      await _saveUser(user, token, password: password, setTourPending: true);
     } else {
       // Throw an exception if the format is unexpected, which will be caught by the calling function.
       throw Exception('Invalid response format from login API. Missing user or token.');

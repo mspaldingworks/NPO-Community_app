@@ -14,6 +14,7 @@ import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -410,15 +411,18 @@ class _PostListScreenState extends State<PostListScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await context.push('/community/group/${widget.groupId}/create-post');
-          if (result == true && mounted) {
-            _loadPosts();
-          }
-        },
-        tooltip: 'Add Post',
-        child: const Icon(Icons.add),
+      floatingActionButton: TourAnchor(
+        name: 'Add Post',
+        child: FloatingActionButton(
+          onPressed: () async {
+            final result = await context.push('/community/group/${widget.groupId}/create-post');
+            if (result == true && mounted) {
+              _loadPosts();
+            }
+          },
+          tooltip: 'Add Post',
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

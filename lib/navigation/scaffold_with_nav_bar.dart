@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
   const ScaffoldWithNavBar({
@@ -22,10 +23,28 @@ class ScaffoldWithNavBar extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        destinations: const [
-          NavigationDestination(label: 'Community', icon: Icon(Icons.group)),
-          NavigationDestination(label: 'Home', icon: Icon(Icons.home)),
-          NavigationDestination(label: 'Resources', icon: Icon(Icons.book)),
+        destinations: [
+          NavigationDestination(
+            label: 'Community',
+            icon: TourAnchor(
+              name: 'Community',
+              child: const Icon(Icons.group),
+            ),
+          ),
+          NavigationDestination(
+            label: 'Home',
+            icon: TourAnchor(
+              name: 'Home',
+              child: const Icon(Icons.home),
+            ),
+          ),
+          NavigationDestination(
+            label: 'Resources',
+            icon: TourAnchor(
+              name: 'Resources',
+              child: const Icon(Icons.book),
+            ),
+          ),
         ],
         onDestinationSelected: _goBranch,
       ),

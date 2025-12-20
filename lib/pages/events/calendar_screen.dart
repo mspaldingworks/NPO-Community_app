@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/core/services/favorites_service.dart';
 import 'package:transconnect/models/event.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -77,12 +78,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Events Calendar'),
+        title: const TourAnchor(
+          name: 'Events Calendar',
+          child: Text('Events Calendar'),
+        ),
         actions: [
-          IconButton(
-            tooltip: 'Open public calendar',
-            icon: const Icon(Icons.public),
-            onPressed: _openPublicCalendar,
+          TourAnchor(
+            name: 'Open public calendar',
+            child: IconButton(
+              tooltip: 'Open public calendar',
+              icon: const Icon(Icons.public),
+              onPressed: _openPublicCalendar,
+            ),
           ),
         ],
       ),

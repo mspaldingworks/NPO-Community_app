@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -30,42 +31,54 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(),
-                  const Text(
-                    'Welcome to TransConnect',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                  const TourAnchor(
+                    name: 'Welcome to TransConnect',
+                    child: Text(
+                      'Welcome to TransConnect',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Connect, share, and grow with a supportive community.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
+                  const TourAnchor(
+                    name: 'Connect, share, and grow with a supportive community.',
+                    child: Text(
+                      'Connect, share, and grow with a supportive community.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: () => context.go('/login'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      minimumSize: const Size.fromHeight(50),
+                  TourAnchor(
+                    name: 'Sign In',
+                    child: ElevatedButton(
+                      onPressed: () => context.go('/login'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size.fromHeight(50),
+                      ),
+                      child: const Text('Sign In'),
                     ),
-                    child: const Text('Sign In'),
                   ),
                   const SizedBox(height: 16),
-                  OutlinedButton(
-                    onPressed: () => context.go('/signup'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      side: const BorderSide(color: Colors.white),
+                  TourAnchor(
+                    name: 'Create Account',
+                    child: OutlinedButton(
+                      onPressed: () => context.go('/signup'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        side: const BorderSide(color: Colors.white),
+                      ),
+                      child: const Text('Create Account'),
                     ),
-                    child: const Text('Create Account'),
                   ),
                   const SizedBox(height: 24),
                   const Spacer(),

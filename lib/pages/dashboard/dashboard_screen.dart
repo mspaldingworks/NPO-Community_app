@@ -29,6 +29,7 @@ import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class _PathPoint {
   final double t;
@@ -844,11 +845,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              context.push('/profile/settings');
-            },
+          TourAnchor(
+            name: 'Settings',
+            child: IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () {
+                context.push('/profile/settings');
+              },
+            ),
           ),
         ],
       ),
@@ -861,101 +865,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    context.push('/chat');
-                  },
-                  child: Container(
-                    width: 110,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.chat, size: 30, color: Colors.grey[600]),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Friends',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                        ),
-                      ],
+                TourAnchor(
+                  name: 'Friends',
+                  child: GestureDetector(
+                    onTap: () {
+                      context.push('/chat');
+                    },
+                    child: Container(
+                      width: 110,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.chat, size: 30, color: Colors.grey[600]),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Friends',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
-                _buildInfoCard(
-                  Icons.calendar_today_outlined,
-                  _isLoading ? '...' : '$_todaysEventsCount upcoming events',
-                  onTap: () {
-                    context.push('/events/calendar');
-                  },
-                  isHighlighted: _todaysEventsCount > 0,
+                TourAnchor(
+                  name: 'No new replies',
+                  child: _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
+                ),
+                TourAnchor(
+                  name: '$_todaysEventsCount upcoming events',
+                  child: _buildInfoCard(
+                    Icons.calendar_today_outlined,
+                    _isLoading ? '...' : '$_todaysEventsCount upcoming events',
+                    onTap: () {
+                      context.push('/events/calendar');
+                    },
+                    isHighlighted: _todaysEventsCount > 0,
+                  ),
                 ),
               ],
             ),
             if (isAdmin) ...[
               const SizedBox(height: 16),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.admin_panel_settings_outlined),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Admin Portal',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+              TourAnchor(
+                name: 'Admin Portal',
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.admin_panel_settings_outlined),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Admin Portal',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ),
-                      OutlinedButton(
-                        onPressed: () {
-                          context.push('/admin/moderation');
-                        },
-                        child: const Text('Open'),
-                      ),
-                    ],
+                        OutlinedButton(
+                          onPressed: () {
+                            context.push('/admin/moderation');
+                          },
+                          child: const Text('Open'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
             const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    const Icon(Icons.map_outlined),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Caches',
-                        style: TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    if (isAdmin)
-                      IconButton(
-                        tooltip: 'Cache Admin',
-                        icon: Icon(
-                          Icons.admin_panel_settings_outlined,
-                          color: _hasUnreadCacheCollections ? Colors.pinkAccent : null,
+            TourAnchor(
+              name: 'Caches',
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.map_outlined),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Caches',
+                          style: TextStyle(fontWeight: FontWeight.w700),
                         ),
-                        onPressed: () async {
-                          await context.push('/geocaching/admin');
-                          await _loadUnreadCacheCollections();
-                        },
                       ),
-                    OutlinedButton(
-                      onPressed: () {
-                        context.push('/geocaching');
-                      },
-                      child: const Text('Open'),
-                    ),
-                  ],
+                      if (isAdmin)
+                        IconButton(
+                          tooltip: 'Cache Admin',
+                          icon: Icon(
+                            Icons.admin_panel_settings_outlined,
+                            color: _hasUnreadCacheCollections ? Colors.pinkAccent : null,
+                          ),
+                          onPressed: () async {
+                            await context.push('/geocaching/admin');
+                            await _loadUnreadCacheCollections();
+                          },
+                        ),
+                      OutlinedButton(
+                        onPressed: () {
+                          context.push('/geocaching');
+                        },
+                        child: const Text('Open'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -981,7 +1000,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
             const SizedBox(height: 16),
-            _buildEditProfileButton(),
+            TourAnchor(
+              name: 'Edit Profile',
+              child: _buildEditProfileButton(),
+            ),
             const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],

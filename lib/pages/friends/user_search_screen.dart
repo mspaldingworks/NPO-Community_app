@@ -8,6 +8,7 @@ import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -132,14 +133,17 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               const Icon(Icons.search, color: Colors.white),
               const SizedBox(width: 8),
               Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: 'Search for users...',
-                    hintStyle: TextStyle(color: Colors.white70),
-                    border: InputBorder.none,
+                child: TourAnchor(
+                  name: 'Search for users...',
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: 'Search for users...',
+                      hintStyle: TextStyle(color: Colors.white70),
+                      border: InputBorder.none,
+                    ),
                   ),
                 ),
               ),

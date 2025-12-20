@@ -5,6 +5,7 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:image_picker/image_picker.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final int groupId;
@@ -145,7 +146,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Post'),
+        title: const TourAnchor(
+          name: 'Create New Post',
+          child: Text('Create New Post'),
+        ),
       ),
       body: Column(
         children: [
@@ -157,86 +161,101 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(labelText: 'Title'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a title';
-                        }
-                        return null;
-                      },
+                    TourAnchor(
+                      name: 'Title',
+                      child: TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(labelText: 'Title'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a title';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16.0),
-                    TextFormField(
-                      controller: _bodyController,
-                      decoration: const InputDecoration(labelText: 'What\'s on your mind?'),
-                      maxLines: 8,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter some content for your post';
-                        }
-                        return null;
-                      },
+                    TourAnchor(
+                      name: "What's on your mind?",
+                      child: TextFormField(
+                        controller: _bodyController,
+                        decoration: const InputDecoration(labelText: 'What\'s on your mind?'),
+                        maxLines: 8,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter some content for your post';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                     const SizedBox(height: 16.0),
-                    SwitchListTile.adaptive(
-                      value: _isAnonymous,
-                      onChanged: (value) {
-                        setState(() {
-                          _isAnonymous = value;
-                        });
-                      },
-                      title: const Text('Post anonymously'),
-                      subtitle: const Text('When enabled, your username will not be shown to others.'),
+                    TourAnchor(
+                      name: 'Post anonymously',
+                      child: SwitchListTile.adaptive(
+                        value: _isAnonymous,
+                        onChanged: (value) {
+                          setState(() {
+                            _isAnonymous = value;
+                          });
+                        },
+                        title: const Text('Post anonymously'),
+                        subtitle: const Text('When enabled, your username will not be shown to others.'),
+                      ),
                     ),
                     const SizedBox(height: 16.0),
-                    GestureDetector(
-                      onTap: _toggleEmojiPicker,
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'How are you feeling?',
-                          border: const OutlineInputBorder(),
-                          helperText: 'Tap to select exactly one emoji that matches your feeling.',
-                          errorText: _emojiError,
-                        ),
-                        child: Wrap(
-                          spacing: 8.0,
-                          children: _selectedEmojis.isEmpty
-                              ? [
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 4.0),
-                                    child: Text('Tap to choose an emoji'),
-                                  ),
-                                ]
-                              : _selectedEmojis
-                                  .map(
-                                    (emoji) => Chip(
-                                      label: Text(
-                                        emoji,
-                                        style: const TextStyle(fontSize: 24),
-                                      ),
-                                      onDeleted: () {
-                                        setState(() {
-                                          _selectedEmojis.remove(emoji);
-                                          if (_selectedEmojis.isEmpty) {
-                                            _emojiError = 'Please select an emoji to describe how you are feeling.';
-                                          }
-                                        });
-                                      },
+                    TourAnchor(
+                      name: 'How are you feeling?',
+                      child: GestureDetector(
+                        onTap: _toggleEmojiPicker,
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'How are you feeling?',
+                            border: const OutlineInputBorder(),
+                            helperText: 'Tap to select exactly one emoji that matches your feeling.',
+                            errorText: _emojiError,
+                          ),
+                          child: Wrap(
+                            spacing: 8.0,
+                            children: _selectedEmojis.isEmpty
+                                ? [
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 4.0),
+                                      child: Text('Tap to choose an emoji'),
                                     ),
-                                  )
-                                  .toList(),
+                                  ]
+                                : _selectedEmojis
+                                    .map(
+                                      (emoji) => Chip(
+                                        label: Text(
+                                          emoji,
+                                          style: const TextStyle(fontSize: 24),
+                                        ),
+                                        onDeleted: () {
+                                          setState(() {
+                                            _selectedEmojis.remove(emoji);
+                                            if (_selectedEmojis.isEmpty) {
+                                              _emojiError = 'Please select an emoji to describe how you are feeling.';
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16.0),
                     Row(
                       children: [
-                        OutlinedButton.icon(
-                          onPressed: _images.length >= _maxImages || _isLoading ? null : _addImage,
-                          icon: const Icon(Icons.photo_library_outlined),
-                          label: Text('Add photos (${_images.length}/$_maxImages)'),
+                        TourAnchor(
+                          name: 'Add photos (${_images.length}/$_maxImages)',
+                          child: OutlinedButton.icon(
+                            onPressed: _images.length >= _maxImages || _isLoading ? null : _addImage,
+                            icon: const Icon(Icons.photo_library_outlined),
+                            label: Text('Add photos (${_images.length}/$_maxImages)'),
+                          ),
                         ),
                       ],
                     ),
@@ -278,11 +297,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       ),
                     ],
                     const SizedBox(height: 24.0),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _submitForm,
-                      child: _isLoading
-                          ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-                          : const Text('Create Post'),
+                    TourAnchor(
+                      name: 'Create Post',
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitForm,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                            : const Text('Create Post'),
+                      ),
                     ),
                   ],
                 ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -25,34 +26,37 @@ class _ProfileImagePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onPickImage,
-          child: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white.withOpacity(0.18),
-                backgroundImage: profileImage != null ? FileImage(profileImage!) : null,
-                child: profileImage == null
-                    ? const Icon(Icons.person, size: 50, color: Colors.white70)
-                    : null,
-              ),
-              Positioned(
-                bottom: 4,
-                right: 4,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.55),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white70, width: 1.2),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+        TourAnchor(
+          name: 'Add Profile Picture',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onPickImage,
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white.withOpacity(0.18),
+                  backgroundImage: profileImage != null ? FileImage(profileImage!) : null,
+                  child: profileImage == null
+                      ? const Icon(Icons.person, size: 50, color: Colors.white70)
+                      : null,
                 ),
-              ),
-            ],
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white70, width: 1.2),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -647,12 +651,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Pronouns',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                            TourAnchor(
+                              name: 'Pronouns',
+                              child: Text(
+                                'Pronouns',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -737,29 +744,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 32),
 
                     // Sign Up Button
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _signUp,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.18),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    TourAnchor(
+                      name: 'Sign Up',
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _signUp,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.18),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Sign Up',
+                                style: TextStyle(fontSize: 16),
                               ),
-                            )
-                          : const Text(
-                              'Sign Up',
-                              style: TextStyle(fontSize: 16),
-                            ),
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -774,7 +784,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         TextButton(
                           onPressed: _isLoading
                               ? null
-                              : () => context.go('/signin'),
+                              : () => context.go('/login'),
                           child: const Text(
                             'Sign In',
                             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),

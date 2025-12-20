@@ -7,6 +7,8 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/features/geocaching/repositories/geocache_repository.dart';
 import 'package:transconnect/features/geocaching/repositories/local_geocache_repository.dart';
+import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/onboarding_tour_host.dart';
 import 'package:transconnect/navigation/app_router.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/dev/dev_menu.dart';
@@ -32,6 +34,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<AuthService>(
           create: (context) => AuthService(),
         ),
+        ChangeNotifierProvider<OnboardingTourController>(
+          create: (context) => OnboardingTourController(),
+        ),
         Provider<CommunityService>(
           create: (context) => CommunityService(),
         ),
@@ -53,8 +58,14 @@ class MyApp extends StatelessWidget {
             title: 'TransConnect',
             theme: AppTheme.lightTheme,
             routerConfig: appRouter.router,
+            builder: (context, child) {
+              final safeChild = child ?? const SizedBox.shrink();
+              final maybeDev = kDebugMode ? DevMenu(child: safeChild) : safeChild;
+              return OnboardingTourHost(child: maybeDev);
+            },
           );
-          return kDebugMode ? DevMenu(child: app) : app;
+
+          return app;
         },
       ),
     );

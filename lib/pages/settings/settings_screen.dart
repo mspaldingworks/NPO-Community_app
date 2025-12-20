@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -48,13 +49,16 @@ class SettingsScreen extends StatelessWidget {
               button: true,
               label: 'Log out',
               hint: 'Signs you out of your TransConnect account',
-              child: ListTile(
-                title: const Text('Log out'),
-                subtitle: const Text('You will be returned to the welcome screen'),
-                leading: const Icon(Icons.logout),
-                trailing: const Icon(Icons.chevron_right),
-                minVerticalPadding: 16,
-                onTap: () => _confirmAndSignOut(context),
+              child: TourAnchor(
+                name: 'Log out',
+                child: ListTile(
+                  title: const Text('Log out'),
+                  subtitle: const Text('You will be returned to the welcome screen'),
+                  leading: const Icon(Icons.logout),
+                  trailing: const Icon(Icons.chevron_right),
+                  minVerticalPadding: 16,
+                  onTap: () => _confirmAndSignOut(context),
+                ),
               ),
             ),
           ],

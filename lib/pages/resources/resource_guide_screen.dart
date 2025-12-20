@@ -8,6 +8,7 @@ import 'package:transconnect/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 Color _getColorFromTag(String tag) {
   final hash = tag.hashCode;
@@ -245,7 +246,6 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                     ),
                   const SizedBox(width: 8),
                   IconButton(
-                    tooltip: 'Report',
                     onPressed: () async {
                       await showReportDialog(
                         context: context,
@@ -261,9 +261,12 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                     },
                     icon: const Icon(Icons.flag_outlined),
                   ),
-                  ElevatedButton(
-                    onPressed: () => _launchURL(resource.url),
-                    child: const Text('More Info'),
+                  TourAnchor(
+                    name: 'More Info',
+                    child: ElevatedButton(
+                      onPressed: () => _launchURL(resource.url),
+                      child: const Text('More Info'),
+                    ),
                   ),
                 ],
               ),
@@ -283,14 +286,20 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Search Resources', style: Theme.of(context).textTheme.titleLarge),
+            TourAnchor(
+              name: 'Search Resources',
+              child: Text('Search Resources', style: Theme.of(context).textTheme.titleLarge),
+            ),
             const SizedBox(height: 16.0),
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search by keyword...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
+            TourAnchor(
+              name: 'Search by keyword...',
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search by keyword...',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
+                ),
               ),
             ),
             const SizedBox(height: 8.0),
