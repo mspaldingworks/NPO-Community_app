@@ -55,6 +55,7 @@ class CommunityService extends ApiClient {
     required String title,
     required String body,
     required String emoji,
+    String? feeling,
     required bool public,
     bool anonymous = false,
     List<String> imageFilePaths = const [],
@@ -68,6 +69,11 @@ class CommunityService extends ApiClient {
       ..fields['emoji'] = emoji
       ..fields['public'] = public.toString()
       ..fields['anonymous'] = anonymous.toString();
+
+    final trimmedFeeling = (feeling ?? '').trim();
+    if (trimmedFeeling.isNotEmpty) {
+      request.fields['feeling'] = trimmedFeeling;
+    }
 
     // Attach up to 4 images (client should enforce limit; keep extra safety here)
     final files = imageFilePaths.take(4);

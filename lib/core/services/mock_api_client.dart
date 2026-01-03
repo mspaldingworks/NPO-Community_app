@@ -7,23 +7,65 @@ import 'package:transconnect/core/services/api_client_interface.dart';
 class MockApiClient implements ApiClientInterface {
   final Logger _logger = Logger();
 
+  final Map<String, List<dynamic>> _cache = {};
+
+  String _normalizePath(String urlPath) {
+    var p = urlPath.trim();
+    if (p.isEmpty) return p;
+
+    final queryIndex = p.indexOf('?');
+    if (queryIndex >= 0) {
+      p = p.substring(0, queryIndex);
+    }
+
+    while (p.startsWith('/')) {
+      p = p.substring(1);
+    }
+
+    if (p.toLowerCase().startsWith('api/')) {
+      p = p.substring(4);
+    }
+
+    while (p.endsWith('/')) {
+      p = p.substring(0, p.length - 1);
+    }
+
+    if (p == 'groups') return 'group';
+    if (p.startsWith('groups/')) return p.replaceFirst('groups/', 'group/');
+
+    return p;
+  }
+
   Future<String> _loadJsonFromAssets(String filePath) async {
     return await rootBundle.loadString(filePath);
   }
 
   Future<List<dynamic>> _readJsonFile(String urlPath) async {
+    final cached = _cache[urlPath];
+    if (cached != null) {
+      return List<dynamic>.from(cached);
+    }
+
     final path = 'lib/data/$urlPath.json';
     _logger.i('Reading from mock data file: $path');
     try {
       final jsonString = await _loadJsonFromAssets(path);
-      return jsonDecode(jsonString);
+      final decoded = jsonDecode(jsonString);
+      if (decoded is List) {
+        _cache[urlPath] = List<dynamic>.from(decoded);
+        return List<dynamic>.from(decoded);
+      }
+      _cache[urlPath] = <dynamic>[];
+      return <dynamic>[];
     } catch (e) {
       _logger.e('Error reading mock data file: $path');
+      _cache[urlPath] = <dynamic>[];
       return [];
     }
   }
 
   Future<void> _writeJsonFile(String urlPath, List<dynamic> data) async {
+    _cache[urlPath] = List<dynamic>.from(data);
     final path = 'lib/data/$urlPath.json';
     _logger.i('Writing to mock data file: $path');
     try {
@@ -42,11 +84,13 @@ class MockApiClient implements ApiClientInterface {
     required Map<String, dynamic> jsonPayload,
     int expectedStatusCode = 201,
   }) async {
-    final data = await _readJsonFile(urlPath);
+    final normalized = _normalizePath(urlPath);
+    final resource = normalized.contains('/') ? normalized.split('/').first : normalized;
+    final data = await _readJsonFile(resource);
     final newId = data.isNotEmpty ? data.map((e) => e['id'] as int).reduce((a, b) => a > b ? a : b) + 1 : 1;
     jsonPayload['id'] = newId;
     data.add(jsonPayload);
-    await _writeJsonFile(urlPath, data);
+    await _writeJsonFile(resource, data);
     return jsonPayload;
   }
 
@@ -56,16 +100,18 @@ class MockApiClient implements ApiClientInterface {
     Map<String, String>? jsonHeaders,
     int expectedStatusCode = 200,
   }) async {
-    if (urlPath.contains('/')) {
-      final parts = urlPath.split('/');
+    final normalized = _normalizePath(urlPath);
+    if (normalized.contains('/')) {
+      final parts = normalized.split('/');
       final resource = parts[0];
-      final id = int.tryParse(parts[1]);
+      final id = parts.length > 1 ? int.tryParse(parts[1]) : null;
       if (id != null) {
         final data = await _readJsonFile(resource);
         return data.firstWhere((element) => element['id'] == id, orElse: () => null);
       }
+      return await _readJsonFile(resource);
     }
-    return await _readJsonFile(urlPath);
+    return await _readJsonFile(normalized);
   }
 
   @override
@@ -75,7 +121,8 @@ class MockApiClient implements ApiClientInterface {
     Map<String, dynamic>? jsonPayload,
     int expectedStatusCode = 200,
   }) async {
-    final parts = urlPath.split('/');
+    final normalized = _normalizePath(urlPath);
+    final parts = normalized.split('/');
     final resource = parts[0];
     final id = int.parse(parts[1]);
     final data = await _readJsonFile(resource);
@@ -95,7 +142,8 @@ class MockApiClient implements ApiClientInterface {
     required Map<String, dynamic> jsonPayload,
     int expectedStatusCode = 200,
   }) async {
-    final parts = urlPath.split('/');
+    final normalized = _normalizePath(urlPath);
+    final parts = normalized.split('/');
     final resource = parts[0];
     final id = int.parse(parts[1]);
     final data = await _readJsonFile(resource);
@@ -116,7 +164,8 @@ class MockApiClient implements ApiClientInterface {
     required Map<String, String> jsonHeaders,
     int expectedStatusCode = 204,
   }) async {
-    final parts = urlPath.split('/');
+    final normalized = _normalizePath(urlPath);
+    final parts = normalized.split('/');
     final resource = parts[0];
     final id = int.parse(parts[1]);
     final data = await _readJsonFile(resource);

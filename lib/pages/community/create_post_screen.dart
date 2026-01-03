@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
@@ -39,7 +38,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   void _onEmojiSelected(Category? category, Emoji emoji) {
-    if (_selectedEmojis.length < 1) {
+    if (_selectedEmojis.isEmpty) {
       setState(() {
         _selectedEmojis.add(emoji.emoji);
         _emojiError = null;
@@ -116,6 +115,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         title: _titleController.text.trim(),
         body: _bodyController.text.trim(),
         emoji: derivedEmoji,
+        feeling: 'community',
         public: true,
         anonymous: _isAnonymous,
         imageFilePaths: _images.map((f) => f.path).toList(),

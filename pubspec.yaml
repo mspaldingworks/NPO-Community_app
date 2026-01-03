@@ -61,6 +61,8 @@ flutter:
   assets:
     - assets/animations/trans_connect_open_video.mp4
     - assets/animations/blue_butterfly.mp4
+    - assets/animations/Pink_TWC_butterfly.mp4
+    - assets/animations/Green_TWC_butterfly.mp4
     - assets/onboarding_tour.json
     - assets/media/twc_primary_logo.png
     - assets/media/NorthernKY-Regions-Map-2048x1046.jpg

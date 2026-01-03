@@ -11,14 +11,14 @@ class Group {
     return Group(
       id: json['id'] as int,
       name: json['name'] as String,
-      image: (json['image_url'] ?? json['image'] ?? json['group_image']) as String?,
+      image: (json['image_url'] ?? json['image'] ?? json['group_image'] ?? json['avatarUrl'] ?? json['avatar_url']) as String?,
     );
   }
 
   String? get fullImageUrl {
     if (image == null) return null;
     if (image!.startsWith('http')) return image;
-    if (image!.startsWith('/')) return ApiEndpoints.host + image!;
-    return ApiEndpoints.host + '/media/' + image!;
+    if (image!.startsWith('/')) return '${ApiEndpoints.host}${image!}';
+    return '${ApiEndpoints.host}/media/${image!}';
   }
 }

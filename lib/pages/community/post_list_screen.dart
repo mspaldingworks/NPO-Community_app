@@ -15,6 +15,7 @@ import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:transconnect/widgets/link_preview_card.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -366,6 +367,7 @@ class _PostListScreenState extends State<PostListScreen> {
                             Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 8),
                             Text(post.body ?? ''),
+                            LinkPreviewCard(urlOrText: post.body),
                             if (post.images.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Wrap(

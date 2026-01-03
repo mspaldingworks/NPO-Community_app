@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/data/affirmation_quotes.dart';
-import 'package:transconnect/core/services/favorites_service.dart';
 import 'package:transconnect/core/services/profile_service.dart';
-import 'package:transconnect/models/event.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/models/user.dart';
@@ -30,12 +28,54 @@ import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:transconnect/widgets/link_preview_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _PathPoint {
   final double t;
   final double x;
   final double y;
   const _PathPoint(this.t, this.x, this.y);
+}
+
+class _HotspotPathPainter extends CustomPainter {
+  final List<_PathPoint> points;
+  final double margin;
+  final Color color;
+
+  const _HotspotPathPainter({
+    required this.points,
+    required this.margin,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (points.length < 2) return;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    for (int i = 0; i < points.length; i++) {
+      final p = points[i];
+      final x = (margin + p.x * (1 - 2 * margin)) * size.width;
+      final y = p.y * size.height;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HotspotPathPainter oldDelegate) {
+    return oldDelegate.margin != margin || oldDelegate.color != color || oldDelegate.points != points;
+  }
 }
 
 class _ToggleCalibrationIntent extends Intent {
@@ -72,14 +112,12 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final CalendarService _calendarService = CalendarService();
-  final FavoritesService _favoritesService = FavoritesService();
   final ProfileService _profileService = ProfileService();
   final FriendService _friendService = FriendService();
   final CommunityService _communityService = CommunityService();
   final ChatService _chatService = ChatService();
   Map<int, String?> _userFlairById = {};
   Map<int, String?> _userPicById = {};
-  List<Event> _upcomingFavoritedEvents = [];
 
   bool _hasUnreadCacheCollections = false;
 
@@ -107,7 +145,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _quoteVisible = false;
   Timer? _quoteTimer;
 
-  final double _hotspotCycleSeconds = 10.0;
+  double get _hotspotCycleSeconds {
+    if (_loadedButterflyAsset == 'assets/animations/Green_TWC_butterfly.mp4') {
+      return 13.5;
+    }
+    return 10.0;
+  }
   final double _hotspotMarginSeconds = 1.0;
   final double _hotspotWidthFraction = 0.18;
   final double _hotspotPauseSeconds = 10.0;
@@ -122,8 +165,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _suppressUntilNextLoop = false;
   final double _hotspotHeightFraction = 0.15;
   bool _calibrationMode = false;
+  final FocusNode _shortcutFocusNode = FocusNode(debugLabel: 'DashboardShortcuts');
 
-  final List<_PathPoint> _hotspotPath = const [
+  static const List<String> _butterflyVideoAssets = <String>[
+    'assets/animations/blue_butterfly.mp4',
+    'assets/animations/Pink_TWC_butterfly.mp4',
+    'assets/animations/Green_TWC_butterfly.mp4',
+  ];
+  static const String _butterflyVideoIndexPrefKey = 'dashboard_butterfly_video_index';
+  int _butterflyVideoIndex = 0;
+  bool _butterflyPrefLoaded = false;
+  String _loadedButterflyAsset = _butterflyVideoAssets.first;
+
+  String get _currentButterflyAsset => _butterflyVideoAssets[_butterflyVideoIndex % _butterflyVideoAssets.length];
+
+  void _toggleCalibrationMode() {
+    setState(() {
+      _calibrationMode = !_calibrationMode;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_calibrationMode) {
+        _shortcutFocusNode.requestFocus();
+      } else {
+        _shortcutFocusNode.unfocus();
+      }
+    });
+  }
+
+  static const List<_PathPoint> _hotspotPathBlue = <_PathPoint>[
     _PathPoint(0.000, 0.000, 0.696),
     _PathPoint(0.079, 0.000, 0.696),
     _PathPoint(0.129, 0.000, 0.752),
@@ -152,6 +223,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _PathPoint(0.899, 1.000, 0.797),
     _PathPoint(1.000, 1.000, 0.797),
   ];
+
+  static const List<_PathPoint> _hotspotPathPink = <_PathPoint>[
+    _PathPoint(0.000, 1.000, 0.240),
+    _PathPoint(0.100, 0.900, 0.205),
+    _PathPoint(0.200, 0.800, 0.240),
+    _PathPoint(0.300, 0.700, 0.215),
+    _PathPoint(0.400, 0.600, 0.255),
+    _PathPoint(0.500, 0.500, 0.230),
+    _PathPoint(0.600, 0.400, 0.265),
+    _PathPoint(0.700, 0.300, 0.235),
+    _PathPoint(0.800, 0.200, 0.260),
+    _PathPoint(0.900, 0.100, 0.245),
+    _PathPoint(1.000, 0.000, 0.260),
+  ];
+
+  static const List<_PathPoint> _hotspotPathGreen = <_PathPoint>[
+    _PathPoint(0.000, 0.000, 0.220),
+    _PathPoint(0.060, 0.080, 0.230),
+    _PathPoint(0.120, 0.160, 0.260),
+    _PathPoint(0.180, 0.240, 0.300),
+    _PathPoint(0.240, 0.320, 0.350),
+    _PathPoint(0.304, 0.500, 0.720),
+    _PathPoint(0.674, 0.500, 0.720),
+    _PathPoint(0.740, 0.400, 0.650),
+    _PathPoint(0.810, 0.300, 0.560),
+    _PathPoint(0.880, 0.200, 0.440),
+    _PathPoint(0.940, 0.100, 0.300),
+    _PathPoint(1.000, 0.000, 0.220),
+  ];
+
+  List<_PathPoint> get _activeHotspotPath {
+    if (_loadedButterflyAsset == _butterflyVideoAssets[2]) {
+      return _hotspotPathGreen;
+    }
+    if (_loadedButterflyAsset == _butterflyVideoAssets[1]) {
+      return _hotspotPathPink;
+    }
+    return _hotspotPathBlue;
+  }
 
   double get _effectiveCycleSeconds {
     if (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized) {
@@ -253,6 +363,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                     const SizedBox(height: 4),
                                     Text(content),
+                                    LinkPreviewCard(urlOrText: content),
                                   ],
                                 ),
                               ),
@@ -296,11 +407,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Offset _samplePath(double t) {
-    if (_hotspotPath.isEmpty) return const Offset(0.5, 0.5);
+    final hotspotPath = _activeHotspotPath;
+    if (hotspotPath.isEmpty) return const Offset(0.5, 0.5);
     final clamped = t.clamp(0.0, 1.0);
-    for (int i = 0; i < _hotspotPath.length - 1; i++) {
-      final a = _hotspotPath[i];
-      final b = _hotspotPath[i + 1];
+    for (int i = 0; i < hotspotPath.length - 1; i++) {
+      final a = hotspotPath[i];
+      final b = hotspotPath[i + 1];
       if (clamped >= a.t && clamped <= b.t) {
         final span = (b.t - a.t).abs() < 1e-6 ? 1.0 : (clamped - a.t) / (b.t - a.t);
         final x = a.x + (b.x - a.x) * span;
@@ -308,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Offset(x, y);
       }
     }
-    final last = _hotspotPath.last;
+    final last = hotspotPath.last;
     return Offset(last.x, last.y);
   }
 
@@ -337,11 +449,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadUnreadCacheCollections();
   }
 
+  Future<void> _loadButterflyVideoPreference() async {
+    if (_butterflyPrefLoaded) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _butterflyVideoIndex = prefs.getInt(_butterflyVideoIndexPrefKey) ?? 0;
+    } catch (_) {
+      _butterflyVideoIndex = 0;
+    }
+    _butterflyPrefLoaded = true;
+  }
+
+  Future<void> _saveButterflyVideoPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_butterflyVideoIndexPrefKey, _butterflyVideoIndex);
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _quoteTimer?.cancel();
     _videoPauseTimer?.cancel();
     awaitDisposeVideo();
+    _shortcutFocusNode.dispose();
     for (final c in _statusCommentCtrls.values) {
       c.dispose();
     }
@@ -357,26 +488,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _initVideo() async {
+    await _loadButterflyVideoPreference();
     try {
       VideoPlayerController? ctrl;
       try {
-        final c1 = VideoPlayerController.asset('assets/animations/blue_butterfly.mp4');
+        final c1 = VideoPlayerController.asset(_currentButterflyAsset);
         await c1.initialize();
         ctrl = c1;
       } catch (e) {
         debugPrint('[DashboardScreen] VideoPlayerController.asset init failed: $e');
         try {
-          final data = await rootBundle.load('assets/animations/blue_butterfly.mp4');
+          final data = await rootBundle.load(_currentButterflyAsset);
           final dir = await getTemporaryDirectory();
-          final f = File('${dir.path}/blue_butterfly.mp4');
+          final fileName = _currentButterflyAsset.split('/').last;
+          final f = File('${dir.path}/$fileName');
           await f.writeAsBytes(data.buffer.asUint8List(), flush: true);
           final c2 = VideoPlayerController.file(f);
           await c2.initialize();
           ctrl = c2;
         } catch (e) {
           debugPrint('[DashboardScreen] VideoPlayerController.file init failed: $e');
+          if (_currentButterflyAsset != _butterflyVideoAssets.first) {
+            _butterflyVideoIndex = 0;
+            await _saveButterflyVideoPreference();
+            if (mounted) {
+              await _initVideo();
+            }
+            return;
+          }
           if (!mounted) return;
-          setState(() { _videoReady = false; });
+          setState(() {
+            _videoReady = false;
+          });
           return;
         }
       }
@@ -388,6 +531,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _videoCtrl = ctrl;
         _videoReady = true;
+        _loadedButterflyAsset = _currentButterflyAsset;
       });
       final readyCtrl = ctrl;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -443,23 +587,127 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pauseMs = remainingToTenMs + (_hotspotPauseSeconds * 1000).round();
     _videoPauseTimer = Timer(Duration(milliseconds: pauseMs), () async {
       if (!mounted) return;
-      await c.seekTo(Duration.zero);
+
+      final previousIndex = _butterflyVideoIndex;
+      final nextIndex = (previousIndex + 1) % _butterflyVideoAssets.length;
+      _butterflyVideoIndex = nextIndex;
+
+      final previous = _videoCtrl;
+      final swapped = await _swapButterflyVideo();
+
+      if (!swapped) {
+        _butterflyVideoIndex = previousIndex;
+      }
+      await _saveButterflyVideoPreference();
+
+      if (!mounted) return;
       _videoWaitingForRestart = false;
+
       if (_suppressUntilNextLoop) {
         setState(() {
           _animVisible = true;
           _suppressUntilNextLoop = false;
         });
       }
-      await c.play();
+
+      if (!swapped) {
+        final stillSame = _videoCtrl == previous;
+        if (stillSame && previous != null) {
+          try {
+            await previous.seekTo(Duration.zero);
+            await previous.play();
+          } catch (_) {}
+        }
+      }
     });
+  }
+
+  Future<bool> _swapButterflyVideo() async {
+    final oldCtrl = _videoCtrl;
+
+    VideoPlayerController? newCtrl;
+    String? resolvedAsset;
+
+    Future<VideoPlayerController?> tryCreate(String assetPath) async {
+      try {
+        final c1 = VideoPlayerController.asset(assetPath);
+        await c1.initialize();
+        return c1;
+      } catch (_) {
+        try {
+          final data = await rootBundle.load(assetPath);
+          final dir = await getTemporaryDirectory();
+          final fileName = assetPath.split('/').last;
+          final f = File('${dir.path}/$fileName');
+          await f.writeAsBytes(data.buffer.asUint8List(), flush: true);
+          final c2 = VideoPlayerController.file(f);
+          await c2.initialize();
+          return c2;
+        } catch (_) {
+          return null;
+        }
+      }
+    }
+
+    newCtrl = await tryCreate(_currentButterflyAsset);
+    resolvedAsset = _currentButterflyAsset;
+
+    if (newCtrl == null && _currentButterflyAsset != _butterflyVideoAssets.first) {
+      newCtrl = await tryCreate(_butterflyVideoAssets.first);
+      resolvedAsset = _butterflyVideoAssets.first;
+      if (newCtrl != null) {
+        _butterflyVideoIndex = 0;
+        await _saveButterflyVideoPreference();
+      }
+    }
+
+    if (newCtrl == null) {
+      return false;
+    }
+
+    try {
+      await newCtrl.setLooping(false);
+      await newCtrl.setVolume(0.0);
+      try {
+        await newCtrl.setPlaybackSpeed(_videoPlaybackSpeed);
+      } catch (_) {}
+      newCtrl.addListener(_onVideoTick);
+    } catch (_) {
+      try {
+        await newCtrl.dispose();
+      } catch (_) {}
+      return false;
+    }
+
+    try {
+      oldCtrl?.removeListener(_onVideoTick);
+      await oldCtrl?.dispose();
+    } catch (_) {}
+
+    if (!mounted) {
+      try {
+        await newCtrl.dispose();
+      } catch (_) {}
+      return false;
+    }
+
+    setState(() {
+      _videoCtrl = newCtrl;
+      _videoReady = true;
+      _loadedButterflyAsset = resolvedAsset ?? _loadedButterflyAsset;
+    });
+
+    try {
+      await newCtrl.play();
+    } catch (_) {}
+
+    return true;
   }
 
   Future<void> _loadDashboardData() async {
     await _loadUnreadCacheCollections();
     await _loadUserFlairMap();
     final allEvents = await _calendarService.fetchEvents();
-    final favoriteIds = await _favoritesService.getFavorites();
     final imagePath = await _profileService.getImagePath();
     final now = DateTime.now();
 
@@ -525,14 +773,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }).toList()
       ..sort((a, b) => a.start.compareTo(b.start));
 
-    // Show only favorited events on the dashboard
-    final todaysFavoritedEvents = todaysEvents
-        .where((e) => favoriteIds.contains(e.uid))
-        .toList();
-
     if (mounted) {
       setState(() {
-        _upcomingFavoritedEvents = todaysFavoritedEvents;
         _todaysEventsCount = todaysEvents.length;
         if (imagePath != null) {
           _profileImage = File(imagePath);
@@ -661,9 +903,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     late final XFile picked;
     if (Platform.isMacOS) {
       try {
-        final typeGroup = XTypeGroup(
+        const typeGroup = XTypeGroup(
           label: 'images',
-          extensions: const ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+          extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
         );
         final f = await openFile(acceptedTypeGroups: [typeGroup]);
         if (f == null) return;
@@ -979,9 +1221,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            _buildAffirmationGif(),
-            const SizedBox(height: 24),
-            _buildProfileAvatar(),
+            _buildButterflyPerchSection(),
             Builder(
               builder: (context) {
                 final authService = Provider.of<AuthService>(context, listen: false);
@@ -1012,6 +1252,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildButterflyPerchSection() {
+    final double aspect = (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized && _videoCtrl!.value.aspectRatio > 0)
+        ? _videoCtrl!.value.aspectRatio
+        : (644 / 144);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = width / aspect;
+        const avatarDiameter = 80.0;
+        const overlap = 57.0;
+        final sectionHeight = height + avatarDiameter - overlap;
+        final avatarTop = height - overlap;
+
+        return SizedBox(
+          height: sectionHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: height,
+                child: _buildAffirmationGif(),
+              ),
+              Positioned(
+                top: avatarTop,
+                left: 0,
+                right: 0,
+                child: _buildProfileAvatar(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildAffirmationGif() {
     final double aspect = (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized && _videoCtrl!.value.aspectRatio > 0)
         ? _videoCtrl!.value.aspectRatio
@@ -1027,9 +1306,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         double hotspotCenterX = 0;
         double hotspotCenterY = 0;
         String? calibrationText;
-        if (_calibrationMode && _videoReady && vc != null && vc.value.isInitialized) {
-          final cycle = _effectiveCycleSeconds;
-          final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+        final bool canTrack = _videoReady && vc != null && vc.value.isInitialized;
+        final cycle = canTrack ? _effectiveCycleSeconds : _hotspotCycleSeconds;
+        final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+
+        if (_calibrationMode && canTrack) {
           final dur = vc.value.duration;
           final pos = vc.value.position;
           final cycleContentMs = (
@@ -1059,21 +1340,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         return FocusableActionDetector(
-          autofocus: true,
-          shortcuts: {
-            LogicalKeySet(LogicalKeyboardKey.keyC): _ToggleCalibrationIntent(),
-            LogicalKeySet(LogicalKeyboardKey.space): _ToggleVideoPauseIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowLeft): _SeekBackwardIntent(),
-            LogicalKeySet(LogicalKeyboardKey.arrowRight): _SeekForwardIntent(),
-            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): _SeekBackwardLargeIntent(),
-            LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): _SeekForwardLargeIntent(),
-          },
+          enabled: _calibrationMode,
+          focusNode: _shortcutFocusNode,
+          autofocus: _calibrationMode,
+          shortcuts: _calibrationMode
+              ? {
+                  LogicalKeySet(LogicalKeyboardKey.keyC): const _ToggleCalibrationIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.escape): const _ToggleCalibrationIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.space): const _ToggleVideoPauseIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _SeekBackwardIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.arrowRight): const _SeekForwardIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): const _SeekBackwardLargeIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): const _SeekForwardLargeIntent(),
+                }
+              : const <ShortcutActivator, Intent>{},
           actions: {
             _ToggleCalibrationIntent: CallbackAction<_ToggleCalibrationIntent>(
               onInvoke: (intent) {
-                setState(() {
-                  _calibrationMode = !_calibrationMode;
-                });
+                _toggleCalibrationMode();
                 return null;
               },
             ),
@@ -1152,6 +1436,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: height,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
+              onLongPress: _toggleCalibrationMode,
               onTapDown: (details) {
                 final vc = _videoCtrl;
                 final isVideoActive = _videoReady && _animVisible && vc != null && vc.value.isInitialized;
@@ -1238,6 +1523,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                   ),
                 ),
+                if (_calibrationMode)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: _HotspotPathPainter(
+                          points: _activeHotspotPath,
+                          margin: margin,
+                          color: const Color(0xFF7C4DFF),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (_calibrationMode && hotspotRect != null)
                   Positioned(
                     left: hotspotRect.left,
@@ -1275,7 +1572,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withAlpha(153),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1298,7 +1595,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.85),
+                          color: Colors.deepPurple.withAlpha(217),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -1366,73 +1663,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildQuoteCard() {
-    final quote = _quote ?? pickRandomQuote();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.deepPurple.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '"${quote.text}"',
-            style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Text(
-              '- ${quote.author}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpcomingFavoritedEvents() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_upcomingFavoritedEvents.isEmpty) {
-      return const Center(
-        child: Text('No events today.'),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Today's Events",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _upcomingFavoritedEvents.length,
-          itemBuilder: (context, index) {
-            final event = _upcomingFavoritedEvents[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: ListTile(
-                title: Text(event.summary),
-                subtitle: Text('${event.start.toLocal()}'),
-              ),
-            );
-          },
-        ),
-      ],
     );
   }
 

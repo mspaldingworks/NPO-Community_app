@@ -1,37 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/theme/app_theme.dart';
+
+class MutualAidContent extends StatelessWidget {
+  const MutualAidContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return GridView.count(
+      padding: const EdgeInsets.all(12),
+      crossAxisCount: 2,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.2,
+      children: [
+        _IconCard(
+          title: 'Request Help',
+          iconData: Icons.handshake_outlined,
+          color: color,
+          onTap: () async {
+            final result = await context.push<bool>('/forms/lgl');
+            if (result == true && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Thanks for submitting the form!')),
+              );
+            }
+          },
+        ),
+        _IconCard(
+          title: 'Browse Help Listings',
+          iconData: Icons.search,
+          color: color,
+          onTap: () {
+            context.push('/exchange/help');
+          },
+        ),
+      ],
+    );
+  }
+}
 
 class MutualAidScreen extends StatelessWidget {
   const MutualAidScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
     return Scaffold(
       appBar: AppBar(title: const Text('Mutual Aid')),
-      body: GridView.count(
-        padding: const EdgeInsets.all(12),
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.2,
-        children: [
-          _IconCard(
-            title: 'Request Help',
-            iconData: Icons.handshake_outlined,
-            color: color,
-            onTap: () async {
-              final result = await context.push<bool>('/forms/lgl');
-              if (result == true && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Thanks for submitting the form!')),
-                );
-              }
-            },
-          ),
-        ],
-      ),
+      body: const MutualAidContent(),
     );
   }
 }
@@ -56,14 +72,14 @@ class _IconCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                  colors: [color.withAlpha(38), color.withAlpha(89)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
             ),
             Center(
-              child: Icon(iconData, size: 64, color: color.withOpacity(0.8)),
+              child: Icon(iconData, size: 64, color: color.withAlpha(204)),
             ),
             Align(
               alignment: Alignment.bottomLeft,

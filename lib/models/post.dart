@@ -5,6 +5,7 @@ class Post {
   final String? title;
   final String? body;
   final String? emoji;
+  final String? feeling;
   final String? statusMessage;
   final bool? public;
   final int? author;
@@ -24,6 +25,7 @@ class Post {
     this.title,
     this.body,
     this.emoji,
+    this.feeling,
     this.statusMessage,
     this.public,
     this.author,
@@ -118,7 +120,17 @@ class Post {
     // Parse images list if provided
     final imagesData = json['images'] as List?;
     final List<String> images = imagesData != null
-        ? imagesData.map((e) => e.toString()).toList()
+        ? imagesData
+            .map((e) {
+              if (e is String) return e;
+              if (e is Map) {
+                final dynamic url = e['url'] ?? e['image_url'] ?? e['image'];
+                if (url is String) return url;
+              }
+              return e.toString();
+            })
+            .where((u) => u.trim().isNotEmpty)
+            .toList()
         : const <String>[];
 
     return Post(
@@ -126,6 +138,7 @@ class Post {
       title: json['title'] as String?,
       body: json['body'] as String?,
       emoji: json['emoji'] as String?,
+      feeling: json['feeling'] as String?,
       statusMessage: json['status_message'] as String?,
       public: json['public'] as bool?,
       author: authorId,

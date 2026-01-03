@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
+import 'package:transconnect/core/services/mock_community_service.dart';
 import 'package:transconnect/core/services/shared_preferences_service.dart';
 import 'package:transconnect/features/geocaching/repositories/geocache_repository.dart';
 import 'package:transconnect/features/geocaching/repositories/local_geocache_repository.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
           create: (context) => OnboardingTourController(),
         ),
         Provider<CommunityService>(
-          create: (context) => CommunityService(),
+          create: (context) => kDebugMode ? MockCommunityService() : CommunityService(),
         ),
         Provider<GeocacheRepository>(
           create: (context) => LocalGeocacheRepository(),

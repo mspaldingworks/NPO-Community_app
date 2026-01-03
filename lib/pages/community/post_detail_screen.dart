@@ -15,6 +15,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/widgets/link_preview_card.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final int groupId;
@@ -501,6 +502,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ),
                 const SizedBox(height: 16),
                 Text(post.body ?? '[No Content]'),
+                LinkPreviewCard(urlOrText: post.body),
                 if (post.images.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   Wrap(
@@ -623,6 +625,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   ),
                                 const SizedBox(height: 4),
                                 Text(comment.content),
+                                LinkPreviewCard(urlOrText: comment.content),
                                 TextButton(
                                   onPressed: () async {
                                     await showReportDialog(

@@ -23,26 +23,40 @@ class ScaffoldWithNavBar extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        destinations: [
+        destinations: const [
           NavigationDestination(
             label: 'Community',
             icon: TourAnchor(
               name: 'Community',
-              child: const Icon(Icons.group),
+              child: Icon(Icons.group),
+            ),
+          ),
+          NavigationDestination(
+            label: 'Exchange',
+            icon: TourAnchor(
+              name: 'Exchange',
+              child: Icon(Icons.swap_horiz_outlined),
             ),
           ),
           NavigationDestination(
             label: 'Home',
             icon: TourAnchor(
               name: 'Home',
-              child: const Icon(Icons.home),
+              child: Icon(Icons.home),
             ),
           ),
           NavigationDestination(
             label: 'Resources',
             icon: TourAnchor(
               name: 'Resources',
-              child: const Icon(Icons.book),
+              child: Icon(Icons.book),
+            ),
+          ),
+          NavigationDestination(
+            label: 'Events',
+            icon: TourAnchor(
+              name: 'Events',
+              child: Icon(Icons.calendar_month_outlined),
             ),
           ),
         ],

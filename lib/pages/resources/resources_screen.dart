@@ -6,7 +6,6 @@ import 'package:transconnect/features/geocaching/models/geocache.dart';
 import 'package:transconnect/features/geocaching/repositories/geocache_repository.dart';
 import 'package:transconnect/features/geocaching/utils/cache_password.dart';
 import 'package:transconnect/pages/resources/resource_guide_screen.dart';
-import 'package:transconnect/pages/community/mutual_aid_screen.dart';
 
 class _UnlockResult {
   final String cacheId;
@@ -156,7 +155,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
   }
 
@@ -197,7 +196,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
           tabs: const [
             Tab(icon: Icon(Icons.menu_book_outlined), text: 'Guide'),
             Tab(icon: Icon(Icons.lock_outline)),
-            Tab(icon: Icon(Icons.handshake_outlined), text: 'Mutual Aid'),
           ],
         ),
       ),
@@ -213,7 +211,6 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
         children: [
           ResourceGuideScreen(key: _guideKey),
           const SizedBox.shrink(),
-          const MutualAidScreen(),
         ],
       ),
     );

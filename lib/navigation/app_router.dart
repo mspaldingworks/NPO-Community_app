@@ -17,7 +17,6 @@ import 'package:transconnect/pages/community/post_detail_screen.dart';
 import 'package:transconnect/pages/community/edit_post_screen.dart';
 import 'package:transconnect/pages/community/regional_chats_screen.dart';
 import 'package:transconnect/pages/community/gender_chats_screen.dart';
-import 'package:transconnect/pages/community/mutual_aid_screen.dart';
 import 'package:transconnect/pages/community/sexual_health_screen.dart';
 import 'package:transconnect/pages/community/photo_album_screen.dart';
 import 'package:transconnect/pages/community/general_community_screen.dart';
@@ -25,6 +24,10 @@ import 'package:transconnect/pages/friends/user_search_screen.dart';
 import 'package:transconnect/pages/dev/chat_test_screen.dart'; // Add this import
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
+import 'package:transconnect/pages/exchange/exchange_hub_screen.dart';
+import 'package:transconnect/pages/exchange/create_exchange_post_screen.dart';
+import 'package:transconnect/pages/exchange/exchange_post_detail_screen.dart';
+import 'package:transconnect/pages/exchange/help_listings_screen.dart';
 import 'package:transconnect/pages/resources/create_resource_screen.dart';
 import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
@@ -143,7 +146,7 @@ class AppRouter {
                   ),
                   GoRoute(
                     path: 'mutual-aid',
-                    builder: (context, state) => const MutualAidScreen(),
+                    redirect: (context, state) => '/exchange',
                   ),
                   GoRoute(
                     path: 'group/:id',
@@ -178,6 +181,37 @@ class AppRouter {
                         ],
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Exchange
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/exchange',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: ExchangeHubScreen(),
+                ),
+                routes: [
+                  GoRoute(
+                    path: 'help',
+                    builder: (context, state) => const HelpListingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'create',
+                    builder: (context, state) => const CreateExchangePostScreen(),
+                  ),
+                  GoRoute(
+                    path: 'post/:postId',
+                    builder: (context, state) {
+                      final postId = int.parse(state.pathParameters['postId']!);
+                      return ExchangePostDetailScreen(
+                        postId: postId,
+                        initialPost: state.extra as Post?,
+                      );
+                    },
                   ),
                 ],
               ),
