@@ -1264,7 +1264,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const avatarDiameter = 80.0;
         const overlap = 57.0;
         final sectionHeight = height + avatarDiameter - overlap;
-        final avatarTop = height - overlap;
 
         return SizedBox(
           height: sectionHeight,
@@ -1279,7 +1278,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _buildAffirmationGif(),
               ),
               Positioned(
-                top: avatarTop,
+                bottom: 0,
                 left: 0,
                 right: 0,
                 child: _buildProfileAvatar(),
@@ -1509,6 +1508,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: _videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized
                         ? FittedBox(
                             fit: BoxFit.cover,
+                            alignment: Alignment.bottomCenter,
                             child: SizedBox(
                               width: _videoCtrl!.value.size.width,
                               height: _videoCtrl!.value.size.height,
