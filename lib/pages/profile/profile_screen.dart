@@ -12,6 +12,7 @@ import 'package:transconnect/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/widgets/pronoun_butterfly.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -38,10 +39,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
   bool _saving = false;
   bool _isProfilePrivate = false;
+  bool _updatingPronounsText = false;
+  bool _pronounLimitSnackShown = false;
   final List<File> _statusImages = [];
   static const int _maxStatusImages = 4;
   static const int _maxStatusImageBytes = 10 * 1024 * 1024;
   static const int _maxPronounSelections = 5;
+  static const String _defaultPronoun = 'No Pronouns';
+  static const Set<String> _blockedPronouns = {'woman'};
 
   static const List<String> _availablePronouns = [
     'She/Her',
@@ -92,6 +97,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Set<String> _selectedMutualAidEmojis = <String>{};
   final Set<String> _selectedPronouns = <String>{};
   final List<String> _customPronouns = <String>[];
+
+  bool _isBlockedPronoun(String pronoun) {
+    return _blockedPronouns.contains(pronoun.trim().toLowerCase());
+  }
+
+  bool _isDefaultPronoun(String pronoun) {
+    return pronoun.trim().toLowerCase() == _defaultPronoun.toLowerCase();
+  }
 
   bool _startsOrContainsToken(String value, String token) {
     final v = value.toLowerCase();
@@ -192,11 +205,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _syncPronounsController() {
-    _pronounsController.text = _selectedPronouns.join(', ');
+    _updatingPronounsText = true;
+    final next = _selectedPronouns.join(', ');
+    _pronounsController.value = TextEditingValue(
+      text: next,
+      selection: TextSelection.collapsed(offset: next.length),
+    );
+    _updatingPronounsText = false;
+  }
+
+  List<String> _parsePronounsText(String text) {
+    return text
+        .split(RegExp(r'[\n,;]'))
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+  }
+
+  String _canonicalPronoun(String pronoun) {
+    final trimmed = pronoun.trim();
+    if (trimmed.isEmpty) return trimmed;
+    for (final p in _availablePronouns) {
+      if (p.toLowerCase() == trimmed.toLowerCase()) {
+        return p;
+      }
+    }
+    return trimmed;
+  }
+
+  void _applyPronounsFromText(String text) {
+    final tokens = _parsePronounsText(text);
+    final canonical = tokens.where((p) => !_isBlockedPronoun(p)).map(_canonicalPronoun).toList();
+
+    var normalized = canonical;
+    if (normalized.length > 1) {
+      normalized = normalized.where((p) => !_isDefaultPronoun(p)).toList();
+    }
+    if (normalized.isEmpty) {
+      normalized = [_defaultPronoun];
+    }
+
+    final overflow = normalized.length > _maxPronounSelections;
+    final parsed = overflow ? normalized.take(_maxPronounSelections).toList() : normalized;
+    final hasDuplicates = parsed.toSet().length != parsed.length;
+    final shouldResync =
+        overflow || canonical.length != tokens.length || normalized.length != canonical.length || hasDuplicates;
+
+    if (mounted) {
+      if (overflow && !_pronounLimitSnackShown) {
+        _pronounLimitSnackShown = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+        );
+      } else if (!overflow && _pronounLimitSnackShown) {
+        _pronounLimitSnackShown = false;
+      }
+    }
+
+    setState(() {
+      _selectedPronouns
+        ..clear()
+        ..addAll(parsed);
+
+      final custom = parsed.where((p) => !_availablePronouns.contains(p)).toList();
+      _customPronouns
+        ..clear()
+        ..addAll(custom);
+    });
+
+    if (shouldResync) {
+      _syncPronounsController();
+    }
+  }
+
+  void _onPronounsTextChanged() {
+    if (_updatingPronounsText) return;
+    if (_saving) return;
+    _applyPronounsFromText(_pronounsController.text);
   }
 
   void _togglePronounSelection(String pronoun) {
     if (_saving) return;
+
+    if (_isDefaultPronoun(pronoun)) {
+      setState(() {
+        if (_selectedPronouns.length == 1 && _selectedPronouns.contains(_defaultPronoun)) {
+          return;
+        }
+        _selectedPronouns
+          ..clear()
+          ..add(_defaultPronoun);
+        _customPronouns.clear();
+        _syncPronounsController();
+      });
+      return;
+    }
+
     setState(() {
       if (_selectedPronouns.contains(pronoun)) {
         _selectedPronouns.remove(pronoun);
@@ -207,7 +311,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
           return;
         }
+
+        _selectedPronouns.remove(_defaultPronoun);
         _selectedPronouns.add(pronoun);
+      }
+
+      if (_selectedPronouns.isEmpty) {
+        _selectedPronouns.add(_defaultPronoun);
       }
       _syncPronounsController();
     });
@@ -218,6 +328,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final custom = _customPronounController.text.trim();
     if (custom.isEmpty) return;
 
+    if (_isDefaultPronoun(custom)) {
+      setState(() {
+        _selectedPronouns
+          ..clear()
+          ..add(_defaultPronoun);
+        _customPronouns.clear();
+        _customPronounController.clear();
+        _syncPronounsController();
+      });
+      return;
+    }
+
+    if (_isBlockedPronoun(custom)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That pronoun option is not available.')),
+      );
+      _customPronounController.clear();
+      return;
+    }
+
     if (!_selectedPronouns.contains(custom) && _selectedPronouns.length >= _maxPronounSelections) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('You can select up to 5 pronoun options.')),
@@ -226,6 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     setState(() {
+      _selectedPronouns.remove(_defaultPronoun);
       if (!_customPronouns.contains(custom)) {
         _customPronouns.add(custom);
       }
@@ -240,6 +371,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _customPronouns.remove(pronoun);
       _selectedPronouns.remove(pronoun);
+
+      if (_selectedPronouns.isEmpty) {
+        _selectedPronouns.add(_defaultPronoun);
+      }
       _syncPronounsController();
     });
   }
@@ -325,6 +460,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedPronouns.add(_defaultPronoun);
+    _updatingPronounsText = true;
+    _pronounsController.text = _defaultPronoun;
+    _updatingPronounsText = false;
+    _pronounsController.addListener(_onPronounsTextChanged);
     _loadProfileData();
   }
 
@@ -356,15 +496,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user != null) {
         _fullNameController.text = user.fullName ?? '';
         _cityController.text = user.city ?? '';
-        _pronounsController.text = pronouns;
+        final pronounTokens = _parsePronounsText(pronouns);
+        var parsedPronouns = pronounTokens
+            .where((p) => !_isBlockedPronoun(p))
+            .map(_canonicalPronoun)
+            .take(_maxPronounSelections)
+            .toList();
+
+        if (parsedPronouns.length > 1) {
+          parsedPronouns = parsedPronouns.where((p) => !_isDefaultPronoun(p)).toList();
+        }
+
+        if (parsedPronouns.isEmpty) {
+          parsedPronouns = [_defaultPronoun];
+        }
+
         _selectedPronouns
           ..clear()
-          ..addAll(
-            pronouns
-                .split(RegExp(r'[\n,]'))
-                .map((p) => p.trim())
-                .where((p) => p.isNotEmpty),
-          );
+          ..addAll(parsedPronouns);
+        _customPronouns
+          ..clear()
+          ..addAll(_selectedPronouns.where((p) => !_availablePronouns.contains(p)));
+
+        _updatingPronounsText = true;
+        _pronounsController.text = _selectedPronouns.join(', ');
+        _updatingPronounsText = false;
         _isProfilePrivate = isPrivateProfile;
 
         _selectedMutualAidEmojis
@@ -412,8 +568,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_saving) return;
     setState(() => _saving = true);
 
+    final pronounsToSave = _selectedPronouns.join(', ');
+
     final flair = FlairUtils.buildFlair(
-      pronouns: _pronounsController.text,
+      pronouns: pronounsToSave,
       mutualAidEmojis: _mutualAidEmojiString,
       isPrivateProfile: _isProfilePrivate,
     );
@@ -439,6 +597,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _statusController.dispose();
     _fullNameController.dispose();
     _cityController.dispose();
+    _pronounsController.removeListener(_onPronounsTextChanged);
     _pronounsController.dispose();
     _customPronounController.dispose();
     super.dispose();
@@ -585,11 +744,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextFormField(
                 controller: _pronounsController,
                 decoration: const InputDecoration(
-                  labelText: 'Pronouns (read-only)',
-                  hintText: 'Select pronouns below',
+                  labelText: 'Pronouns',
+                  hintText: 'Comma-separated (up to 5) — or tap chips below',
                   border: OutlineInputBorder(),
                 ),
-                readOnly: true,
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: ButterflyViewerWindow(
+                  child: PronounButterfly(
+                    pronouns: _selectedPronouns.toList(),
+                    size: 260,
+                  ),
+                ),
               ),
               const SizedBox(height: 12),
               Text(

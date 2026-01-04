@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:transconnect/widgets/pronoun_butterfly.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -80,7 +81,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _customPronounController = TextEditingController();
-  final Set<String> _selectedPronouns = <String>{};
+  static const String _defaultPronoun = 'No Pronouns';
+  static const Set<String> _blockedPronouns = {'woman'};
+  final Set<String> _selectedPronouns = <String>{_defaultPronoun};
   final List<String> _customPronouns = <String>[];
   File? _profileImage;
   bool _isLoading = false;
@@ -120,6 +123,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'It/Its',
     'Thon/Thons',
   ];
+
+  bool _isBlockedPronoun(String pronoun) {
+    return _blockedPronouns.contains(pronoun.trim().toLowerCase());
+  }
+
+  bool _isDefaultPronoun(String pronoun) {
+    return pronoun.trim().toLowerCase() == _defaultPronoun.toLowerCase();
+  }
 
   bool _startsOrContainsToken(String value, String token) {
     final v = value.toLowerCase();
@@ -319,11 +330,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _togglePronounSelection(String pronoun) {
+    if (_isBlockedPronoun(pronoun)) {
+      return;
+    }
+
+    if (_isDefaultPronoun(pronoun)) {
+      setState(() {
+        if (_selectedPronouns.length == 1 && _selectedPronouns.contains(_defaultPronoun)) {
+          return;
+        }
+        _selectedPronouns
+          ..clear()
+          ..add(_defaultPronoun);
+        _customPronouns.clear();
+        _pronounFieldKey.currentState?.didChange(_selectedPronouns.toList());
+      });
+      return;
+    }
+
     setState(() {
       if (_selectedPronouns.contains(pronoun)) {
         _selectedPronouns.remove(pronoun);
       } else {
+        _selectedPronouns.remove(_defaultPronoun);
         _selectedPronouns.add(pronoun);
+      }
+
+      if (_selectedPronouns.isEmpty) {
+        _selectedPronouns.add(_defaultPronoun);
       }
       _pronounFieldKey.currentState?.didChange(_selectedPronouns.toList());
     });
@@ -334,7 +368,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (custom.isEmpty) {
       return;
     }
+
+    if (_isDefaultPronoun(custom)) {
+      setState(() {
+        _selectedPronouns
+          ..clear()
+          ..add(_defaultPronoun);
+        _customPronouns.clear();
+        _pronounFieldKey.currentState?.didChange(_selectedPronouns.toList());
+        _customPronounController.clear();
+      });
+      return;
+    }
+
+    if (_isBlockedPronoun(custom)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('That pronoun option is not available.')),
+      );
+      _customPronounController.clear();
+      return;
+    }
+
     setState(() {
+      _selectedPronouns.remove(_defaultPronoun);
       if (!_selectedPronouns.contains(custom)) {
         _selectedPronouns.add(custom);
         _customPronouns.add(custom);
@@ -348,6 +404,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       _customPronouns.remove(pronoun);
       _selectedPronouns.remove(pronoun);
+
+      if (_selectedPronouns.isEmpty) {
+        _selectedPronouns.add(_defaultPronoun);
+      }
       _pronounFieldKey.currentState?.didChange(_selectedPronouns.toList());
     });
   }
@@ -384,13 +444,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
+      final pronouns = _selectedPronouns
+          .map((p) => p.trim())
+          .where((p) => p.isNotEmpty)
+          .where((p) => !_isBlockedPronoun(p))
+          .toList();
+
+      if (pronouns.isEmpty) {
+        pronouns.add(_defaultPronoun);
+      }
+
       await _authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         password2: _confirmPasswordController.text.trim(),
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
-        pronouns: _selectedPronouns.map((p) => p.trim()).where((p) => p.isNotEmpty).toList(),
+        pronouns: pronouns,
         statusMessage: _statusMessageController.text.trim(),
         profileImage: _profileImage,
       );
@@ -659,6 +729,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: ButterflyViewerWindow(
+                                child: PronounButterfly(
+                                  pronouns: _selectedPronouns.toList(),
+                                  size: 240,
                                 ),
                               ),
                             ),
