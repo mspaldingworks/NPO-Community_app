@@ -152,17 +152,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
               return n.contains('hugbox') || n.contains('hug box') || n.contains('honest improvement');
             }
 
-            bool isGeneralAffinity(Group g) {
+            bool isWellnessGroup(Group g) {
               final n = g.name.trim().toLowerCase();
-              if (n.contains('bipoc')) return true;
-              if (n.contains('neurospicy') || n.contains('neurodivergent') || n.contains('neurodivergence')) return true;
-              if (n.contains('under 30') || n.contains('u30') || n.contains('under30')) return true;
-              if (n.contains('60+') || n.contains('60 plus') || n.contains('senior') || n.contains('older')) return true;
-              return false;
-            }
-
-            bool isSexualHealthGroup(Group g) {
-              final n = g.name.trim().toLowerCase();
+              if (n == 'wellness' || n.contains('wellness')) return true;
+              if (n.contains('beauty') || n.contains('self care') || n.contains('self-care') || n.contains('selfcare')) return true;
+              if (n.contains('physical wellness') || n.contains('physical health')) return true;
+              if (n.contains('fitness') || n.contains('exercise') || n.contains('workout')) return true;
               if (n.contains('kink') || n.contains('bdsm') || n.contains('fetish')) return true;
               if (n.contains('prep') || n.contains('pep')) return true;
               if (n.contains('sti') || n.contains('std') || n.contains('testing') || n.contains('clinic')) return true;
@@ -172,22 +167,44 @@ class _CommunityScreenState extends State<CommunityScreen> {
               return false;
             }
 
+            bool isIdentityAffinityGroup(Group g) {
+              final n = g.name.trim().toLowerCase();
+              if (n.contains('bipoc')) return true;
+              if (n.contains('neurospicy') || n.contains('neurodivergent') || n.contains('neurodivergence')) return true;
+              if (n.contains('under 30') || n.contains('u30') || n.contains('under30')) return true;
+              if (n.contains('60+') || n.contains('60 plus') || n.contains('senior') || n.contains('older')) return true;
+              return false;
+            }
+
+            bool isPoliticsGroup(Group g) {
+              final n = g.name.trim().toLowerCase();
+              return n.contains('politic') || n.contains('organizing') || n.contains('organising') || n.contains('advocacy');
+            }
+
             bool isGeneralGroup(Group g) {
               final n = g.name.trim().toLowerCase();
               return n == 'general' || n == 'general chat' || n.startsWith('general ');
             }
 
-            final regionGroups = groups.where(isRegion).toList();
             final otherGroups = groups.where((g) =>
               !isRegion(g)
               && !isGender(g)
               && !isLegal(g)
               && !isHobbies(g)
               && !isPhotoAlbumGroup(g)
-              && !isGeneralAffinity(g)
-              && !isSexualHealthGroup(g)
+              && !isWellnessGroup(g)
+              && !isIdentityAffinityGroup(g)
+              && !isPoliticsGroup(g)
               && !isGeneralGroup(g)
             ).toList();
+
+            final navCards = [
+              {'title': 'Identity', 'icon': Icons.transgender, 'route': '/community/identity'},
+              {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
+              {'title': 'Wellness', 'icon': Icons.favorite, 'route': '/community/wellness'},
+              {'title': 'Photo Album', 'icon': Icons.photo_library, 'route': '/community/photo-album'},
+              {'title': 'Politics', 'icon': Icons.gavel, 'route': '/community/politics'},
+            ];
 
             final token = SharedPreferencesService().getData('user_token');
             final headers = token != null ? {'Authorization': 'Token $token'} : null;
@@ -394,13 +411,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   sliver: SliverGrid(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
-                        final navCards = [
-                          {'title': 'Gender Identity', 'icon': Icons.transgender, 'route': '/community/gender'},
-                          {'title': 'Legal', 'icon': Icons.gavel, 'route': '/community/legal'},
-                          {'title': 'Sexual Wellness', 'icon': Icons.favorite, 'route': '/community/sexual-health'},
-                          {'title': 'Photo Album', 'icon': Icons.photo_library, 'route': '/community/photo-album'},
-                          {'title': 'Affinity', 'icon': Icons.forum, 'route': '/community/general'},
-                        ];
                         if (index < navCards.length) {
                           final item = navCards[index];
                           return _IconCard(
@@ -474,7 +484,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           ),
                         );
                       },
-                      childCount: 5 + otherGroups.length,
+                      childCount: navCards.length + otherGroups.length,
                     ),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,

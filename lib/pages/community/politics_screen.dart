@@ -3,14 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/group.dart';
 
-class GeneralCommunityScreen extends StatefulWidget {
-  const GeneralCommunityScreen({super.key});
+class PoliticsScreen extends StatefulWidget {
+  const PoliticsScreen({super.key});
 
   @override
-  State<GeneralCommunityScreen> createState() => _GeneralCommunityScreenState();
+  State<PoliticsScreen> createState() => _PoliticsScreenState();
 }
 
-class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
+class _PoliticsScreenState extends State<PoliticsScreen> {
   late final CommunityService _communityService;
   late Future<List<Group>> _groupsFuture;
 
@@ -40,7 +40,7 @@ class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Affinity')),
+      appBar: AppBar(title: const Text('Politics')),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
         builder: (context, snapshot) {
@@ -52,16 +52,12 @@ class _GeneralCommunityScreenState extends State<GeneralCommunityScreen> {
           }
           final groups = snapshot.data ?? [];
 
-          final bipoc = _findByNames(groups, ['bipoc']);
-          final neuro = _findByNames(groups, ['neurospicy', 'neurodivergent', 'neurodivergence']);
-          final under30 = _findByNames(groups, ['under 30', 'u30', 'under30']);
-          final over60 = _findByNames(groups, ['60+', '60 plus', 'senior', 'older']);
+          final organizing = _findByNames(groups, ['organizing', 'organising', 'organizing/advocacy', 'organising/advocacy']);
+          final advocacy = _findByNames(groups, ['advocacy', 'advocacy group', 'advocacy groups']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'BIPOC', icon: Icons.groups, group: bipoc),
-            _CardItem(title: 'Neurospicy', icon: Icons.psychology, group: neuro),
-            _CardItem(title: 'Under 30 chat', icon: Icons.cake, group: under30),
-            _CardItem(title: '60+ chat', icon: Icons.elderly, group: over60),
+            _CardItem(title: 'Organizing', icon: Icons.campaign, group: organizing),
+            _CardItem(title: 'Advocacy', icon: Icons.gavel, group: advocacy),
           ];
 
           return GridView.builder(
@@ -119,14 +115,14 @@ class _IconCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                  colors: [color.withAlpha(38), color.withAlpha(89)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
             ),
             Center(
-              child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+              child: Icon(iconData, size: 64, color: color.withAlpha(179)),
             ),
             Align(
               alignment: Alignment.bottomLeft,

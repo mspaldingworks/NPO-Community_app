@@ -158,9 +158,29 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
               group: _findByNames(groups, ['partners/ families', 'partners & families', 'partners and families', 'families']),
             ),
             _CardItem(
+              title: 'BIPOC',
+              icon: Icons.groups,
+              group: _findByNames(groups, ['bipoc']),
+            ),
+            _CardItem(
+              title: 'Neurospicy',
+              icon: Icons.psychology,
+              group: _findByNames(groups, ['neurospicy', 'neurodivergent', 'neurodivergence']),
+            ),
+            _CardItem(
+              title: 'Under 30 chat',
+              icon: Icons.cake,
+              group: _findByNames(groups, ['under 30', 'u30', 'under30']),
+            ),
+            _CardItem(
+              title: '60+ chat',
+              icon: Icons.elderly,
+              group: _findByNames(groups, ['60+', '60 plus', 'senior', 'older']),
+            ),
+            _CardItem(
               title: 'General',
               icon: Icons.forum,
-              route: '/community/gender/general',
+              route: '/community/identity/general',
             ),
           ];
 

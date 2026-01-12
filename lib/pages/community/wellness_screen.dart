@@ -3,14 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/models/group.dart';
 
-class SexualHealthScreen extends StatefulWidget {
-  const SexualHealthScreen({super.key});
+class WellnessScreen extends StatefulWidget {
+  const WellnessScreen({super.key});
 
   @override
-  State<SexualHealthScreen> createState() => _SexualHealthScreenState();
+  State<WellnessScreen> createState() => _WellnessScreenState();
 }
 
-class _SexualHealthScreenState extends State<SexualHealthScreen> {
+class _WellnessScreenState extends State<WellnessScreen> {
   late final CommunityService _communityService;
   late Future<List<Group>> _groupsFuture;
 
@@ -40,7 +40,7 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sexual Wellness')),
+      appBar: AppBar(title: const Text('Wellness')),
       body: FutureBuilder<List<Group>>(
         future: _groupsFuture,
         builder: (context, snapshot) {
@@ -51,21 +51,41 @@ class _SexualHealthScreenState extends State<SexualHealthScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final groups = snapshot.data ?? [];
-          final sexualHealth = _findByNames(groups, [
+
+          final wellnessGeneral = _findByNames(groups, [
+            'wellness',
+            'sexual wellness',
             'sexual health',
             'sexual-health',
-            'sexual wellness',
             'sexual health & wellness',
             'sexual'
           ]);
+          final beautyGroup = _findByNames(groups, [
+            'beauty',
+            'self care',
+            'self-care',
+            'selfcare',
+            'skin care',
+            'skincare',
+          ]);
+          final physicalWellness = _findByNames(groups, [
+            'physical wellness',
+            'physical health',
+            'fitness',
+            'exercise',
+            'workout',
+          ]);
+
           final kink = _findByNames(groups, ['kink', 'kinky', 'bdsm', 'fetish']);
           final prepPep = _findByNames(groups, ['prep', 'pep', 'hiv prevention', 'prep & pep', 'prep/pep']);
-          final stiTesting = _findByNames(groups, ['sti testing', 'std testing', 'testing', 'clinics']);
+          final stiTesting = _findByNames(groups, ['sti testing', 'std testing', 'testing', 'clinics', 'clinic']);
           final saferSex = _findByNames(groups, ['safer sex', 'sex ed', 'sex education']);
           final consent = _findByNames(groups, ['consent', 'boundaries']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'Sexual Wellness (General)', icon: Icons.favorite, group: sexualHealth),
+            _CardItem(title: 'Wellness (General)', icon: Icons.favorite, group: wellnessGeneral),
+            _CardItem(title: 'Beauty', icon: Icons.face, group: beautyGroup),
+            _CardItem(title: 'Physical Wellness', icon: Icons.fitness_center, group: physicalWellness),
             _CardItem(title: 'Kink', icon: Icons.favorite_border, group: kink),
             _CardItem(title: 'PrEP & PEP Access', icon: Icons.medication, group: prepPep),
             _CardItem(title: 'STI Testing & Clinics', icon: Icons.medical_services, group: stiTesting),
@@ -128,14 +148,14 @@ class _IconCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                  colors: [color.withAlpha(38), color.withAlpha(89)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
             ),
             Center(
-              child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+              child: Icon(iconData, size: 64, color: color.withAlpha(179)),
             ),
             Align(
               alignment: Alignment.bottomLeft,

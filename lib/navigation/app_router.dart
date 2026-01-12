@@ -17,9 +17,9 @@ import 'package:transconnect/pages/community/post_detail_screen.dart';
 import 'package:transconnect/pages/community/edit_post_screen.dart';
 import 'package:transconnect/pages/community/regional_chats_screen.dart';
 import 'package:transconnect/pages/community/gender_chats_screen.dart';
-import 'package:transconnect/pages/community/sexual_health_screen.dart';
+import 'package:transconnect/pages/community/wellness_screen.dart';
 import 'package:transconnect/pages/community/photo_album_screen.dart';
-import 'package:transconnect/pages/community/general_community_screen.dart';
+import 'package:transconnect/pages/community/politics_screen.dart';
 import 'package:transconnect/pages/friends/user_search_screen.dart';
 import 'package:transconnect/pages/dev/chat_test_screen.dart'; // Add this import
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
@@ -120,6 +120,10 @@ class AppRouter {
                   ),
                   GoRoute(
                     path: 'gender',
+                    redirect: (context, state) => '/community/identity',
+                  ),
+                  GoRoute(
+                    path: 'identity',
                     builder: (context, state) => const GenderChatsScreen(),
                     routes: [
                       GoRoute(
@@ -134,15 +138,19 @@ class AppRouter {
                   ),
                   GoRoute(
                     path: 'sexual-health',
-                    builder: (context, state) => const SexualHealthScreen(),
+                    redirect: (context, state) => '/community/wellness',
+                  ),
+                  GoRoute(
+                    path: 'wellness',
+                    builder: (context, state) => const WellnessScreen(),
                   ),
                   GoRoute(
                     path: 'photo-album',
                     builder: (context, state) => const PhotoAlbumScreen(),
                   ),
                   GoRoute(
-                    path: 'general',
-                    builder: (context, state) => const GeneralCommunityScreen(),
+                    path: 'politics',
+                    builder: (context, state) => const PoliticsScreen(),
                   ),
                   GoRoute(
                     path: 'mutual-aid',
