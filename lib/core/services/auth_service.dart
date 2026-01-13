@@ -295,6 +295,23 @@ class AuthService extends ApiClient with ChangeNotifier {
     return user;
   }
 
+  Future<User> updateProfileOptimistically({
+    required Map<String, dynamic> updates,
+    required User optimisticUser,
+  }) async {
+    final previous = _currentUser;
+    _currentUser = optimisticUser;
+    notifyListeners();
+
+    try {
+      return await updateProfile(updates);
+    } catch (e) {
+      _currentUser = previous;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<List<User>> getAllUsers() async {
     try {
       final result = await read(

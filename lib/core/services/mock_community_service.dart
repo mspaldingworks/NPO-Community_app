@@ -1,5 +1,6 @@
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/mock_api_client.dart';
+import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/group.dart';
 import 'package:transconnect/models/post.dart';
 
@@ -26,6 +27,17 @@ class MockCommunityService extends CommunityService {
 
     final List<dynamic> data = (result as List?) ?? const [];
     return data.map((json) => Post.fromJson(json as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<Comment>> fetchAllComments() async {
+    final result = await _client.read(
+      urlPath: '/api/comments/',
+      jsonHeaders: const {},
+    );
+
+    final List<dynamic> data = (result as List?) ?? const [];
+    return data.map((json) => Comment.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   @override
@@ -73,5 +85,41 @@ class MockCommunityService extends CommunityService {
     );
 
     return Post.fromJson(result as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Comment> addComment({
+    required int postId,
+    required String content,
+    bool anonymous = false,
+  }) async {
+    final payload = <String, dynamic>{
+      'post': postId,
+      'content': content,
+      'anonymous': anonymous,
+      'user': anonymous ? 'Anonymous' : 'You',
+      'author_id': 0,
+      'author_username': anonymous ? 'Anonymous' : 'You',
+      'pub_date': DateTime.now().toIso8601String(),
+    };
+
+    final result = await _client.post(
+      urlPath: '/api/comments/',
+      jsonHeaders: const {},
+      jsonPayload: payload,
+      expectedStatusCode: 201,
+    );
+
+    return Comment.fromJson(result as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Comment> addCommentMultipart({
+    required int postId,
+    required String content,
+    bool anonymous = false,
+    String? imageFilePath,
+  }) async {
+    return addComment(postId: postId, content: content, anonymous: anonymous);
   }
 }

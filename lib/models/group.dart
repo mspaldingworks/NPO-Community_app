@@ -16,9 +16,14 @@ class Group {
   }
 
   String? get fullImageUrl {
-    if (image == null) return null;
-    if (image!.startsWith('http')) return image;
-    if (image!.startsWith('/')) return '${ApiEndpoints.host}${image!}';
-    return '${ApiEndpoints.host}/media/${image!}';
+    final raw = image;
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final lowered = trimmed.toLowerCase();
+    if (lowered == 'null' || lowered == 'none') return null;
+    if (trimmed.startsWith('http')) return trimmed;
+    if (trimmed.startsWith('/')) return '${ApiEndpoints.host}$trimmed';
+    return '${ApiEndpoints.host}/media/$trimmed';
   }
 }

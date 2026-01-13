@@ -28,7 +28,7 @@ import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/link_preview_card.dart';
+import 'package:transconnect/widgets/smart_link_body.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _PathPoint {
@@ -362,8 +362,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ),
                                       ),
                                     const SizedBox(height: 4),
-                                    Text(content),
-                                    LinkPreviewCard(urlOrText: content),
+                                    SmartLinkBody(text: content),
                                   ],
                                 ),
                               ),
@@ -1087,6 +1086,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
+          IconButton(
+            tooltip: 'Listings',
+            icon: const Icon(Icons.dynamic_feed_outlined),
+            onPressed: () {
+              context.push('/exchange/help');
+            },
+          ),
           TourAnchor(
             name: 'Settings',
             child: IconButton(
@@ -1666,6 +1672,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _showQuickEditProfileSheet() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final me = auth.currentUser;
+    if (me == null) return;
+
+    final statusCtrl = TextEditingController(text: (me.statusMessage ?? '').trim());
+    final cityCtrl = TextEditingController(text: (me.city ?? '').trim());
+    final pronounsCtrl = TextEditingController(text: (FlairUtils.extractPronouns(me.flair) ?? '').trim());
+    final flairCtrl = TextEditingController(text: (FlairUtils.extractMutualAidEmojis(me.flair) ?? '').trim());
+
+    bool saving = false;
+
+    try {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (sheetContext, setSheetState) {
+              Future<void> handleSave() async {
+                if (saving) return;
+                setSheetState(() => saving = true);
+
+                final status = statusCtrl.text.trim();
+                final city = cityCtrl.text.trim();
+                final pronouns = pronounsCtrl.text.trim();
+                final mutualAid = flairCtrl.text.trim();
+                final isPrivateProfile = FlairUtils.isProfilePrivate(me.flair);
+
+                final flair = FlairUtils.buildFlair(
+                  pronouns: pronouns,
+                  mutualAidEmojis: mutualAid,
+                  isPrivateProfile: isPrivateProfile,
+                );
+
+                final updates = <String, dynamic>{
+                  'status_message': status,
+                  'city': city,
+                  'flair': flair,
+                };
+
+                final optimisticUser = User(
+                  id: me.id,
+                  username: me.username,
+                  email: me.email,
+                  city: city.isEmpty ? null : city,
+                  statusMessage: status.isEmpty ? null : status,
+                  statusUpdatedAt: DateTime.now(),
+                  flair: flair,
+                  profilePic: me.profilePic,
+                  friends: me.friends,
+                  userType: me.userType,
+                  isStaff: me.isStaff,
+                  fullName: me.fullName,
+                );
+
+                try {
+                  await auth.updateProfileOptimistically(
+                    updates: updates,
+                    optimisticUser: optimisticUser,
+                  );
+                  if (!sheetContext.mounted) return;
+                  Navigator.of(sheetContext).pop();
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to update profile: $e')),
+                  );
+                  if (!sheetContext.mounted) return;
+                  setSheetState(() => saving = false);
+                }
+              }
+
+              final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
+
+              return Padding(
+                padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 16 + bottom),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Quick edit',
+                      style: Theme.of(sheetContext).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: statusCtrl,
+                      enabled: !saving,
+                      maxLength: 140,
+                      decoration: const InputDecoration(
+                        labelText: 'Status',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: pronounsCtrl,
+                      enabled: !saving,
+                      decoration: const InputDecoration(
+                        labelText: 'Pronouns',
+                        border: OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: cityCtrl,
+                      enabled: !saving,
+                      decoration: const InputDecoration(
+                        labelText: 'City',
+                        border: OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.next,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: flairCtrl,
+                      enabled: !saving,
+                      decoration: const InputDecoration(
+                        labelText: 'Flair',
+                        border: OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: saving ? null : handleSave,
+                      child: saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Save'),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: saving ? null : () => Navigator.of(sheetContext).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      statusCtrl.dispose();
+      cityCtrl.dispose();
+      pronounsCtrl.dispose();
+      flairCtrl.dispose();
+    }
+  }
+
   Widget _buildProfileAvatar() {
     final authService = Provider.of<AuthService>(context, listen: false);
     final currentUser = authService.currentUser;
@@ -1676,7 +1840,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         color: Colors.transparent,
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: _updatingProfilePic ? null : _pickAndUploadProfilePic,
+          onTap: _showQuickEditProfileSheet,
           child: Stack(
             alignment: Alignment.bottomRight,
             children: [
@@ -1698,13 +1862,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 )
               else
-                const Positioned(
+                Positioned(
                   bottom: 2,
                   right: 2,
-                  child: CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Colors.black54,
-                    child: Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                  child: IconButton(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Change profile photo',
+                    onPressed: _updatingProfilePic ? null : _pickAndUploadProfilePic,
+                    icon: const CircleAvatar(
+                      radius: 12,
+                      backgroundColor: Colors.black54,
+                      child: Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                    ),
                   ),
                 ),
             ],
@@ -1797,8 +1968,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
-                        subtitle: Text(
-                          when == null ? msg : '$msg • ${timeAgo(when)}',
+                        subtitle: SmartLinkBody(
+                          text: when == null ? msg : '$msg • ${timeAgo(when)}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),

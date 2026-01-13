@@ -15,7 +15,7 @@ import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/link_preview_card.dart';
+import 'package:transconnect/widgets/smart_link_body.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -34,7 +34,7 @@ class PostListScreen extends StatefulWidget {
 String _fullUrl(String path) {
   if (path.startsWith('http')) return path;
   if (path.startsWith('/')) return ApiEndpoints.host + path;
-  return ApiEndpoints.host + '/media/' + path;
+  return '${ApiEndpoints.host}/media/$path';
 }
 
 class _PostListScreenState extends State<PostListScreen> {
@@ -170,23 +170,30 @@ class _PostListScreenState extends State<PostListScreen> {
                 itemCount: posts.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: FutureBuilder<Group>(
-                        future: _groupFuture,
-                        builder: (context, groupSnap) {
-                          final imgUrl = groupSnap.hasData ? groupSnap.data!.fullImageUrl : null;
-                          if (imgUrl == null) return const SizedBox.shrink();
-                          final token = SharedPreferencesService().getData('user_token');
-                          final headers = token != null ? {'Authorization': 'Token $token'} : null;
-                          return ClipRRect(
+                    return FutureBuilder<Group>(
+                      future: _groupFuture,
+                      builder: (context, groupSnap) {
+                        final imgUrl = groupSnap.hasData ? groupSnap.data!.fullImageUrl : null;
+                        if (imgUrl == null) return const SizedBox.shrink();
+
+                        final token = SharedPreferencesService().getData('user_token');
+                        final headers = token != null ? {'Authorization': 'Token $token'} : null;
+
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: CachedNetworkImage(
                               imageUrl: imgUrl,
                               httpHeaders: headers,
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+                              imageBuilder: (context, imageProvider) => SizedBox(
+                                height: 180,
+                                width: double.infinity,
+                                child: Image(
+                                  image: imageProvider,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                               placeholder: (context, url) => Container(
                                 height: 180,
                                 alignment: Alignment.center,
@@ -196,16 +203,11 @@ class _PostListScreenState extends State<PostListScreen> {
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 ),
                               ),
-                              errorWidget: (context, url, error) => Container(
-                                height: 180,
-                                color: Colors.grey[200],
-                                alignment: Alignment.center,
-                                child: const Icon(Icons.image_not_supported),
-                              ),
+                              errorWidget: (context, url, error) => const SizedBox.shrink(),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     );
                   }
                   final post = posts[index - 1];
@@ -366,8 +368,7 @@ class _PostListScreenState extends State<PostListScreen> {
                             const SizedBox(height: 12),
                             Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
                             const SizedBox(height: 8),
-                            Text(post.body ?? ''),
-                            LinkPreviewCard(urlOrText: post.body),
+                            SmartLinkBody(text: post.body),
                             if (post.images.isNotEmpty) ...[
                               const SizedBox(height: 8),
                               Wrap(

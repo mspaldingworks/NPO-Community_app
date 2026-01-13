@@ -7,8 +7,8 @@ import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/exchange_service.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/models/post.dart';
-import 'package:transconnect/widgets/link_preview_card.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/widgets/smart_link_body.dart';
 
 class ExchangePostDetailScreen extends StatefulWidget {
   final int postId;
@@ -197,8 +197,7 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
                   children: meta.tags.map((t) => Chip(label: Text(t))).toList(),
                 ),
               if (meta != null && meta.tags.isNotEmpty) const SizedBox(height: 16),
-              Text(body),
-              LinkPreviewCard(urlOrText: body),
+              SmartLinkBody(text: body),
               if (post.images.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Wrap(

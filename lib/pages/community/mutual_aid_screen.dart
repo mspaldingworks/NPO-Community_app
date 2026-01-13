@@ -28,7 +28,7 @@ class MutualAidContent extends StatelessWidget {
           },
         ),
         _IconCard(
-          title: 'Browse Help Listings',
+          title: 'Browse Listings',
           iconData: Icons.search,
           color: color,
           onTap: () {

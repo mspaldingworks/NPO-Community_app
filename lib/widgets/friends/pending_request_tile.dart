@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/core/services/friends_controller.dart';
 import 'package:transconnect/models/friend_request.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 
@@ -15,9 +14,10 @@ class PendingRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.read<FriendsController>();    
+    final controller = context.watch<FriendsController>();
     final imageUrl = request.fromUser.fullProfilePicUrl;
-    print((imageUrl ?? 'No image'));
+
+    final isInProgress = controller.isRequestActionInProgress(request.fromUser.username);
 
     final isPrivate = FlairUtils.isProfilePrivate(request.fromUser.flair);
     final String? pronounsDisplay = isPrivate
@@ -58,7 +58,9 @@ class PendingRequestTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ElevatedButton(
-            onPressed: () async {
+            onPressed: isInProgress
+                ? null
+                : () async {
               final success = await controller.acceptRequest(request.fromUser.username);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -72,11 +74,19 @@ class PendingRequestTile extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).primaryColor,
             ),
-            child: const Text('Accept'),
+            child: isInProgress
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Accept'),
           ),
           const SizedBox(width: 8),
           OutlinedButton(
-            onPressed: () async {
+            onPressed: isInProgress
+                ? null
+                : () async {
               final success = await controller.declineRequest(request.fromUser.username);
                if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -91,7 +101,13 @@ class PendingRequestTile extends StatelessWidget {
               foregroundColor: Theme.of(context).colorScheme.error,
               side: BorderSide(color: Theme.of(context).colorScheme.error),
             ),
-            child: const Text('Decline'),
+            child: isInProgress
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Decline'),
           ),
         ],
       ),

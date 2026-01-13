@@ -21,7 +21,7 @@ import 'package:transconnect/pages/community/wellness_screen.dart';
 import 'package:transconnect/pages/community/photo_album_screen.dart';
 import 'package:transconnect/pages/community/politics_screen.dart';
 import 'package:transconnect/pages/friends/user_search_screen.dart';
-import 'package:transconnect/pages/dev/chat_test_screen.dart'; // Add this import
+import 'package:transconnect/pages/dev/chat_test_screen.dart'; 
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/pages/exchange/exchange_hub_screen.dart';
@@ -233,6 +233,12 @@ class AppRouter {
                 pageBuilder: (context, state) => const NoTransitionPage(
                   child: DashboardScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'feed',
+                    redirect: (context, state) => '/exchange/help',
+                  ),
+                ],
               ),
             ],
           ),

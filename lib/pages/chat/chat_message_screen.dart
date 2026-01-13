@@ -11,6 +11,7 @@ import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/loading_indicator.dart';
 import 'package:transconnect/core/services/report_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:transconnect/widgets/smart_link_body.dart';
 
 class ChatMessageScreen extends StatefulWidget {
   final String conversationId;
@@ -373,6 +374,13 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                         ),
                       ],
                     ),
+                  ),
+                  SmartLinkBody(
+                    text: message.content,
+                    showText: false,
+                    previewMaxWidth: 320,
+                    previewAlignment:
+                        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
                   ),
                 ],
               ),

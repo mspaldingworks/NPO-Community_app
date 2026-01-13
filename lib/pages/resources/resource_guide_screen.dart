@@ -30,6 +30,7 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
   late Future<List<Resource>> _resourcesFuture;
   List<Resource> _allResources = [];
   List<Resource> _filteredResources = [];
+  Set<int> _favoriteResourceIds = <int>{};
   final TextEditingController _searchController = TextEditingController();
   TabController? _tabController;
   List<String> _tags = [];
@@ -38,6 +39,7 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
   void initState() {
     super.initState();
     _resourcesFuture = _fetchAndSetResources();
+    _loadFavorites();
     _searchController.addListener(_filterResources);
   }
 
@@ -53,6 +55,15 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
     setState(() {
       _resourcesFuture = _fetchAndSetResources();
     });
+  }
+
+  Future<void> _loadFavorites() async {
+    final ids = await _resourceService.getFavoriteResourceIds();
+    if (!mounted) return;
+    setState(() {
+      _favoriteResourceIds = ids;
+    });
+    _filterResources();
   }
 
   Future<List<Resource>> _fetchAndSetResources() async {
@@ -72,6 +83,8 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
         _tabController = TabController(length: _tags.length, vsync: this);
         _tabController!.addListener(_handleTabSelection);
       });
+
+      _filterResources();
     }
     return resources;
   }
@@ -86,14 +99,39 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
     final query = _searchController.text.toLowerCase();
     final selectedTag = _tabController != null && _tabController!.index != 0 ? _tags[_tabController!.index] : null;
 
+    final next = _allResources.where((resource) {
+      final nameMatches = resource.name?.toLowerCase().contains(query) ?? false;
+      final descriptionMatches = resource.description?.toLowerCase().contains(query) ?? false;
+      final tagMatches = selectedTag == null || resource.tags.contains(selectedTag);
+      return (nameMatches || descriptionMatches) && tagMatches;
+    }).toList();
+
+    final ordered = _applyFavoriteOrdering(next);
+
     setState(() {
-      _filteredResources = _allResources.where((resource) {
-        final nameMatches = resource.name?.toLowerCase().contains(query) ?? false;
-        final descriptionMatches = resource.description?.toLowerCase().contains(query) ?? false;
-        final tagMatches = selectedTag == null || resource.tags.contains(selectedTag);
-        return (nameMatches || descriptionMatches) && tagMatches;
-      }).toList();
+      _filteredResources = ordered;
     });
+  }
+
+  List<Resource> _applyFavoriteOrdering(List<Resource> resources) {
+    if (_favoriteResourceIds.isEmpty) return resources;
+
+    final favorites = <Resource>[];
+    final nonFavorites = <Resource>[];
+    for (final resource in resources) {
+      if (_favoriteResourceIds.contains(resource.id)) {
+        favorites.add(resource);
+      } else {
+        nonFavorites.add(resource);
+      }
+    }
+    return [...favorites, ...nonFavorites];
+  }
+
+  Future<void> _toggleFavorite(Resource resource) async {
+    final isFavorite = _favoriteResourceIds.contains(resource.id);
+    await _resourceService.setResourceFavorite(resourceId: resource.id, isFavorite: !isFavorite);
+    await _loadFavorites();
   }
 
   Future<void> _launchURL(String? urlString) async {
@@ -185,7 +223,8 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
   }
 
   Widget _buildResourceCard(Resource resource, User? user) {
-    const bool isAdmin = false;
+    final bool isAdmin = user?.isStaff ?? false;
+    final isFavorite = _favoriteResourceIds.contains(resource.id);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
@@ -195,7 +234,44 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(resource.name ?? '[No Name]', style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(resource.name ?? '[No Name]', style: Theme.of(context).textTheme.titleLarge),
+                ),
+                IconButton(
+                  tooltip: isFavorite ? 'Unstar' : 'Star',
+                  onPressed: () => _toggleFavorite(resource),
+                  icon: Icon(
+                    isFavorite ? Icons.star : Icons.star_border,
+                    color: isFavorite ? Colors.amber : null,
+                  ),
+                ),
+              ],
+            ),
+            FutureBuilder<bool?>(
+              future: _resourceService.getCachedLinkReachable(resource.url),
+              builder: (context, snapshot) {
+                final reachable = snapshot.data;
+                if (reachable != true) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.verified, size: 18, color: Colors.green),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Verified link',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             if (isAdmin)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),

@@ -27,8 +27,10 @@ class _FriendsTabViewState extends State<FriendsTabView> {
   }
 
   Future<void> _fetchData() async {
-    await _friendsController.fetchPendingRequests();
-    await _friendsController.fetchFriends();
+    await Future.wait([
+      _friendsController.fetchPendingRequests(),
+      _friendsController.fetchFriends(),
+    ]);
   }
 
   @override
@@ -37,43 +39,72 @@ class _FriendsTabViewState extends State<FriendsTabView> {
       value: _friendsController,
       child: Consumer<FriendsController>(
         builder: (context, controller, child) {
-          if (controller.isLoadingPending || controller.isLoadingFriends) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          return RefreshIndicator(
-            onRefresh: _fetchData,
-            child: ListView(
-              children: [
-                if (controller.pendingRequests.isNotEmpty) ...[
-                  _buildSectionHeader('Pending Requests'),
-                  ...controller.pendingRequests.map(
-                    (request) => PendingRequestTile(request: request),
-                  ),
-                  const Divider(),
-                ],
-                if (controller.pendingSentRequests.isNotEmpty) ...[
-                  _buildSectionHeader('Requests You Sent'),
-                  ...controller.pendingSentRequests.map(
-                    (request) => PendingSentTile(request: request),
-                  ),
-                  const Divider(),
-                ],
-                if (controller.friends.isNotEmpty) ...[
-                  _buildSectionHeader('Friends'),
-                  ...controller.friends.map(
-                    (friend) => _buildFriendTile(friend),
-                  ),
-                ],
-                if (controller.pendingRequests.isEmpty && controller.friends.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text('No pending requests.'),
-                    ),
-                  ),
-              ],
-            ),
+          return TabBarView(
+            children: [
+              RefreshIndicator(
+                onRefresh: _fetchData,
+                child: controller.isLoadingPending
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView(
+                        children: [
+                          if (controller.pendingError != null)
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(controller.pendingError!),
+                            ),
+                          if (controller.pendingRequests.isNotEmpty) ...[
+                            _buildSectionHeader('Incoming Requests'),
+                            ...controller.pendingRequests.map(
+                              (request) => PendingRequestTile(request: request),
+                            ),
+                            const Divider(),
+                          ],
+                          if (controller.pendingSentRequests.isNotEmpty) ...[
+                            _buildSectionHeader('Outgoing Requests'),
+                            ...controller.pendingSentRequests.map(
+                              (request) => PendingSentTile(request: request),
+                            ),
+                            const Divider(),
+                          ],
+                          if (controller.pendingRequests.isEmpty &&
+                              controller.pendingSentRequests.isEmpty)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text('No pending requests.'),
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
+              RefreshIndicator(
+                onRefresh: _fetchData,
+                child: controller.isLoadingFriends
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView(
+                        children: [
+                          if (controller.friendsError != null)
+                            Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(controller.friendsError!),
+                            ),
+                          if (controller.friends.isNotEmpty) ...[
+                            _buildSectionHeader('Friends'),
+                            ...controller.friends.map(
+                              (friend) => _buildFriendTile(friend),
+                            ),
+                          ],
+                          if (controller.friends.isEmpty)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Text('No friends yet.'),
+                              ),
+                            ),
+                        ],
+                      ),
+              ),
+            ],
           );
         },
       ),

@@ -21,17 +21,26 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Connect'),
-      ),
-      body: const FriendsTabView(),
-      floatingActionButton: TourAnchor(
-        name: 'Add Friend',
-        child: FloatingActionButton(
-          onPressed: () => GoRouter.of(context).push('/user-search'),
-          child: const Icon(Icons.person_add),
-          tooltip: 'Add Friend',
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Connect'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Requests'),
+              Tab(text: 'Friends'),
+            ],
+          ),
+        ),
+        body: const FriendsTabView(),
+        floatingActionButton: TourAnchor(
+          name: 'Add Friend',
+          child: FloatingActionButton(
+            onPressed: () => GoRouter.of(context).push('/user-search'),
+            child: const Icon(Icons.person_add),
+            tooltip: 'Add Friend',
+          ),
         ),
       ),
     );

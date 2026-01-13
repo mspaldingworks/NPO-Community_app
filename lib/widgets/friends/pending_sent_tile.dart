@@ -14,9 +14,11 @@ class PendingSentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.read<FriendsController>();
+    final controller = context.watch<FriendsController>();
     final toUser = request.toUser ?? request.fromUser; // fallback just in case
     final imageUrl = toUser.fullProfilePicUrl;
+
+    final isInProgress = controller.isRequestActionInProgress(toUser.username);
 
     final isPrivate = FlairUtils.isProfilePrivate(toUser.flair);
     final String? pronounsDisplay = isPrivate
@@ -56,7 +58,9 @@ class PendingSentTile extends StatelessWidget {
       ),
       subtitle: Text(subtitleText),
       trailing: OutlinedButton(
-        onPressed: () async {
+        onPressed: isInProgress
+            ? null
+            : () async {
           final success = await controller.declineRequest(toUser.username);
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +75,13 @@ class PendingSentTile extends StatelessWidget {
           foregroundColor: Theme.of(context).colorScheme.error,
           side: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
-        child: const Text('Cancel'),
+        child: isInProgress
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Text('Cancel'),
       ),
     );
   }

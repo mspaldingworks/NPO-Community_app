@@ -5,6 +5,7 @@ import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/exchange_service.dart';
 import 'package:transconnect/models/post.dart';
+import 'package:transconnect/widgets/smart_link_body.dart';
 
 class WorkAndServicesScreen extends StatefulWidget {
   const WorkAndServicesScreen({super.key});
@@ -202,8 +203,8 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                           children: [
                             if (subtitle.isNotEmpty) Text(subtitle),
                             const SizedBox(height: 4),
-                            Text(
-                              body,
+                            SmartLinkBody(
+                              text: body,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),

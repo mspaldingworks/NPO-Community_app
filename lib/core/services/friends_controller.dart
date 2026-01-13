@@ -7,6 +7,10 @@ import 'package:transconnect/models/user.dart';
 class FriendsController with ChangeNotifier {
   final FriendService _friendService = FriendService();
 
+  final Set<String> _requestActionsInProgress = {};
+  bool isRequestActionInProgress(String username) =>
+      _requestActionsInProgress.contains(username);
+
   // State for pending requests
   List<FriendRequest> _pendingRequests = [];
   List<FriendRequest> get pendingRequests => _pendingRequests;
@@ -74,25 +78,65 @@ class FriendsController with ChangeNotifier {
   }
 
   Future<bool> acceptRequest(String username) async {
+    if (_requestActionsInProgress.contains(username)) {
+      return false;
+    }
+
+    final previousPending = List<FriendRequest>.from(_pendingRequests);
+    final previousFriends = List<Friend>.from(_friends);
+
+    final FriendRequest? request = _pendingRequests
+        .cast<FriendRequest?>()
+        .firstWhere(
+          (req) => req?.fromUser.username == username,
+          orElse: () => null,
+        );
+
+    _requestActionsInProgress.add(username);
+    _pendingRequests.removeWhere((req) => req.fromUser.username == username);
+    if (request != null && !_friends.any((f) => f.username == request.fromUser.username)) {
+      _friends = [request.fromUser, ..._friends];
+    }
+    notifyListeners();
+
     try {
       await _friendService.acceptFriendRequest(username);
-      _pendingRequests.removeWhere((req) => req.fromUser.username == username);
-      // Refresh friends list when a request is accepted
-      await fetchFriends();
+      await fetchFriendsWithLoading(showLoading: false);
+      _requestActionsInProgress.remove(username);
       notifyListeners();
       return true;
     } catch (e) {
+      _pendingRequests = previousPending;
+      _friends = previousFriends;
+      _requestActionsInProgress.remove(username);
+      notifyListeners();
       return false;
     }
   }
 
   Future<bool> declineRequest(String username) async {
+    if (_requestActionsInProgress.contains(username)) {
+      return false;
+    }
+
+    final previousIncoming = List<FriendRequest>.from(_pendingRequests);
+    final previousOutgoing = List<FriendRequest>.from(_pendingSentRequests);
+
+    _requestActionsInProgress.add(username);
+    _pendingRequests.removeWhere((req) => req.fromUser.username == username);
+    _pendingSentRequests.removeWhere((req) => req.toUser?.username == username);
+    notifyListeners();
+
     try {
       await _friendService.declineFriendRequest(username);
-      _pendingRequests.removeWhere((req) => req.fromUser.username == username);
+      _requestActionsInProgress.remove(username);
       notifyListeners();
       return true;
     } catch (e) {
+      _pendingRequests = previousIncoming;
+      _pendingSentRequests = previousOutgoing;
+      _requestActionsInProgress.remove(username);
+      notifyListeners();
       return false;
     }
   }
@@ -100,9 +144,15 @@ class FriendsController with ChangeNotifier {
   // --- Methods for Friends List ---
 
   Future<void> fetchFriends() async {
-    _isLoadingFriends = true;
-    _friendsError = null;
-    notifyListeners();
+    await fetchFriendsWithLoading(showLoading: true);
+  }
+
+  Future<void> fetchFriendsWithLoading({required bool showLoading}) async {
+    if (showLoading) {
+      _isLoadingFriends = true;
+      _friendsError = null;
+      notifyListeners();
+    }
 
     try {
       final apiFriends = await _friendService.listFriends();
@@ -120,8 +170,10 @@ class FriendsController with ChangeNotifier {
     } catch (e) {
       _friendsError = 'Failed to load friends. Please try again.';
     } finally {
-      _isLoadingFriends = false;
-      notifyListeners();
+      if (showLoading) {
+        _isLoadingFriends = false;
+        notifyListeners();
+      }
     }
   }
 
