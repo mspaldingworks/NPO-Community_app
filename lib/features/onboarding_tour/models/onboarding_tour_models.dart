@@ -122,12 +122,14 @@ class SpotlightConfig {
   final String? shape;
   final double paddingPx;
   final double shroudOpacity;
+  final double radiusMultiplier;
 
   const SpotlightConfig({
     required this.targetElementName,
     required this.shape,
     required this.paddingPx,
     required this.shroudOpacity,
+    required this.radiusMultiplier,
   });
 
   static SpotlightConfig empty() {
@@ -136,18 +138,23 @@ class SpotlightConfig {
       shape: null,
       paddingPx: 8,
       shroudOpacity: 0.72,
+      radiusMultiplier: 1.0,
     );
   }
 
   static SpotlightConfig fromMap(Map<String, dynamic> map) {
     final padding = map['padding_px'];
     final opacity = map['shroud_opacity'];
+    final radiusMultiplier = map['radius_multiplier'];
 
     return SpotlightConfig(
       targetElementName: map['target_element_name']?.toString() ?? '',
       shape: map['shape']?.toString(),
       paddingPx: padding is num ? padding.toDouble() : 8,
       shroudOpacity: opacity is num ? opacity.toDouble() : 0.72,
+      radiusMultiplier: radiusMultiplier is num
+          ? radiusMultiplier.toDouble()
+          : 1.0,
     );
   }
 }

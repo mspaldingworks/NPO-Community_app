@@ -3,9 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OnboardingTourStorage {
   static const String seenKeyPrefix = 'onboarding_tour_seen__';
   static const String pendingKeyPrefix = 'onboarding_tour_pending__';
+  static const String infoKeyPrefix = 'onboarding_tour_info_seen__';
 
   static String seenKey(String username) => '$seenKeyPrefix$username';
   static String pendingKey(String username) => '$pendingKeyPrefix$username';
+  static String infoKey(String username) => '$infoKeyPrefix$username';
 
   static Future<bool> hasSeen(String username) async {
     final prefs = await SharedPreferences.getInstance();
@@ -15,6 +17,16 @@ class OnboardingTourStorage {
   static Future<void> markSeen(String username) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(seenKey(username), true);
+  }
+
+  static Future<bool> hasSeenInfo(String username) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(infoKey(username)) ?? false;
+  }
+
+  static Future<void> markInfoSeen(String username) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(infoKey(username), true);
   }
 
   static Future<void> markPendingStart(String username) async {

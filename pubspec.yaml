@@ -68,6 +68,7 @@ flutter:
     - assets/butterfly_wings/front_right/
     - assets/butterfly_wings/back_right/
     - assets/butterfly_wings/center/
+    - assets/tour/tour_butterfly.gif
     - assets/onboarding_tour.json
     - assets/media/twc_primary_logo.png
     - assets/media/NorthernKY-Regions-Map-2048x1046.jpg

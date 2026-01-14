@@ -21,18 +21,18 @@ import 'package:transconnect/pages/community/wellness_screen.dart';
 import 'package:transconnect/pages/community/photo_album_screen.dart';
 import 'package:transconnect/pages/community/politics_screen.dart';
 import 'package:transconnect/pages/friends/user_search_screen.dart';
-import 'package:transconnect/pages/dev/chat_test_screen.dart'; 
+import 'package:transconnect/pages/dev/chat_test_screen.dart';
 import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
 import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
 import 'package:transconnect/pages/exchange/exchange_hub_screen.dart';
 import 'package:transconnect/pages/exchange/create_exchange_post_screen.dart';
 import 'package:transconnect/pages/exchange/exchange_post_detail_screen.dart';
-import 'package:transconnect/pages/exchange/help_listings_screen.dart';
 import 'package:transconnect/pages/resources/create_resource_screen.dart';
 import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
 import 'package:transconnect/pages/profile/profile_screen.dart';
 import 'package:transconnect/pages/profile/public_user_profile_screen.dart';
+import 'package:transconnect/pages/settings/app_info_screen.dart';
 import 'package:transconnect/pages/settings/settings_screen.dart';
 import 'package:transconnect/models/resource.dart';
 import 'package:transconnect/models/post.dart';
@@ -50,7 +50,8 @@ import 'package:transconnect/features/geocaching/screens/place_cache_screen.dart
 class AppRouter {
   final AuthService authService;
 
-  static final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>();
 
   AppRouter({required this.authService});
 
@@ -86,7 +87,7 @@ class AppRouter {
           GoRoute(
             path: 'create',
             builder: (context, state) => const CreateConversationScreen(),
-          ),          
+          ),
           GoRoute(
             path: ':id',
             builder: (context, state) {
@@ -110,9 +111,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/community',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: CommunityScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CommunityScreen()),
                 routes: [
                   GoRoute(
                     path: 'regional',
@@ -167,16 +167,25 @@ class AppRouter {
                       GoRoute(
                         path: 'create-post',
                         builder: (context, state) {
-                          final groupId = int.parse(state.pathParameters['id']!);
+                          final groupId = int.parse(
+                            state.pathParameters['id']!,
+                          );
                           return CreatePostScreen(groupId: groupId);
                         },
                       ),
                       GoRoute(
                         path: 'post/:postId',
                         builder: (context, state) {
-                          final groupId = int.parse(state.pathParameters['id']!);
-                          final postId = int.parse(state.pathParameters['postId']!);
-                          return PostDetailScreen(groupId: groupId, postId: postId);
+                          final groupId = int.parse(
+                            state.pathParameters['id']!,
+                          );
+                          final postId = int.parse(
+                            state.pathParameters['postId']!,
+                          );
+                          return PostDetailScreen(
+                            groupId: groupId,
+                            postId: postId,
+                          );
                         },
                         routes: [
                           GoRoute(
@@ -199,17 +208,17 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/exchange',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: ExchangeHubScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ExchangeHubScreen()),
                 routes: [
                   GoRoute(
                     path: 'help',
-                    builder: (context, state) => const HelpListingsScreen(),
+                    redirect: (context, state) => '/exchange',
                   ),
                   GoRoute(
                     path: 'create',
-                    builder: (context, state) => const CreateExchangePostScreen(),
+                    builder: (context, state) =>
+                        const CreateExchangePostScreen(),
                   ),
                   GoRoute(
                     path: 'post/:postId',
@@ -230,13 +239,12 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/home',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: DashboardScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: DashboardScreen()),
                 routes: [
                   GoRoute(
                     path: 'feed',
-                    redirect: (context, state) => '/exchange/help',
+                    redirect: (context, state) => '/exchange',
                   ),
                 ],
               ),
@@ -247,9 +255,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/resources',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: ResourcesScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: ResourcesScreen()),
                 routes: [
                   GoRoute(
                     path: 'create',
@@ -271,12 +278,11 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/events/calendar',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: CalendarScreen(),
-                ),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: CalendarScreen()),
               ),
             ],
-          ),          
+          ),
         ],
       ),
       GoRoute(
@@ -287,6 +293,11 @@ class AppRouter {
         path: '/profile/settings',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile/info',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AppInfoScreen(),
       ),
       GoRoute(
         path: '/users/:id',
@@ -344,9 +355,9 @@ class AppRouter {
           ),
         ],
       ),
-      
+
       // Development-only routes
-      if (const bool.fromEnvironment('dart.vm.product') == false) 
+      if (const bool.fromEnvironment('dart.vm.product') == false)
         GoRoute(
           path: '/dev/chat-test',
           builder: (context, state) => const ChatTestScreen(),
@@ -356,14 +367,13 @@ class AppRouter {
       final bool loggedIn = authService.currentUser != null;
       final String location = state.matchedLocation;
       final bool onAuthRoute = location == '/login' || location == '/signup';
-      final bool onSplashOrOnboarding = location == '/splash' || location == '/onboarding';
+      final bool onSplashOrOnboarding =
+          location == '/splash' || location == '/onboarding';
 
-      const adminUsernames = <String>[
-        'Mad.E',
-        'Mad.E.Made',
-        'pmaxwell',
-      ];
-      final isAdmin = adminUsernames.contains(authService.currentUser?.username);
+      const adminUsernames = <String>['Mad.E', 'Mad.E.Made', 'pmaxwell'];
+      final isAdmin = adminUsernames.contains(
+        authService.currentUser?.username,
+      );
 
       if (!loggedIn && !onAuthRoute && !onSplashOrOnboarding) {
         return '/splash';

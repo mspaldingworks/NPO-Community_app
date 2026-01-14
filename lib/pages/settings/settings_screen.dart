@@ -1,10 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:transconnect/features/onboarding_tour/services/onboarding_tour_storage.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _startTourFromSettings(BuildContext context) async {
+    final username = context.read<AuthService>().currentUser?.username;
+    if (username == null || username.trim().isEmpty) {
+      return;
+    }
+
+    final controller = context.read<OnboardingTourController>();
+    await controller.load();
+    if (controller.totalSteps == 0) return;
+
+    await OnboardingTourStorage.clearPendingStart(username);
+    if (!context.mounted) return;
+    context.go('/home');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await controller.startForUser(username);
+    });
+  }
 
   Future<void> _confirmAndSignOut(BuildContext context) async {
     final authService = AuthService();
@@ -14,7 +36,9 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Log out?'),
-          content: const Text('You will need to log in again to access your account.'),
+          content: const Text(
+            'You will need to log in again to access your account.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -38,13 +62,31 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 8),
           children: [
+            Semantics(
+              button: true,
+              label: 'Info and tour',
+              hint: 'Learn about the app and replay the home dashboard tour',
+              child: ListTile(
+                title: const Text('Info & tour'),
+                subtitle: const Text(
+                  'Read the overview and replay the guided tour',
+                ),
+                leading: const Icon(Icons.info_outline),
+                trailing: const Icon(Icons.chevron_right),
+                minVerticalPadding: 16,
+                onTap: () async {
+                  final shouldStart = await context.push<bool>('/profile/info');
+                  if (shouldStart == true && context.mounted) {
+                    await _startTourFromSettings(context);
+                  }
+                },
+              ),
+            ),
             Semantics(
               button: true,
               label: 'Log out',
@@ -53,7 +95,9 @@ class SettingsScreen extends StatelessWidget {
                 name: 'Log out',
                 child: ListTile(
                   title: const Text('Log out'),
-                  subtitle: const Text('You will be returned to the welcome screen'),
+                  subtitle: const Text(
+                    'You will be returned to the welcome screen',
+                  ),
                   leading: const Icon(Icons.logout),
                   trailing: const Icon(Icons.chevron_right),
                   minVerticalPadding: 16,

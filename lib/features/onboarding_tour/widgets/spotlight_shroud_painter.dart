@@ -13,7 +13,8 @@ class SpotlightShroudPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final shroudPaint = Paint()..color = Colors.black.withOpacity(shroudOpacity);
+    final alpha = (shroudOpacity.clamp(0.0, 1.0) * 255).round();
+    final shroudPaint = Paint()..color = Colors.white.withAlpha(alpha);
     canvas.saveLayer(Offset.zero & size, Paint());
     canvas.drawRect(Offset.zero & size, shroudPaint);
 

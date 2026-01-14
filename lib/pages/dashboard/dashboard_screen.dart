@@ -74,7 +74,9 @@ class _HotspotPathPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _HotspotPathPainter oldDelegate) {
-    return oldDelegate.margin != margin || oldDelegate.color != color || oldDelegate.points != points;
+    return oldDelegate.margin != margin ||
+        oldDelegate.color != color ||
+        oldDelegate.points != points;
   }
 }
 
@@ -102,7 +104,6 @@ class _SeekForwardLargeIntent extends Intent {
   const _SeekForwardLargeIntent();
 }
 
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -128,6 +129,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _hasUnreadCacheCollections = hasUnread;
     });
   }
+
   File? _profileImage;
   bool _isLoading = true;
   AffirmationQuote? _quote;
@@ -151,6 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     return 10.0;
   }
+
   final double _hotspotMarginSeconds = 1.0;
   final double _hotspotWidthFraction = 0.18;
   final double _hotspotPauseSeconds = 10.0;
@@ -165,19 +168,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _suppressUntilNextLoop = false;
   final double _hotspotHeightFraction = 0.15;
   bool _calibrationMode = false;
-  final FocusNode _shortcutFocusNode = FocusNode(debugLabel: 'DashboardShortcuts');
+  final FocusNode _shortcutFocusNode = FocusNode(
+    debugLabel: 'DashboardShortcuts',
+  );
 
   static const List<String> _butterflyVideoAssets = <String>[
     'assets/animations/blue_butterfly.mp4',
     'assets/animations/Pink_TWC_butterfly.mp4',
     'assets/animations/Green_TWC_butterfly.mp4',
   ];
-  static const String _butterflyVideoIndexPrefKey = 'dashboard_butterfly_video_index';
+  static const String _butterflyVideoIndexPrefKey =
+      'dashboard_butterfly_video_index';
   int _butterflyVideoIndex = 0;
   bool _butterflyPrefLoaded = false;
   String _loadedButterflyAsset = _butterflyVideoAssets.first;
 
-  String get _currentButterflyAsset => _butterflyVideoAssets[_butterflyVideoIndex % _butterflyVideoAssets.length];
+  String get _currentButterflyAsset =>
+      _butterflyVideoAssets[_butterflyVideoIndex %
+          _butterflyVideoAssets.length];
 
   void _toggleCalibrationMode() {
     setState(() {
@@ -267,9 +275,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized) {
       final durMs = _videoCtrl!.value.duration.inMilliseconds;
       if (durMs > 0) {
-        final playedSeconds = (durMs / 1000.0) / (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed);
+        final playedSeconds =
+            (durMs / 1000.0) /
+            (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed);
         // Force the cycle to 10s if the video is longer than that.
-        return playedSeconds > _hotspotCycleSeconds ? _hotspotCycleSeconds : playedSeconds;
+        return playedSeconds > _hotspotCycleSeconds
+            ? _hotspotCycleSeconds
+            : playedSeconds;
       }
     }
     return _hotspotCycleSeconds;
@@ -303,10 +315,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   'Comments',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 if (msgs.isEmpty)
@@ -326,10 +337,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         final String? pronounsDisplay = isPrivate
                             ? null
                             : (FlairUtils.extractPronouns(flair) ?? '')
-                                .split(RegExp(r'[\n,]'))
-                                .map((p) => p.trim())
-                                .where((p) => p.isNotEmpty)
-                                .join(' • ');
+                                  .split(RegExp(r'[\n,]'))
+                                  .map((p) => p.trim())
+                                  .where((p) => p.isNotEmpty)
+                                  .join(' • ');
                         return Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
@@ -350,14 +361,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   children: [
                                     Text(
                                       m.sender.username,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
-                                    if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                    if (pronounsDisplay != null &&
+                                        pronounsDisplay.isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 2),
                                         child: Text(
                                           pronounsDisplay,
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -413,7 +429,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final a = hotspotPath[i];
       final b = hotspotPath[i + 1];
       if (clamped >= a.t && clamped <= b.t) {
-        final span = (b.t - a.t).abs() < 1e-6 ? 1.0 : (clamped - a.t) / (b.t - a.t);
+        final span = (b.t - a.t).abs() < 1e-6
+            ? 1.0
+            : (clamped - a.t) / (b.t - a.t);
         final x = a.x + (b.x - a.x) * span;
         final y = a.y + (b.y - a.y) * span;
         return Offset(x, y);
@@ -423,8 +441,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Offset(last.x, last.y);
   }
 
-  TextEditingController _ctrlFor(int friendId)
-      => _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
+  TextEditingController _ctrlFor(int friendId) =>
+      _statusCommentCtrls.putIfAbsent(friendId, () => TextEditingController());
 
   Future<void> _loadUserFlairMap() async {
     try {
@@ -495,7 +513,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         await c1.initialize();
         ctrl = c1;
       } catch (e) {
-        debugPrint('[DashboardScreen] VideoPlayerController.asset init failed: $e');
+        debugPrint(
+          '[DashboardScreen] VideoPlayerController.asset init failed: $e',
+        );
         try {
           final data = await rootBundle.load(_currentButterflyAsset);
           final dir = await getTemporaryDirectory();
@@ -506,7 +526,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           await c2.initialize();
           ctrl = c2;
         } catch (e) {
-          debugPrint('[DashboardScreen] VideoPlayerController.file init failed: $e');
+          debugPrint(
+            '[DashboardScreen] VideoPlayerController.file init failed: $e',
+          );
           if (_currentButterflyAsset != _butterflyVideoAssets.first) {
             _butterflyVideoIndex = 0;
             await _saveButterflyVideoPreference();
@@ -524,7 +546,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
       await ctrl.setLooping(false);
       await ctrl.setVolume(0.0);
-      try { await ctrl.setPlaybackSpeed(_videoPlaybackSpeed); } catch (_) {}
+      try {
+        await ctrl.setPlaybackSpeed(_videoPlaybackSpeed);
+      } catch (_) {}
       ctrl.addListener(_onVideoTick);
       if (!mounted) return;
       setState(() {
@@ -556,12 +580,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final v = c.value;
     if (!v.isInitialized) return;
     // Loop end in CONTENT time that corresponds to 10s in REAL time at current playback speed
-    final loopEndContentMs = (v.duration.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000))
+    final loopEndContentMs =
+        (v.duration.inMilliseconds <
+            (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000))
         ? v.duration.inMilliseconds
         : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round();
     final loopEndContent = Duration(milliseconds: loopEndContentMs);
     final remaining = loopEndContent - v.position;
-    if (remaining <= const Duration(milliseconds: 80) || (!v.isPlaying && v.position >= loopEndContent && !_calibrationMode)) {
+    if (remaining <= const Duration(milliseconds: 80) ||
+        (!v.isPlaying && v.position >= loopEndContent && !_calibrationMode)) {
       _handleVideoCompleted();
     }
   }
@@ -575,14 +602,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _videoPauseTimer?.cancel();
     // Compute pause to make the full cycle exactly _hotspotCycleSeconds in REAL time
     final contentMs = c.value.duration.inMilliseconds; // content ms
-    final playedContentMs = (
-      contentMs < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+    final playedContentMs =
+        (contentMs < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
         ? contentMs
-        : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
-    );
-    final playedRealMs = (playedContentMs / (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed)).round();
+        : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round());
+    final playedRealMs =
+        (playedContentMs /
+                (_videoPlaybackSpeed <= 0 ? 1.0 : _videoPlaybackSpeed))
+            .round();
     final targetRealMs = (_hotspotCycleSeconds * 1000).round();
-    final remainingToTenMs = (targetRealMs - playedRealMs).clamp(0, targetRealMs);
+    final remainingToTenMs = (targetRealMs - playedRealMs).clamp(
+      0,
+      targetRealMs,
+    );
     final pauseMs = remainingToTenMs + (_hotspotPauseSeconds * 1000).round();
     _videoPauseTimer = Timer(Duration(milliseconds: pauseMs), () async {
       if (!mounted) return;
@@ -651,7 +683,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     newCtrl = await tryCreate(_currentButterflyAsset);
     resolvedAsset = _currentButterflyAsset;
 
-    if (newCtrl == null && _currentButterflyAsset != _butterflyVideoAssets.first) {
+    if (newCtrl == null &&
+        _currentButterflyAsset != _butterflyVideoAssets.first) {
       newCtrl = await tryCreate(_butterflyVideoAssets.first);
       resolvedAsset = _butterflyVideoAssets.first;
       if (newCtrl != null) {
@@ -716,13 +749,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     var apiFriends = await _friendService.listFriends();
     // Ensure auth/session is loaded, then retry once
     if (apiFriends.isEmpty) {
-      try { await AuthService().getCurrentUser(); } catch (_) {}
+      try {
+        await AuthService().getCurrentUser();
+      } catch (_) {}
       apiFriends = await _friendService.listFriends();
     }
 
     // Merge with friends embedded in current user payload; prefer entries with non-empty status
     List<Friend> meFriends = const [];
-    try { meFriends = (await AuthService().getCurrentUser()).friends; } catch (_) {}
+    try {
+      meFriends = (await AuthService().getCurrentUser()).friends;
+    } catch (_) {}
 
     final Map<int, Friend> friendsById = {};
     void addOrPrefer(Friend f) {
@@ -731,7 +768,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         friendsById[f.id] = f;
       } else {
         final hasStatus = (f.statusMessage?.trim().isNotEmpty ?? false);
-        final existingHasStatus = (existing.statusMessage?.trim().isNotEmpty ?? false);
+        final existingHasStatus =
+            (existing.statusMessage?.trim().isNotEmpty ?? false);
         if (hasStatus && !existingHasStatus) {
           friendsById[f.id] = f;
         } else if (hasStatus == existingHasStatus) {
@@ -769,8 +807,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final todaysEvents = allEvents.where((event) {
       final d = event.start.toLocal();
       return d.year == now.year && d.month == now.month && d.day == now.day;
-    }).toList()
-      ..sort((a, b) => a.start.compareTo(b.start));
+    }).toList()..sort((a, b) => a.start.compareTo(b.start));
 
     if (mounted) {
       setState(() {
@@ -816,7 +853,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   DateTime _postSortDate(Post p) {
     final raw = (p.updatedAt ?? '').isNotEmpty ? p.updatedAt : p.pubDate;
-    if (raw == null || raw.isEmpty) return DateTime.fromMillisecondsSinceEpoch(0);
+    if (raw == null || raw.isEmpty) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
     try {
       return DateTime.parse(raw).toUtc();
     } catch (_) {
@@ -856,7 +895,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             best = p;
           }
         }
-        best ??= candidates.reduce((a, b) => _postSortDate(a).isAfter(_postSortDate(b)) ? a : b);
+        best ??= candidates.reduce(
+          (a, b) => _postSortDate(a).isAfter(_postSortDate(b)) ? a : b,
+        );
         selected[f.id] = best;
       }
 
@@ -864,11 +905,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final futures = <Future<void>>[];
       selected.forEach((friendId, post) {
         futures.add(
-          _communityService.fetchPostById(post.id).then((full) {
-            hydrated[friendId] = full;
-          }).catchError((_) {
-            hydrated[friendId] = post;
-          }),
+          _communityService
+              .fetchPostById(post.id)
+              .then((full) {
+                hydrated[friendId] = full;
+              })
+              .catchError((_) {
+                hydrated[friendId] = post;
+              }),
         );
       });
       if (futures.isNotEmpty) {
@@ -918,7 +962,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       final picker = ImagePicker();
       try {
-        final f = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+        final f = await picker.pickImage(
+          source: ImageSource.gallery,
+          imageQuality: 85,
+        );
         if (f == null) return;
         picked = f;
       } catch (e) {
@@ -971,103 +1018,109 @@ class _DashboardScreenState extends State<DashboardScreen> {
             height: height * 0.6,
             child: Column(
               mainAxisSize: MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Comments',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              if (comments.isEmpty)
-                const Text('No comments yet.')
-              else
-                Expanded(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: comments.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final c = comments[i];
-                      final flair = _userFlairById[c.authorId];
-                      final isPrivate = FlairUtils.isProfilePrivate(flair);
-                      final String? pronounsDisplay = isPrivate
-                          ? null
-                          : (FlairUtils.extractPronouns(flair) ?? '')
-                              .split(RegExp(r'[\n,]'))
-                              .map((p) => p.trim())
-                              .where((p) => p.isNotEmpty)
-                              .join(' • ');
-                      return Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            DisplayProfilePic(
-                              radius: 20,
-                              imageUrl: c.authorProfilePic ?? _userPicById[c.authorId],
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    c.authorUsername,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 2),
-                                      child: Text(
-                                        pronounsDisplay,
-                                        style: Theme.of(context).textTheme.bodySmall,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  const SizedBox(height: 4),
-                                  Text(c.content),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'Report comment',
-                              icon: const Icon(Icons.flag_outlined, size: 18),
-                              onPressed: () async {
-                                await showReportDialog(
-                                  context: context,
-                                  baseRequest: ReportRequest(
-                                    type: ReportTargetType.statusComment,
-                                    reason: '',
-                                    targetId: c.id,
-                                    targetUserId: c.authorId,
-                                    targetUsername: c.authorUsername,
-                                    details: c.content,
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Comments',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
+                const SizedBox(height: 12),
+                if (comments.isEmpty)
+                  const Text('No comments yet.')
+                else
+                  Expanded(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: comments.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, i) {
+                        final c = comments[i];
+                        final flair = _userFlairById[c.authorId];
+                        final isPrivate = FlairUtils.isProfilePrivate(flair);
+                        final String? pronounsDisplay = isPrivate
+                            ? null
+                            : (FlairUtils.extractPronouns(flair) ?? '')
+                                  .split(RegExp(r'[\n,]'))
+                                  .map((p) => p.trim())
+                                  .where((p) => p.isNotEmpty)
+                                  .join(' • ');
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DisplayProfilePic(
+                                radius: 20,
+                                imageUrl:
+                                    c.authorProfilePic ??
+                                    _userPicById[c.authorId],
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      c.authorUsername,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (pronounsDisplay != null &&
+                                        pronounsDisplay.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: Text(
+                                          pronounsDisplay,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    const SizedBox(height: 4),
+                                    Text(c.content),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Report comment',
+                                icon: const Icon(Icons.flag_outlined, size: 18),
+                                onPressed: () async {
+                                  await showReportDialog(
+                                    context: context,
+                                    baseRequest: ReportRequest(
+                                      type: ReportTargetType.statusComment,
+                                      reason: '',
+                                      targetId: c.id,
+                                      targetUserId: c.authorId,
+                                      targetUsername: c.authorUsername,
+                                      details: c.content,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
                 ),
-              ),
-            ],
+              ],
             ),
           ),
         );
@@ -1078,7 +1131,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final me = Provider.of<AuthService>(context, listen: true).currentUser;
-    final isAdmin = me?.username == 'Mad.E' ||
+    final isAdmin =
+        me?.username == 'Mad.E' ||
         me?.username == 'Mad.E.Made' ||
         me?.username == 'pmaxwell';
 
@@ -1086,13 +1140,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Home'),
         actions: [
-          IconButton(
-            tooltip: 'Listings',
-            icon: const Icon(Icons.dynamic_feed_outlined),
-            onPressed: () {
-              context.push('/exchange/help');
-            },
-          ),
           TourAnchor(
             name: 'Settings',
             child: IconButton(
@@ -1134,7 +1181,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             'Friends',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
                           ),
                         ],
                       ),
@@ -1143,10 +1193,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 TourAnchor(
                   name: 'No new replies',
-                  child: _buildInfoCard(Icons.notifications_none_outlined, 'No new replies'),
+                  child: _buildInfoCard(
+                    Icons.notifications_none_outlined,
+                    'No new replies',
+                  ),
                 ),
                 TourAnchor(
-                  name: '$_todaysEventsCount upcoming events',
+                  name: 'Upcoming events',
                   child: _buildInfoCard(
                     Icons.calendar_today_outlined,
                     _isLoading ? '...' : '$_todaysEventsCount upcoming events',
@@ -1208,7 +1261,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           tooltip: 'Cache Admin',
                           icon: Icon(
                             Icons.admin_panel_settings_outlined,
-                            color: _hasUnreadCacheCollections ? Colors.pinkAccent : null,
+                            color: _hasUnreadCacheCollections
+                                ? Colors.pinkAccent
+                                : null,
                           ),
                           onPressed: () async {
                             await context.push('/geocaching/admin');
@@ -1230,8 +1285,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildButterflyPerchSection(),
             Builder(
               builder: (context) {
-                final authService = Provider.of<AuthService>(context, listen: false);
-                final mutualAid = (FlairUtils.extractMutualAidEmojis(authService.currentUser?.flair) ?? '').trim();
+                final authService = Provider.of<AuthService>(
+                  context,
+                  listen: false,
+                );
+                final mutualAid =
+                    (FlairUtils.extractMutualAidEmojis(
+                              authService.currentUser?.flair,
+                            ) ??
+                            '')
+                        .trim();
                 if (mutualAid.isEmpty) return const SizedBox.shrink();
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
@@ -1246,10 +1309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               },
             ),
             const SizedBox(height: 16),
-            TourAnchor(
-              name: 'Edit Profile',
-              child: _buildEditProfileButton(),
-            ),
+            TourAnchor(name: 'Edit Profile', child: _buildEditProfileButton()),
             const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],
@@ -1259,7 +1319,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildButterflyPerchSection() {
-    final double aspect = (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized && _videoCtrl!.value.aspectRatio > 0)
+    final double aspect =
+        (_videoReady &&
+            _videoCtrl != null &&
+            _videoCtrl!.value.isInitialized &&
+            _videoCtrl!.value.aspectRatio > 0)
         ? _videoCtrl!.value.aspectRatio
         : (644 / 144);
 
@@ -1297,7 +1361,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAffirmationGif() {
-    final double aspect = (_videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized && _videoCtrl!.value.aspectRatio > 0)
+    final double aspect =
+        (_videoReady &&
+            _videoCtrl != null &&
+            _videoCtrl!.value.isInitialized &&
+            _videoCtrl!.value.aspectRatio > 0)
         ? _videoCtrl!.value.aspectRatio
         : (644 / 144);
     final quote = _quote ?? pickRandomQuote();
@@ -1311,26 +1379,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
         double hotspotCenterX = 0;
         double hotspotCenterY = 0;
         String? calibrationText;
-        final bool canTrack = _videoReady && vc != null && vc.value.isInitialized;
+        final bool canTrack =
+            _videoReady && vc != null && vc.value.isInitialized;
         final cycle = canTrack ? _effectiveCycleSeconds : _hotspotCycleSeconds;
-        final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+        final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle))
+            .clamp(0.0, 0.45);
 
         if (_calibrationMode && canTrack) {
           final dur = vc.value.duration;
           final pos = vc.value.position;
-          final cycleContentMs = (
-            dur.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+          final cycleContentMs =
+              (dur.inMilliseconds <
+                  (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
               ? dur.inMilliseconds
-              : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
-          );
-          final double baseP = cycleContentMs == 0 ? 0.0 : pos.inMilliseconds / cycleContentMs;
+              : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round());
+          final double baseP = cycleContentMs == 0
+              ? 0.0
+              : pos.inMilliseconds / cycleContentMs;
           final phase = cycle <= 0 ? 0.0 : (_hotspotPhaseOffsetSeconds / cycle);
           final rawP = baseP + phase;
           final p = vc.value.isPlaying
               ? ((rawP % 1.0) == 0.0 && rawP > 0.0 ? 1.0 : (rawP % 1.0))
               : rawP.clamp(0.0, 1.0);
           final Offset center = _samplePath(p);
-          final centerX = (margin + center.dx * (1 - 2 * margin)).clamp(0.0, 1.0);
+          final centerX = (margin + center.dx * (1 - 2 * margin)).clamp(
+            0.0,
+            1.0,
+          );
           final centerY = center.dy.clamp(0.0, 1.0);
           hotspotCenterX = centerX;
           hotspotCenterY = centerY;
@@ -1341,7 +1416,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           final right = ((centerX + halfW) * width).clamp(0.0, width);
           final bottom = ((centerY + halfH) * height).clamp(0.0, height);
           hotspotRect = Rect.fromLTRB(left, top, right, bottom);
-          calibrationText = 'calibration: ON   p=${p.toStringAsFixed(3)}   x=${centerX.toStringAsFixed(3)}   y=${centerY.toStringAsFixed(3)}';
+          calibrationText =
+              'calibration: ON   p=${p.toStringAsFixed(3)}   x=${centerX.toStringAsFixed(3)}   y=${centerY.toStringAsFixed(3)}';
         }
 
         return FocusableActionDetector(
@@ -1350,13 +1426,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
           autofocus: _calibrationMode,
           shortcuts: _calibrationMode
               ? {
-                  LogicalKeySet(LogicalKeyboardKey.keyC): const _ToggleCalibrationIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.escape): const _ToggleCalibrationIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.space): const _ToggleVideoPauseIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.arrowLeft): const _SeekBackwardIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.arrowRight): const _SeekForwardIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowLeft): const _SeekBackwardLargeIntent(),
-                  LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.arrowRight): const _SeekForwardLargeIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.keyC):
+                      const _ToggleCalibrationIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.escape):
+                      const _ToggleCalibrationIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.space):
+                      const _ToggleVideoPauseIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.arrowLeft):
+                      const _SeekBackwardIntent(),
+                  LogicalKeySet(LogicalKeyboardKey.arrowRight):
+                      const _SeekForwardIntent(),
+                  LogicalKeySet(
+                    LogicalKeyboardKey.shift,
+                    LogicalKeyboardKey.arrowLeft,
+                  ): const _SeekBackwardLargeIntent(),
+                  LogicalKeySet(
+                    LogicalKeyboardKey.shift,
+                    LogicalKeyboardKey.arrowRight,
+                  ): const _SeekForwardLargeIntent(),
                 }
               : const <ShortcutActivator, Intent>{},
           actions: {
@@ -1444,7 +1531,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onLongPress: _toggleCalibrationMode,
               onTapDown: (details) {
                 final vc = _videoCtrl;
-                final isVideoActive = _videoReady && _animVisible && vc != null && vc.value.isInitialized;
+                final isVideoActive =
+                    _videoReady &&
+                    _animVisible &&
+                    vc != null &&
+                    vc.value.isInitialized;
                 if (!isVideoActive) {
                   return;
                 }
@@ -1452,18 +1543,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final dx = details.localPosition.dx / width;
                 final dy = details.localPosition.dy / height;
                 final cycle = _effectiveCycleSeconds;
-                final margin = (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(0.0, 0.45);
+                final margin =
+                    (cycle <= 0 ? 0.0 : (_hotspotMarginSeconds / cycle)).clamp(
+                      0.0,
+                      0.45,
+                    );
 
                 final dur = vc.value.duration;
                 final pos = vc.value.position;
-                final cycleContentMs = (
-                  dur.inMilliseconds < (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+                final cycleContentMs =
+                    (dur.inMilliseconds <
+                        (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
                     ? dur.inMilliseconds
-                    : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000).round()
-                );
-                final double baseP = cycleContentMs == 0 ? 0.0 : pos.inMilliseconds / cycleContentMs;
+                    : (_videoPlaybackSpeed * _hotspotCycleSeconds * 1000)
+                          .round());
+                final double baseP = cycleContentMs == 0
+                    ? 0.0
+                    : pos.inMilliseconds / cycleContentMs;
 
-                final phase = cycle <= 0 ? 0.0 : (_hotspotPhaseOffsetSeconds / cycle);
+                final phase = cycle <= 0
+                    ? 0.0
+                    : (_hotspotPhaseOffsetSeconds / cycle);
                 final rawP = baseP + phase;
                 final p = vc.value.isPlaying
                     ? ((rawP % 1.0) == 0.0 && rawP > 0.0 ? 1.0 : (rawP % 1.0))
@@ -1471,9 +1571,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 if (_calibrationMode) {
                   final denom = (1 - 2 * margin);
-                  final px = (denom <= 0) ? dx : ((dx - margin) / denom).clamp(0.0, 1.0);
+                  final px = (denom <= 0)
+                      ? dx
+                      : ((dx - margin) / denom).clamp(0.0, 1.0);
                   final py = dy.clamp(0.0, 1.0);
-                  debugPrint('_PathPoint(${p.toStringAsFixed(3)}, ${px.toStringAsFixed(3)}, ${py.toStringAsFixed(3)}),');
+                  debugPrint(
+                    '_PathPoint(${p.toStringAsFixed(3)}, ${px.toStringAsFixed(3)}, ${py.toStringAsFixed(3)}),',
+                  );
                   return;
                 }
 
@@ -1505,134 +1609,143 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  opacity: _animVisible ? 1.0 : 0.0,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _videoReady && _videoCtrl != null && _videoCtrl!.value.isInitialized
-                        ? FittedBox(
-                            fit: BoxFit.cover,
-                            alignment: Alignment.bottomCenter,
-                            child: SizedBox(
-                              width: _videoCtrl!.value.size.width,
-                              height: _videoCtrl!.value.size.height,
-                              child: VideoPlayer(_videoCtrl!),
-                            ),
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                  ),
-                ),
-                if (_calibrationMode)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: _HotspotPathPainter(
-                          points: _activeHotspotPath,
-                          margin: margin,
-                          color: const Color(0xFF7C4DFF),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_calibrationMode && hotspotRect != null)
-                  Positioned(
-                    left: hotspotRect.left,
-                    top: hotspotRect.top,
-                    width: hotspotRect.width,
-                    height: hotspotRect.height,
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red, width: 2),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_calibrationMode && hotspotRect != null)
-                  Positioned(
-                    left: (hotspotCenterX * width) - 3,
-                    top: (hotspotCenterY * height) - 3,
-                    width: 6,
-                    height: 6,
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (_calibrationMode && calibrationText != null)
-                  Positioned(
-                    left: 8,
-                    bottom: 8,
-                    child: IgnorePointer(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(153),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          calibrationText,
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ),
-                Positioned(
-                  left: 12,
-                  right: 12,
-                  top: 10,
-                  child: IgnorePointer(
-                    ignoring: true,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 600),
-                      curve: Curves.easeInOut,
-                      opacity: _quoteVisible ? 1.0 : 0.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.deepPurple.withAlpha(217),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '"${quote.text}"',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontStyle: FontStyle.italic,
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeInOut,
+                    opacity: _animVisible ? 1.0 : 0.0,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child:
+                          _videoReady &&
+                              _videoCtrl != null &&
+                              _videoCtrl!.value.isInitialized
+                          ? FittedBox(
+                              fit: BoxFit.cover,
+                              alignment: Alignment.bottomCenter,
+                              child: SizedBox(
+                                width: _videoCtrl!.value.size.width,
+                                height: _videoCtrl!.value.size.height,
+                                child: VideoPlayer(_videoCtrl!),
+                              ),
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
                                 color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Text(
-                                '- ${quote.author}',
+                    ),
+                  ),
+                  if (_calibrationMode)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: CustomPaint(
+                          painter: _HotspotPathPainter(
+                            points: _activeHotspotPath,
+                            margin: margin,
+                            color: const Color(0xFF7C4DFF),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_calibrationMode && hotspotRect != null)
+                    Positioned(
+                      left: hotspotRect.left,
+                      top: hotspotRect.top,
+                      width: hotspotRect.width,
+                      height: hotspotRect.height,
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_calibrationMode && hotspotRect != null)
+                    Positioned(
+                      left: (hotspotCenterX * width) - 3,
+                      top: (hotspotCenterY * height) - 3,
+                      width: 6,
+                      height: 6,
+                      child: IgnorePointer(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_calibrationMode && calibrationText != null)
+                    Positioned(
+                      left: 8,
+                      bottom: 8,
+                      child: IgnorePointer(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(153),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            calibrationText,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    left: 12,
+                    right: 12,
+                    top: 10,
+                    child: IgnorePointer(
+                      ignoring: true,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeInOut,
+                        opacity: _quoteVisible ? 1.0 : 0.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.deepPurple.withAlpha(217),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '"${quote.text}"',
                                 style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  fontStyle: FontStyle.italic,
                                   color: Colors.white,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Text(
+                                  '- ${quote.author}',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
                 ],
               ),
             ),
@@ -1642,9 +1755,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildInfoCard(IconData icon, String text, {VoidCallback? onTap, bool isHighlighted = false}) {
-    final Color backgroundColor = isHighlighted ? AppColors.tertiary : Colors.grey[200]!;
-    final Color contentColor = isHighlighted ? AppColors.textWhite : Colors.grey[700]!;
+  Widget _buildInfoCard(
+    IconData icon,
+    String text, {
+    VoidCallback? onTap,
+    bool isHighlighted = false,
+  }) {
+    final Color backgroundColor = isHighlighted
+        ? AppColors.tertiary
+        : Colors.grey[200]!;
+    final Color contentColor = isHighlighted
+        ? AppColors.textWhite
+        : Colors.grey[700]!;
 
     return GestureDetector(
       onTap: onTap,
@@ -1664,7 +1786,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               text,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: contentColor, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 12,
+                color: contentColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -1677,10 +1803,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final me = auth.currentUser;
     if (me == null) return;
 
-    final statusCtrl = TextEditingController(text: (me.statusMessage ?? '').trim());
+    final statusCtrl = TextEditingController(
+      text: (me.statusMessage ?? '').trim(),
+    );
     final cityCtrl = TextEditingController(text: (me.city ?? '').trim());
-    final pronounsCtrl = TextEditingController(text: (FlairUtils.extractPronouns(me.flair) ?? '').trim());
-    final flairCtrl = TextEditingController(text: (FlairUtils.extractMutualAidEmojis(me.flair) ?? '').trim());
+    final pronounsCtrl = TextEditingController(
+      text: (FlairUtils.extractPronouns(me.flair) ?? '').trim(),
+    );
+    final flairCtrl = TextEditingController(
+      text: (FlairUtils.extractMutualAidEmojis(me.flair) ?? '').trim(),
+    );
 
     bool saving = false;
 
@@ -1749,7 +1881,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final bottom = MediaQuery.of(sheetContext).viewInsets.bottom;
 
               return Padding(
-                padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 16 + bottom),
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                  bottom: 16 + bottom,
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1812,7 +1949,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
-                      onPressed: saving ? null : () => Navigator.of(sheetContext).pop(),
+                      onPressed: saving
+                          ? null
+                          : () => Navigator.of(sheetContext).pop(),
                       child: const Text('Cancel'),
                     ),
                   ],
@@ -1870,11 +2009,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: 'Change profile photo',
-                    onPressed: _updatingProfilePic ? null : _pickAndUploadProfilePic,
+                    onPressed: _updatingProfilePic
+                        ? null
+                        : _pickAndUploadProfilePic,
                     icon: const CircleAvatar(
                       radius: 12,
                       backgroundColor: Colors.black54,
-                      child: Icon(Icons.camera_alt_outlined, size: 14, color: Colors.white),
+                      child: Icon(
+                        Icons.camera_alt_outlined,
+                        size: 14,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -1929,10 +2074,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final String? pronounsDisplay = isPrivate
                   ? null
                   : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                      .split(RegExp(r'[\n,]'))
-                      .map((p) => p.trim())
-                      .where((p) => p.isNotEmpty)
-                      .join(' • ');
+                        .split(RegExp(r'[\n,]'))
+                        .map((p) => p.trim())
+                        .where((p) => p.isNotEmpty)
+                        .join(' • ');
               return Card(
                 margin: const EdgeInsets.only(bottom: 8.0),
                 child: Padding(
@@ -1946,7 +2091,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           onTap: () {
                             context.push('/users/${friend.id}');
                           },
-                          child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+                          child: DisplayProfilePic(
+                            radius: 20,
+                            imageUrl: friend.fullProfilePicUrl,
+                          ),
                         ),
                         title: GestureDetector(
                           onTap: () {
@@ -1956,12 +2104,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(friend.username),
-                              if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                              if (pronounsDisplay != null &&
+                                  pronounsDisplay.isNotEmpty)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 2),
                                   child: Text(
                                     pronounsDisplay,
-                                    style: Theme.of(context).textTheme.bodySmall,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -1981,8 +2132,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Builder(
                             builder: (context) {
                               final p = _statusPostByFriendId[friend.id];
-                              final dmCount = _statusDmCommentsByFriendId[friend.id]?.length ?? 0;
-                              final count = (p?.comments.length ?? 0) + (p == null ? dmCount : 0);
+                              final dmCount =
+                                  _statusDmCommentsByFriendId[friend.id]
+                                      ?.length ??
+                                  0;
+                              final count =
+                                  (p?.comments.length ?? 0) +
+                                  (p == null ? dmCount : 0);
                               final hasComments = count > 0;
                               return IconButton(
                                 icon: const Icon(Icons.add_circle_outline),
@@ -1990,10 +2146,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 onPressed: () async {
                                   if (p != null) {
                                     try {
-                                      final refreshed = await _communityService.fetchPostById(p.id);
+                                      final refreshed = await _communityService
+                                          .fetchPostById(p.id);
                                       if (!mounted) return;
                                       setState(() {
-                                        _statusPostByFriendId[friend.id] = refreshed;
+                                        _statusPostByFriendId[friend.id] =
+                                            refreshed;
                                       });
                                       _showStatusCommentsSheet(refreshed);
                                       return;
@@ -2027,57 +2185,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           DisplayProfilePic(
                             radius: 16,
-                            imageUrl: Provider.of<AuthService>(context, listen: false).currentUser?.fullProfilePicUrl,
+                            imageUrl: Provider.of<AuthService>(
+                              context,
+                              listen: false,
+                            ).currentUser?.fullProfilePicUrl,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
                               controller: _ctrlFor(friend.id),
                               decoration: InputDecoration(
-                                hintText: "Comment on ${friend.username}'s status...",
+                                hintText:
+                                    "Comment on ${friend.username}'s status...",
                                 isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                                 suffixIcon: IconButton(
                                   icon: const Icon(Icons.arrow_upward_rounded),
                                   color: Colors.red,
                                   onPressed: () async {
-                                    final messenger = ScaffoldMessenger.of(context);
-                                    final text = _ctrlFor(friend.id).text.trim();
+                                    final messenger = ScaffoldMessenger.of(
+                                      context,
+                                    );
+                                    final text = _ctrlFor(
+                                      friend.id,
+                                    ).text.trim();
                                     if (text.isEmpty) return;
                                     try {
-                                      final post = _statusPostByFriendId[friend.id];
+                                      final post =
+                                          _statusPostByFriendId[friend.id];
                                       if (post == null) {
                                         await _chatService.sendMessage(
                                           recipientId: friend.id,
                                           content: '$_statusDmPrefix$text',
                                         );
                                         try {
-                                          final all = await _chatService.getConversation(friend.id);
-                                          final filtered = _filterStatusDmMessages(all);
-                                          _statusDmCommentsByFriendId[friend.id] = filtered;
+                                          final all = await _chatService
+                                              .getConversation(friend.id);
+                                          final filtered =
+                                              _filterStatusDmMessages(all);
+                                          _statusDmCommentsByFriendId[friend
+                                                  .id] =
+                                              filtered;
                                           if (mounted) setState(() {});
                                         } catch (_) {}
                                         messenger.showSnackBar(
-                                          SnackBar(content: Text('Comment posted on ${friend.username}\'s status')),
+                                          SnackBar(
+                                            content: Text(
+                                              'Comment posted on ${friend.username}\'s status',
+                                            ),
+                                          ),
                                         );
                                         _ctrlFor(friend.id).clear();
                                         return;
                                       }
-                                      await _communityService.addComment(postId: post.id, content: text);
-                                      final refreshed = await _communityService.fetchPostById(post.id);
+                                      await _communityService.addComment(
+                                        postId: post.id,
+                                        content: text,
+                                      );
+                                      final refreshed = await _communityService
+                                          .fetchPostById(post.id);
                                       if (!mounted) return;
                                       messenger.showSnackBar(
-                                        SnackBar(content: Text('Comment posted on ${friend.username}\'s status')),
+                                        SnackBar(
+                                          content: Text(
+                                            'Comment posted on ${friend.username}\'s status',
+                                          ),
+                                        ),
                                       );
                                       _ctrlFor(friend.id).clear();
                                       setState(() {
-                                        _statusPostByFriendId[friend.id] = refreshed;
+                                        _statusPostByFriendId[friend.id] =
+                                            refreshed;
                                       });
                                     } catch (e) {
                                       if (!mounted) return;
                                       messenger.showSnackBar(
-                                        SnackBar(content: Text('Failed to comment: $e')),
+                                        SnackBar(
+                                          content: Text(
+                                            'Failed to comment: $e',
+                                          ),
+                                        ),
                                       );
                                     }
                                   },
@@ -2096,5 +2289,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ],
     );
   }
-
 }

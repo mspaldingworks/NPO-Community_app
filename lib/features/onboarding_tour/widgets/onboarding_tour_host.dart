@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
@@ -8,10 +9,7 @@ import 'package:transconnect/features/onboarding_tour/widgets/onboarding_tour_ov
 class OnboardingTourHost extends StatefulWidget {
   final Widget child;
 
-  const OnboardingTourHost({
-    super.key,
-    required this.child,
-  });
+  const OnboardingTourHost({super.key, required this.child});
 
   @override
   State<OnboardingTourHost> createState() => _OnboardingTourHostState();
@@ -43,8 +41,29 @@ class _OnboardingTourHostState extends State<OnboardingTourHost> {
     await controller.load();
     if (controller.totalSteps == 0) return;
 
+    final hasSeenInfo = await OnboardingTourStorage.hasSeenInfo(username);
+    if (!hasSeenInfo) {
+      await OnboardingTourStorage.markInfoSeen(username);
+      await OnboardingTourStorage.clearPendingStart(username);
+      if (!mounted) return;
+
+      final shouldStart = await context.push<bool>('/profile/info');
+      if (!mounted) return;
+      if (shouldStart == true) {
+        context.go('/home');
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          await controller.startForUser(username);
+        });
+      }
+      return;
+    }
+
     await OnboardingTourStorage.clearPendingStart(username);
-    await controller.startForUser(username);
+    if (!mounted) return;
+    context.go('/home');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await controller.startForUser(username);
+    });
   }
 
   @override

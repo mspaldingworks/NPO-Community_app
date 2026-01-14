@@ -63,7 +63,9 @@ class SavedListingSearch {
       'id': id,
       'name': name,
       'groupId': groupId,
-      'kind': kind == null ? null : (kind == ExchangeKind.offer ? 'offer' : 'request'),
+      'kind': kind == null
+          ? null
+          : (kind == ExchangeKind.offer ? 'offer' : 'request'),
       'comp': switch (comp) {
         null => null,
         ExchangeCompensation.free => 'free',
@@ -82,7 +84,9 @@ class SavedListingSearch {
       final groupIdRaw = json['groupId'];
       final int? groupId = groupIdRaw == null
           ? null
-          : (groupIdRaw is int ? groupIdRaw : int.tryParse(groupIdRaw.toString()));
+          : (groupIdRaw is int
+                ? groupIdRaw
+                : int.tryParse(groupIdRaw.toString()));
 
       final kindRaw = (json['kind'] ?? '').toString().toLowerCase().trim();
       final ExchangeKind? kind = kindRaw == 'offer'
@@ -93,8 +97,8 @@ class SavedListingSearch {
       final ExchangeCompensation? comp = compRaw == 'free'
           ? ExchangeCompensation.free
           : (compRaw == 'trade'
-              ? ExchangeCompensation.trade
-              : (compRaw == 'paid' ? ExchangeCompensation.paid : null));
+                ? ExchangeCompensation.trade
+                : (compRaw == 'paid' ? ExchangeCompensation.paid : null));
 
       return SavedListingSearch(
         id: id,
@@ -110,7 +114,10 @@ class SavedListingSearch {
 }
 
 class ActivityFeedScreen extends StatefulWidget {
-  const ActivityFeedScreen({super.key});
+  final bool showAppBar;
+  final Widget? header;
+
+  const ActivityFeedScreen({super.key, this.showAppBar = true, this.header});
 
   @override
   State<ActivityFeedScreen> createState() => _ActivityFeedScreenState();
@@ -202,13 +209,16 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
 
   Future<void> _persistSavedSearches(List<SavedListingSearch> searches) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = jsonEncode(searches.map((s) => s.toJson()).toList(growable: false));
+    final raw = jsonEncode(
+      searches.map((s) => s.toJson()).toList(growable: false),
+    );
     await prefs.setString(_savedSearchesPrefKey, raw);
   }
 
   void _applySavedSearch(SavedListingSearch search) {
     final desiredGroupId = search.groupId;
-    final effectiveGroupId = desiredGroupId != null && _groups.any((g) => g.id == desiredGroupId)
+    final effectiveGroupId =
+        desiredGroupId != null && _groups.any((g) => g.id == desiredGroupId)
         ? desiredGroupId
         : null;
 
@@ -220,7 +230,9 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
   }
 
   Future<void> _deleteSavedSearch(SavedListingSearch search) async {
-    final updated = _savedSearches.where((s) => s.id != search.id).toList(growable: false);
+    final updated = _savedSearches
+        .where((s) => s.id != search.id)
+        .toList(growable: false);
     setState(() {
       _savedSearches = updated;
     });
@@ -248,7 +260,8 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
               child: const Text('Cancel'),
             ),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
               child: const Text('Save'),
             ),
           ],
@@ -276,9 +289,9 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
     try {
       await _persistSavedSearches(updated);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved "$trimmed"')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Saved "$trimmed"')));
       }
     } catch (_) {}
   }
@@ -299,7 +312,10 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Saved searches', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Saved searches',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
@@ -408,21 +424,23 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
     final kind = _selectedKind;
     final comp = _selectedComp;
 
-    return items.where((item) {
-      if (groupId != null) {
-        final effectiveGroupId = item.groupId ?? item.parentPost?.groupId;
-        if (effectiveGroupId != groupId) return false;
-      }
+    return items
+        .where((item) {
+          if (groupId != null) {
+            final effectiveGroupId = item.groupId ?? item.parentPost?.groupId;
+            if (effectiveGroupId != groupId) return false;
+          }
 
-      if (kind != null || comp != null) {
-        final meta = item.exchange;
-        if (meta == null) return false;
-        if (kind != null && meta.kind != kind) return false;
-        if (comp != null && meta.compensation != comp) return false;
-      }
+          if (kind != null || comp != null) {
+            final meta = item.exchange;
+            if (meta == null) return false;
+            if (kind != null && meta.kind != kind) return false;
+            if (comp != null && meta.compensation != comp) return false;
+          }
 
-      return true;
-    }).toList(growable: false);
+          return true;
+        })
+        .toList(growable: false);
   }
 
   String _groupName(int? groupId) {
@@ -459,27 +477,30 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
     final c = item.comment;
     if (c == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Unable to open post ${c.postId}.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Unable to open post ${c.postId}.')));
   }
 
   @override
   Widget build(BuildContext context) {
     final all = _buildItems();
     final filtered = _applyFilters(all);
-    final effectiveSelectedGroupId = _groups.any((g) => g.id == _selectedGroupId) ? _selectedGroupId : null;
+    final effectiveSelectedGroupId =
+        _groups.any((g) => g.id == _selectedGroupId) ? _selectedGroupId : null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Listings'),
-        actions: [
-          IconButton(
-            onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              title: const Text('Listings'),
+              actions: [
+                IconButton(
+                  onPressed: _loading ? null : _load,
+                  icon: const Icon(Icons.refresh),
+                ),
+              ],
+            )
+          : null,
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await context.push<bool>('/exchange/create');
@@ -501,14 +522,18 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (widget.header != null) widget.header!,
+                    if (widget.header != null) const SizedBox(height: 12),
                     _buildSavedSearches(context),
-                    if (_savedSearchesLoaded && _savedSearches.isNotEmpty) const SizedBox(height: 10),
+                    if (_savedSearchesLoaded && _savedSearches.isNotEmpty)
+                      const SizedBox(height: 10),
                     _FeedFilters(
                       groups: _groups,
                       selectedGroupId: effectiveSelectedGroupId,
                       selectedKind: _selectedKind,
                       selectedComp: _selectedComp,
-                      onChangedGroup: (v) => setState(() => _selectedGroupId = v),
+                      onChangedGroup: (v) =>
+                          setState(() => _selectedGroupId = v),
                       onChangedKind: (v) => setState(() => _selectedKind = v),
                       onChangedComp: (v) => setState(() => _selectedComp = v),
                       onSaveSearch: _promptSaveSearch,
@@ -563,7 +588,10 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                 onReport: () async {
                   final authorLabel = post.isAnonymous
                       ? 'Anonymous'
-                      : (post.authorUsername ?? (post.author != null ? 'User ${post.author}' : 'Unknown user'));
+                      : (post.authorUsername ??
+                            (post.author != null
+                                ? 'User ${post.author}'
+                                : 'Unknown user'));
 
                   await showReportDialog(
                     context: context,
@@ -573,7 +601,8 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                       targetId: post.id,
                       targetUserId: post.author,
                       targetUsername: authorLabel,
-                      details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                      details: '${post.title ?? ''}\n\n${post.body ?? ''}'
+                          .trim(),
                     ),
                   );
                 },
@@ -615,7 +644,9 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
     bool submitting = false;
 
     Future<void> pickImage(StateSetter setModalState) async {
-      final picked = await _commentImagePicker.pickImage(source: ImageSource.gallery);
+      final picked = await _commentImagePicker.pickImage(
+        source: ImageSource.gallery,
+      );
       if (picked == null) return;
       final file = File(picked.path);
       final bytes = await file.length();
@@ -687,13 +718,15 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
         if (!mounted) return;
 
         setState(() {
-          _comments = _comments.where((c) => c.id != optimistic.id).toList(growable: false);
+          _comments = _comments
+              .where((c) => c.id != optimistic.id)
+              .toList(growable: false);
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add comment: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to add comment: $e')));
         }
       } finally {
         setModalState(() {
@@ -711,15 +744,25 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: bottomInsets + 16),
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: bottomInsets + 16,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Comment', style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Comment',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    (post.title ?? '').trim().isEmpty ? '(Untitled post)' : (post.title ?? '').trim(),
+                    (post.title ?? '').trim().isEmpty
+                        ? '(Untitled post)'
+                        : (post.title ?? '').trim(),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 12),
@@ -737,7 +780,9 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                   Row(
                     children: [
                       OutlinedButton.icon(
-                        onPressed: submitting ? null : () => pickImage(setModalState),
+                        onPressed: submitting
+                            ? null
+                            : () => pickImage(setModalState),
                         icon: const Icon(Icons.photo_camera_back_outlined),
                         label: const Text('Attach photo'),
                       ),
@@ -750,7 +795,12 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
-                                child: Image.file(image!, fit: BoxFit.cover, width: 48, height: 48),
+                                child: Image.file(
+                                  image!,
+                                  fit: BoxFit.cover,
+                                  width: 48,
+                                  height: 48,
+                                ),
                               ),
                               Positioned(
                                 right: -6,
@@ -778,18 +828,24 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
                     children: [
                       Expanded(
                         child: TextButton(
-                          onPressed: submitting ? null : () => Navigator.of(context).pop(),
+                          onPressed: submitting
+                              ? null
+                              : () => Navigator.of(context).pop(),
                           child: const Text('Cancel'),
                         ),
                       ),
                       Expanded(
                         child: FilledButton(
-                          onPressed: submitting ? null : () => submit(setModalState),
+                          onPressed: submitting
+                              ? null
+                              : () => submit(setModalState),
                           child: submitting
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Text('Post'),
                         ),
@@ -1014,7 +1070,9 @@ class _FeedPostCard extends StatelessWidget {
   });
 
   DateTime _parseDate(String? raw) {
-    if (raw == null || raw.isEmpty) return DateTime.fromMillisecondsSinceEpoch(0);
+    if (raw == null || raw.isEmpty) {
+      return DateTime.fromMillisecondsSinceEpoch(0);
+    }
     try {
       return DateTime.parse(raw).toLocal();
     } catch (_) {
@@ -1028,18 +1086,19 @@ class _FeedPostCard extends StatelessWidget {
 
     final displayAuthor = post.isAnonymous
         ? 'Anonymous'
-        : (post.authorUsername ?? (post.author != null ? 'User ${post.author}' : 'Unknown user'));
+        : (post.authorUsername ??
+              (post.author != null ? 'User ${post.author}' : 'Unknown user'));
 
     final exchangeSubtitleParts = <String>[];
     if (exchange != null) {
-      exchangeSubtitleParts.add(exchange!.kind == ExchangeKind.offer ? 'Offer' : 'Request');
       exchangeSubtitleParts.add(
-        switch (exchange!.compensation) {
-          ExchangeCompensation.free => 'Free',
-          ExchangeCompensation.trade => 'Trade',
-          ExchangeCompensation.paid => 'Paid',
-        },
+        exchange!.kind == ExchangeKind.offer ? 'Offer' : 'Request',
       );
+      exchangeSubtitleParts.add(switch (exchange!.compensation) {
+        ExchangeCompensation.free => 'Free',
+        ExchangeCompensation.trade => 'Trade',
+        ExchangeCompensation.paid => 'Paid',
+      });
       if (exchange!.price != null && exchange!.price!.trim().isNotEmpty) {
         exchangeSubtitleParts.add(exchange!.price!.trim());
       }
@@ -1091,7 +1150,8 @@ class _FeedPostCard extends StatelessWidget {
                                   (t) => Chip(
                                     label: Text(t),
                                     visualDensity: VisualDensity.compact,
-                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                   ),
                                 )
                                 .toList(),
@@ -1108,7 +1168,9 @@ class _FeedPostCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                (post.title ?? '').trim().isEmpty ? '(Untitled)' : (post.title ?? '').trim(),
+                (post.title ?? '').trim().isEmpty
+                    ? '(Untitled)'
+                    : (post.title ?? '').trim(),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),

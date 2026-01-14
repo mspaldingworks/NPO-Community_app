@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:transconnect/pages/community/activity_feed_screen.dart';
 
 class MutualAidContent extends StatelessWidget {
   const MutualAidContent({super.key});
@@ -7,35 +8,47 @@ class MutualAidContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
-    return GridView.count(
-      padding: const EdgeInsets.all(12),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.2,
-      children: [
-        _IconCard(
-          title: 'Request Help',
-          iconData: Icons.handshake_outlined,
-          color: color,
-          onTap: () async {
-            final result = await context.push<bool>('/forms/lgl');
-            if (result == true && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Thanks for submitting the form!')),
-              );
-            }
-          },
+    return ActivityFeedScreen(
+      showAppBar: false,
+      header: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.2,
+                child: _IconCard(
+                  title: 'Request Help',
+                  iconData: Icons.handshake_outlined,
+                  color: color,
+                  onTap: () async {
+                    final result = await context.push<bool>('/forms/lgl');
+                    if (result == true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Thanks for submitting the form!'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AspectRatio(
+                aspectRatio: 1.2,
+                child: _IconCard(
+                  title: 'Browse Listings',
+                  iconData: Icons.search,
+                  color: color,
+                  onTap: () {},
+                ),
+              ),
+            ),
+          ],
         ),
-        _IconCard(
-          title: 'Browse Listings',
-          iconData: Icons.search,
-          color: color,
-          onTap: () {
-            context.push('/exchange/help');
-          },
-        ),
-      ],
+      ),
     );
   }
 }
@@ -58,7 +71,12 @@ class _IconCard extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _IconCard({required this.title, required this.iconData, required this.color, required this.onTap});
+  const _IconCard({
+    required this.title,
+    required this.iconData,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
