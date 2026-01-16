@@ -63,6 +63,8 @@ flutter:
     - assets/animations/blue_butterfly.mp4
     - assets/animations/Pink_TWC_butterfly.mp4
     - assets/animations/Green_TWC_butterfly.mp4
+    - assets/meadow/backgrounds/
+    - assets/meadow/flowers/
     - assets/butterfly_wings/front_left/
     - assets/butterfly_wings/back_left/
     - assets/butterfly_wings/front_right/

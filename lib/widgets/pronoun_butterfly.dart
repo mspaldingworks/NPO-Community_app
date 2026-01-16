@@ -88,6 +88,115 @@ class PronounButterfly extends StatelessWidget {
   }
 }
 
+class PronounButterflyAvatar extends StatefulWidget {
+  const PronounButterflyAvatar({
+    super.key,
+    required this.pronouns,
+    this.isFlapping = true,
+    this.flapSpeed = const Duration(milliseconds: 260),
+    this.size = 240,
+    this.centerGap = 12,
+  });
+
+  final List<String> pronouns;
+  final bool isFlapping;
+  final Duration flapSpeed;
+  final double size;
+  final double centerGap;
+
+  @override
+  State<PronounButterflyAvatar> createState() => _PronounButterflyAvatarState();
+}
+
+class _PronounButterflyAvatarState extends State<PronounButterflyAvatar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _flapController;
+
+  @override
+  void initState() {
+    super.initState();
+    _flapController = AnimationController(vsync: this, duration: widget.flapSpeed);
+    if (widget.isFlapping) {
+      _flapController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant PronounButterflyAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.flapSpeed != widget.flapSpeed) {
+      _flapController.duration = widget.flapSpeed;
+      if (widget.isFlapping && !_flapController.isAnimating) {
+        _flapController.repeat();
+      }
+    }
+    if (oldWidget.isFlapping != widget.isFlapping) {
+      if (widget.isFlapping) {
+        _flapController.repeat();
+      } else {
+        _flapController.stop();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _flapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = PronounButterflyParts.fromPronouns(widget.pronouns);
+    final halfGap = widget.centerGap / 2;
+
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: ClipRect(
+        child: AnimatedBuilder(
+          animation: _flapController,
+          builder: (context, child) {
+            final showFlip = widget.isFlapping && _flapController.value >= 0.5;
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Transform.translate(
+                  key: const ValueKey('butterfly-left'),
+                  offset: Offset(-halfGap, 0),
+                  child: _WingStack(
+                    size: widget.size,
+                    back: _assetPaths('back_left', parts.backLeft),
+                    front: _assetPaths('front_left', parts.frontLeft),
+                    showFlip: showFlip,
+                    flapSpeed: widget.flapSpeed,
+                  ),
+                ),
+                Transform.translate(
+                  key: const ValueKey('butterfly-right'),
+                  offset: Offset(halfGap, 0),
+                  child: _WingStack(
+                    size: widget.size,
+                    back: _assetPaths('back_right', parts.backRight),
+                    front: _assetPaths('front_right', parts.frontRight),
+                    showFlip: showFlip,
+                    flapSpeed: widget.flapSpeed,
+                  ),
+                ),
+                if (parts.center != null)
+                  Image.asset(
+                    _assetPaths('center', parts.center).base,
+                    fit: BoxFit.contain,
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class ButterflyViewerWindow extends StatelessWidget {
   const ButterflyViewerWindow({
     super.key,
@@ -134,6 +243,14 @@ String _assetPath(String section, String? pronoun) {
   return 'assets/butterfly_wings/$section/$key.png';
 }
 
+PronounWingAssetPaths _assetPaths(String section, String? pronoun) {
+  final key = _assetKeyForPronoun(pronoun);
+  return PronounWingAssetPaths(
+    base: 'assets/butterfly_wings/$section/$key.png',
+    flip: 'assets/butterfly_wings/$section/$key.flip.png',
+  );
+}
+
 String _assetKeyForPronoun(String? pronoun) {
   final p = (pronoun ?? '').trim();
   if (p.isEmpty) return 'Not Listed';
@@ -165,4 +282,76 @@ String _assetKeyForPronoun(String? pronoun) {
   if (firstToken == 'ae' || firstToken == 'aer') return 'Ae.Aer';
 
   return 'Not Listed';
+}
+
+class PronounWingAssetPaths {
+  const PronounWingAssetPaths({required this.base, required this.flip});
+
+  final String base;
+  final String flip;
+}
+
+class _WingStack extends StatelessWidget {
+  const _WingStack({
+    required this.size,
+    required this.back,
+    required this.front,
+    required this.showFlip,
+    required this.flapSpeed,
+  });
+
+  final double size;
+  final PronounWingAssetPaths back;
+  final PronounWingAssetPaths front;
+  final bool showFlip;
+  final Duration flapSpeed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          _FlappingWing(
+            assetPaths: back,
+            showFlip: showFlip,
+            flapSpeed: flapSpeed,
+          ),
+          _FlappingWing(
+            assetPaths: front,
+            showFlip: showFlip,
+            flapSpeed: flapSpeed,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlappingWing extends StatelessWidget {
+  const _FlappingWing({
+    required this.assetPaths,
+    required this.showFlip,
+    required this.flapSpeed,
+  });
+
+  final PronounWingAssetPaths assetPaths;
+  final bool showFlip;
+  final Duration flapSpeed;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: (flapSpeed.inMilliseconds / 2).round()),
+      switchInCurve: Curves.easeInOut,
+      switchOutCurve: Curves.easeInOut,
+      child: Image.asset(
+        showFlip ? assetPaths.flip : assetPaths.base,
+        key: ValueKey(showFlip),
+        fit: BoxFit.contain,
+      ),
+    );
+  }
 }

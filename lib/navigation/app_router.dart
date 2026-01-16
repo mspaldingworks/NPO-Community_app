@@ -46,6 +46,7 @@ import 'package:transconnect/features/geocaching/screens/cache_admin_screen.dart
 import 'package:transconnect/features/geocaching/screens/geocache_filter_screen.dart';
 import 'package:transconnect/features/geocaching/screens/geocache_list_screen.dart';
 import 'package:transconnect/features/geocaching/screens/place_cache_screen.dart';
+import 'package:transconnect/features/meadow/screens/meadow_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -161,6 +162,14 @@ class AppRouter {
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
                       final groupName = state.extra as String? ?? 'Group';
+
+                      final lowered = groupName.trim().toLowerCase();
+                      final isGeneral =
+                          lowered == 'general' || lowered == 'general chat' || lowered.startsWith('general ');
+                      if (isGeneral) {
+                        return MeadowScreen(groupId: id, groupName: groupName);
+                      }
+
                       return PostListScreen(groupId: id, groupName: groupName);
                     },
                     routes: [
