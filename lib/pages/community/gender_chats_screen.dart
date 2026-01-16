@@ -61,7 +61,12 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
           final generalGroup = _findByNames(groups, ['general']);
           final hobbiesGroup = _findByNames(groups, ['hobbies', 'hobby']);
           final items = <_CardItem>[
-            _CardItem(title: 'General Chat', icon: Icons.forum, group: generalGroup),
+            _CardItem(
+              title: 'The Meadow',
+              icon: Icons.forum,
+              group: generalGroup,
+              imageUrl: generalGroup?.fullImageUrl,
+            ),
             _CardItem(title: 'Hobbies', icon: Icons.interests, group: hobbiesGroup),
           ];
 
@@ -79,6 +84,7 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
               return _IconCard(
                 title: item.title,
                 iconData: item.icon,
+                imageUrl: item.imageUrl,
                 onTap: () {
                   if (item.group != null) {
                     GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
@@ -302,15 +308,29 @@ class _CardItem {
   final IconData icon;
   final Group? group;
   final String? route;
-  _CardItem({required this.title, required this.icon, this.group, this.route});
+  final String? imageUrl;
+
+  _CardItem({
+    required this.title,
+    required this.icon,
+    this.group,
+    this.route,
+    this.imageUrl,
+  });
 }
 
 class _IconCard extends StatelessWidget {
   final String title;
   final IconData iconData;
   final VoidCallback? onTap;
+  final String? imageUrl;
 
-  const _IconCard({required this.title, required this.iconData, this.onTap});
+  const _IconCard({
+    required this.title,
+    required this.iconData,
+    this.onTap,
+    this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -322,18 +342,25 @@ class _IconCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            if (imageUrl != null)
+              Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
               ),
-            ),
-            Center(
-              child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
-            ),
+            if (imageUrl == null)
+              Center(
+                child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+              ),
             Align(
               alignment: Alignment.bottomLeft,
               child: Container(

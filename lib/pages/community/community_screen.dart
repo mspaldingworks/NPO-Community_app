@@ -315,7 +315,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                       child: TourAnchor(
-                        name: 'General Chat',
+                        name: 'The Meadow',
                         child: GestureDetector(
                           onTap: () {
                             GoRouter.of(context).push('/community/group/${generalGroup!.id}', extra: generalGroup!.name);
@@ -327,55 +327,25 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               child: Stack(
                                 fit: StackFit.expand,
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                                          Theme.of(context).colorScheme.primary.withOpacity(0.35),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
+                                  if (generalGroup!.fullImageUrl != null)
+                                    CachedNetworkImage(
+                                      imageUrl: generalGroup!.fullImageUrl!,
+                                      httpHeaders: headers,
+                                      fit: BoxFit.cover,
+                                    )
+                                  else
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                                            Theme.of(context).colorScheme.primary.withOpacity(0.35),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  Center(
-                                    child: SizedBox(
-                                      width: 160,
-                                      height: 110,
-                                      child: Stack(
-                                        children: [
-                                          Positioned(
-                                            left: 8,
-                                            top: 38,
-                                            child: Icon(
-                                              Icons.chat_bubble,
-                                              size: 58,
-                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.45),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            left: 42,
-                                            top: 10,
-                                            child: Icon(
-                                              Icons.chat_bubble_outline,
-                                              size: 72,
-                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.85),
-                                            ),
-                                          ),
-                                          Positioned(
-                                            left: 94,
-                                            top: 42,
-                                            child: Icon(
-                                              Icons.chat,
-                                              size: 56,
-                                              color: Theme.of(context).colorScheme.primary.withOpacity(0.6),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
                                   Align(
                                     alignment: Alignment.bottomLeft,
                                     child: Container(
@@ -388,7 +358,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                         ),
                                       ),
                                       child: const Text(
-                                        'General Chat',
+                                        'The Meadow',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:transconnect/core/services/auth_service.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/meadow/controllers/meadow_controller.dart';
@@ -12,6 +13,9 @@ import 'package:transconnect/features/meadow/widgets/meadow_butterfly.dart';
 import 'package:transconnect/features/meadow/widgets/meadow_chat_overlay.dart';
 import 'package:transconnect/features/meadow/widgets/meadow_create_chat_sheet.dart';
 import 'package:transconnect/features/meadow/widgets/meadow_flower.dart';
+import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:transconnect/widgets/pronoun_butterfly.dart';
 
 class MeadowScreen extends StatefulWidget {
   const MeadowScreen({
@@ -34,10 +38,12 @@ class MeadowScreen extends StatefulWidget {
 class _MeadowScreenState extends State<MeadowScreen> {
   static const _padding = EdgeInsets.all(40);
   static const _backgroundAsset = 'assets/meadow/backgrounds/All Grass.png';
+  static const _meadowTourAsset = 'assets/meadow_tour.json';
 
   final _random = Random();
   bool _overlayOpen = false;
   MeadowController? _controller;
+  String _displayName = '';
 
   @override
   void initState() {
@@ -58,6 +64,10 @@ class _MeadowScreenState extends State<MeadowScreen> {
     final pronounString = FlairUtils.extractPronouns(user?.flair) ?? '';
     final currentPronouns = _parsePronounList(pronounString);
 
+    _displayName = widget.groupName.toLowerCase().contains('general')
+        ? 'The Meadow'
+        : widget.groupName;
+
     final repo = InMemoryMeadowRepository.instance;
     if (!repo.hasSeededUsers) {
       repo.seedUsers(_seedUsers(currentUserId, currentUserName, currentPronouns));
@@ -75,6 +85,8 @@ class _MeadowScreenState extends State<MeadowScreen> {
     setState(() {
       _controller = controller;
     });
+
+    await _maybeStartMeadowTour(currentUserName);
   }
 
   List<String> _parsePronounList(String raw) {
@@ -163,6 +175,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
 
   @override
   void dispose() {
+    if (mounted) {
+      context.read<OnboardingTourController>().resetSeenKeyPrefix();
+    }
     _controller?.dispose();
     super.dispose();
   }
@@ -172,7 +187,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
     final controller = _controller;
     if (controller == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(widget.groupName)),
+        appBar: AppBar(title: Text(_displayName.isEmpty ? widget.groupName : _displayName)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -180,50 +195,108 @@ class _MeadowScreenState extends State<MeadowScreen> {
     return ChangeNotifierProvider.value(
       value: controller,
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.groupName)),
+        appBar: AppBar(title: Text(_displayName.isEmpty ? widget.groupName : _displayName)),
         body: LayoutBuilder(
           builder: (context, constraints) {
             final meadowSize = constraints.biggest;
-            return Stack(
-              children: [
-                _MeadowBackground(size: meadowSize),
-                Consumer<MeadowController>(
-                  builder: (context, meadow, _) {
-                    return Stack(
+            return Consumer<MeadowController>(
+              builder: (context, meadow, _) {
+                final sections = max(
+                  1,
+                  (meadow.flowers.length / MeadowController.flowersPerSection).ceil(),
+                );
+                final meadowHeight = meadowSize.height * sections;
+                final canvasSize = Size(meadowSize.width, meadowHeight);
+
+                return SingleChildScrollView(
+                  child: SizedBox(
+                    width: meadowSize.width,
+                    height: meadowHeight,
+                    child: Stack(
                       children: [
-                        for (final flower in meadow.flowers)
-                          MeadowFlower(
-                            flower: flower,
-                            onTap: () => meadow.startFlyTo(flower),
+                        TourAnchor(
+                          name: 'Meadow overview',
+                          child: _MeadowBackground(
+                            size: meadowSize,
+                            sections: sections,
                           ),
-                        for (final user in meadow.onlineUsers)
-                          MeadowButterfly(
-                            key: ValueKey('meadow-butterfly-${user.id}'),
-                            user: user,
-                            meadowSize: meadowSize,
-                            padding: _padding,
-                            size: 30,
-                            flyToTarget: user.id == meadow.currentUserId
-                                ? meadow.flyTarget
-                                : null,
-                            onArrived: user.id == meadow.currentUserId
-                                ? () => _handleArrived(meadow)
-                                : null,
-                            driftEnabled: widget.enableDrift && !_overlayOpen,
-                            flightDuration: widget.flightDuration,
+                        ),
+                        for (var i = 0; i < meadow.flowers.length; i++)
+                          i == 0
+                              ? TourAnchor(
+                                  name: 'Meadow flowers',
+                                  child: MeadowFlower(
+                                    flower: meadow.flowers[i],
+                                    onTap: () => meadow.startFlyTo(meadow.flowers[i]),
+                                  ),
+                                )
+                              : MeadowFlower(
+                                  flower: meadow.flowers[i],
+                                  onTap: () => meadow.startFlyTo(meadow.flowers[i]),
+                                ),
+                        for (var i = 0; i < meadow.onlineUsers.length; i++)
+                          i == 0
+                              ? TourAnchor(
+                                  name: 'Meadow butterflies',
+                                  child: MeadowButterfly(
+                                    key: ValueKey('meadow-butterfly-${meadow.onlineUsers[i].id}'),
+                                    user: meadow.onlineUsers[i],
+                                    meadowSize: canvasSize,
+                                    padding: _padding,
+                                    size: 30,
+                                    flyToTarget: meadow.onlineUsers[i].id == meadow.currentUserId
+                                        ? meadow.flyTarget
+                                        : null,
+                                    onArrived: meadow.onlineUsers[i].id == meadow.currentUserId
+                                        ? () => _handleArrived(meadow)
+                                        : null,
+                                    onTap: () => _showUserProfile(context, meadow.onlineUsers[i]),
+                                    driftEnabled: widget.enableDrift && !_overlayOpen,
+                                    flightDuration: widget.flightDuration,
+                                  ),
+                                )
+                              : MeadowButterfly(
+                                  key: ValueKey('meadow-butterfly-${meadow.onlineUsers[i].id}'),
+                                  user: meadow.onlineUsers[i],
+                                  meadowSize: canvasSize,
+                                  padding: _padding,
+                                  size: 30,
+                                  flyToTarget: meadow.onlineUsers[i].id == meadow.currentUserId
+                                      ? meadow.flyTarget
+                                      : null,
+                                  onArrived: meadow.onlineUsers[i].id == meadow.currentUserId
+                                      ? () => _handleArrived(meadow)
+                                      : null,
+                                  onTap: () => _showUserProfile(context, meadow.onlineUsers[i]),
+                                  driftEnabled: widget.enableDrift && !_overlayOpen,
+                                  flightDuration: widget.flightDuration,
+                                ),
+                        Positioned(
+                          right: 16,
+                          top: meadowSize.height - 80,
+                          child: TourAnchor(
+                            name: 'Meadow scroll',
+                            child: Icon(
+                              Icons.unfold_more,
+                              color: Colors.white.withOpacity(0.6),
+                            ),
                           ),
+                        ),
                       ],
-                    );
-                  },
-                ),
-              ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showCreateChat(context),
           backgroundColor: const Color(0xFFFFD166),
-          child: const Icon(Icons.add, color: Colors.black87),
+          child: const TourAnchor(
+            name: 'Meadow create chat',
+            child: Icon(Icons.local_florist, color: Colors.black87),
+          ),
         ),
       ),
     );
@@ -274,32 +347,186 @@ class _MeadowScreenState extends State<MeadowScreen> {
     final parsed = parseCreateChatResult(result);
     if (parsed == null) return;
 
-    await _controller!.createChat(
+    final controller = _controller!;
+    final size = MediaQuery.of(context).size;
+    final sections = max(
+      1,
+      ((controller.flowers.length + 1) / MeadowController.flowersPerSection).ceil(),
+    );
+
+    await controller.createChat(
       topic: parsed.topic,
       description: parsed.description,
-      meadowSize: MediaQuery.of(context).size,
+      meadowSize: Size(size.width, size.height * sections),
       padding: _padding,
+    );
+  }
+
+  Future<void> _maybeStartMeadowTour(String username) async {
+    final trimmed = username.trim();
+    if (trimmed.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final seenKey = '${OnboardingTourController.meadowSeenKeyPrefix}$trimmed';
+    if (prefs.getBool(seenKey) ?? false) return;
+
+    if (!mounted) return;
+    final controller = context.read<OnboardingTourController>();
+    controller.setSeenKeyPrefix(OnboardingTourController.meadowSeenKeyPrefix);
+    await controller.load(assetPath: _meadowTourAsset);
+    if (!mounted || controller.totalSteps == 0) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.startForUser(trimmed);
+    });
+  }
+
+  Future<void> _showUserProfile(BuildContext context, OnlineUser user) async {
+    if (user.isCurrentUser) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.white,
+                      child: PronounButterflyAvatar(
+                        pronouns: user.pronounSlots,
+                        size: 56,
+                        isFlapping: false,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user.name,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: -6,
+                            children: user.pronounSlots
+                                .map((p) => Chip(
+                                      label: Text(p),
+                                      visualDensity: VisualDensity.compact,
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Shareable info',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Last seen: just now',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Message request sent.')),
+                          );
+                        },
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Message'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Friend request sent.')),
+                          );
+                        },
+                        icon: const Icon(Icons.person_add_alt_1),
+                        label: const Text('Friend request'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
 class _MeadowBackground extends StatelessWidget {
-  const _MeadowBackground({required this.size});
+  const _MeadowBackground({
+    required this.size,
+    required this.sections,
+  });
 
   final Size size;
+  final int sections;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size.width,
-      height: size.height,
+      height: size.height * sections,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            _MeadowScreenState._backgroundAsset,
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
+          Column(
+            children: List.generate(
+              sections,
+              (index) => SizedBox(
+                height: size.height,
+                width: size.width,
+                child: index.isOdd
+                    ? Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.rotationX(pi),
+                        child: Image.asset(
+                          _MeadowScreenState._backgroundAsset,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Image.asset(
+                        _MeadowScreenState._backgroundAsset,
+                        fit: BoxFit.cover,
+                      ),
+              ),
+            ),
           ),
           Container(
             decoration: BoxDecoration(

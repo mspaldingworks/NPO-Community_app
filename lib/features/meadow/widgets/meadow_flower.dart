@@ -22,9 +22,12 @@ class MeadowFlower extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final asset = _flowerAssets[flower.id.hashCode.abs() % _flowerAssets.length];
+
+    final scale = (1 + (flower.participantCount * 0.12)).clamp(1.0, 1.7);
+    final scaledSize = size * scale;
     return Positioned(
-      left: flower.position.dx - size / 2,
-      top: flower.position.dy - size / 2,
+      left: flower.position.dx - scaledSize / 2,
+      top: flower.position.dy - scaledSize / 2,
       child: GestureDetector(
         key: ValueKey('meadow-flower-${flower.id}'),
         onTap: onTap,
@@ -32,10 +35,10 @@ class MeadowFlower extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: size,
-              height: size,
+              width: scaledSize,
+              height: scaledSize,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(size / 2),
+                borderRadius: BorderRadius.circular(scaledSize / 2),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.16),
@@ -45,7 +48,7 @@ class MeadowFlower extends StatelessWidget {
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(size / 2),
+                borderRadius: BorderRadius.circular(scaledSize / 2),
                 child: Image.asset(
                   asset,
                   fit: BoxFit.cover,

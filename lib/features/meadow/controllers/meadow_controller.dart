@@ -7,6 +7,8 @@ import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
 import 'package:transconnect/features/meadow/models/online_user.dart';
 
 class MeadowController extends ChangeNotifier {
+  static const int flowersPerSection = 10;
+
   MeadowController({
     required MeadowRepository repository,
     required String currentUserId,
@@ -118,8 +120,15 @@ class MeadowController extends ChangeNotifier {
   }
 
   Offset _randomPosition(Size meadowSize, EdgeInsets padding) {
-    final dx = padding.left + _random.nextDouble() * (meadowSize.width - padding.horizontal);
-    final dy = padding.top + _random.nextDouble() * (meadowSize.height - padding.vertical);
+    final totalSections = max(1, ((_flowers.length + 1) / flowersPerSection).ceil());
+    final sectionHeight = meadowSize.height / totalSections;
+    final sectionIndex = _flowers.length ~/ flowersPerSection;
+
+    final dx = padding.left +
+        _random.nextDouble() * (meadowSize.width - padding.horizontal);
+    final dy = padding.top +
+        _random.nextDouble() * (sectionHeight - padding.vertical) +
+        (sectionIndex * sectionHeight);
     return Offset(dx, dy);
   }
 

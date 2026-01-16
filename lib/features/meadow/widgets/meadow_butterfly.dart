@@ -14,6 +14,7 @@ class MeadowButterfly extends StatefulWidget {
     this.size = 120,
     this.flyToTarget,
     this.onArrived,
+    this.onTap,
     this.driftEnabled = true,
     this.flightDuration = const Duration(milliseconds: 900),
   });
@@ -24,6 +25,7 @@ class MeadowButterfly extends StatefulWidget {
   final double size;
   final Offset? flyToTarget;
   final VoidCallback? onArrived;
+  final VoidCallback? onTap;
   final bool driftEnabled;
   final Duration flightDuration;
 
@@ -35,12 +37,17 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     with SingleTickerProviderStateMixin {
   late Offset _currentPosition;
   late AnimationController _movementController;
+  late AnimationController _fadeController;
   Timer? _pauseTimer;
   Offset? _activeFlightTarget;
   final _random = Random();
   late final double _bobPhase;
   double _bobAmplitude = 2.6;
   int _flightCounter = 0;
+  bool _hasEntered = false;
+
+  static const double _pixelsPerSecond = 56;
+  static const Duration _minTravelDuration = Duration(milliseconds: 1600);
 
   Offset _start = Offset.zero;
   Offset _control = Offset.zero;
@@ -49,13 +56,19 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   @override
   void initState() {
     super.initState();
-    _currentPosition = widget.user.position;
+    _currentPosition = _randomEntryPoint();
     _bobPhase = _random.nextDouble() * pi * 2;
     _movementController = AnimationController(vsync: this);
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
     _movementController.addListener(_handleTick);
-    if (widget.driftEnabled) {
-      _startDrift();
-    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _startEntry();
+    });
   }
 
   @override
@@ -79,7 +92,22 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   void dispose() {
     _pauseTimer?.cancel();
     _movementController.dispose();
+    _fadeController.dispose();
     super.dispose();
+  }
+
+  void _startEntry() {
+    if (_hasEntered) return;
+    _hasEntered = true;
+    _animateTo(
+      widget.user.position,
+      duration: _durationForDistance(_currentPosition, widget.user.position),
+      onCompleted: () {
+        if (widget.driftEnabled) {
+          _startDrift();
+        }
+      },
+    );
   }
 
   void _startDrift() {
@@ -88,7 +116,7 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     final target = _random.nextDouble() < 0.20 ? _randomPoint() : _randomNearbyPoint();
     _animateTo(
       target,
-      duration: Duration(milliseconds: 5200 + _random.nextInt(5200)),
+      duration: _durationForDistance(_currentPosition, target),
     );
   }
 
@@ -102,7 +130,11 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     _pauseTimer?.cancel();
     _animateTo(
       target,
-      duration: widget.flightDuration,
+      duration: _durationForDistance(
+        _currentPosition,
+        target,
+        minimum: widget.flightDuration,
+      ),
       onCompleted: () {
         widget.onArrived?.call();
       },
@@ -184,6 +216,24 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     return Offset(dx, dy);
   }
 
+  Offset _randomEntryPoint() {
+    final minX = widget.padding.left - widget.size;
+    final minY = widget.padding.top - widget.size;
+    final maxX = widget.meadowSize.width - widget.padding.right + widget.size;
+    final maxY = widget.meadowSize.height - widget.padding.bottom + widget.size;
+    final side = _random.nextInt(4);
+    switch (side) {
+      case 0:
+        return Offset(minX, minY + _random.nextDouble() * (maxY - minY));
+      case 1:
+        return Offset(maxX, minY + _random.nextDouble() * (maxY - minY));
+      case 2:
+        return Offset(minX + _random.nextDouble() * (maxX - minX), minY);
+      default:
+        return Offset(minX + _random.nextDouble() * (maxX - minX), maxY);
+    }
+  }
+
   Offset _randomNearbyPoint() {
     final minX = widget.padding.left + widget.size / 2;
     final minY = widget.padding.top + widget.size / 2;
@@ -209,36 +259,58 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     );
   }
 
+  Duration _durationForDistance(
+    Offset start,
+    Offset end, {
+    Duration? minimum,
+  }) {
+    final distance = (end - start).distance;
+    final ms = (distance / _pixelsPerSecond * 1000).round();
+    final computed = Duration(
+      milliseconds: max(ms, _minTravelDuration.inMilliseconds),
+    );
+    if (minimum == null) return computed;
+    if (computed < minimum) return minimum;
+    return computed;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Positioned(
       left: _currentPosition.dx - widget.size / 2,
       top: _currentPosition.dy - widget.size / 2,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PronounButterflyAvatar(
-            pronouns: widget.user.pronounSlots,
-            size: widget.size,
-            isFlapping: true,
-            centerGap: widget.user.pronounSlots.length >= 5 ? 12 : -8,
+      child: FadeTransition(
+        opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PronounButterflyAvatar(
+                pronouns: widget.user.pronounSlots,
+                size: widget.size,
+                isFlapping: true,
+                flapSpeed: const Duration(milliseconds: 520),
+                centerGap: widget.user.pronounSlots.length >= 5 ? 12 : -8,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.user.name,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.55),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            widget.user.name,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.55),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ],
-                ),
-          ),
-        ],
+        ),
       ),
     );
   }

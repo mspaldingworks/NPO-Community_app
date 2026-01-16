@@ -8,11 +8,15 @@ import 'package:transconnect/features/onboarding_tour/models/onboarding_tour_mod
 class OnboardingTourController extends ChangeNotifier {
   static const String defaultAssetPath = 'assets/onboarding_tour.json';
   static const String _seenKeyPrefix = 'onboarding_tour_seen__';
+  static const String defaultSeenKeyPrefix = _seenKeyPrefix;
+  static const String meadowSeenKeyPrefix = 'meadow_tour_seen__';
 
   OnboardingTourConfig? _config;
   bool _active = false;
   int _index = 0;
   String? _username;
+  String _seenKeyPrefix = defaultSeenKeyPrefix;
+  String _loadedAssetPath = defaultAssetPath;
 
   bool get active => _active;
 
@@ -28,16 +32,26 @@ class OnboardingTourController extends ChangeNotifier {
   }
 
   Future<void> load({String assetPath = defaultAssetPath}) async {
-    if (_config != null) return;
+    if (_config != null && _loadedAssetPath == assetPath) return;
     try {
       final raw = await rootBundle.loadString(assetPath);
       _config = OnboardingTourConfig.fromJsonString(raw);
+      _loadedAssetPath = assetPath;
     } catch (_) {
       _config = OnboardingTourConfig.empty();
+      _loadedAssetPath = assetPath;
     }
   }
 
   String _seenKey(String username) => '$_seenKeyPrefix$username';
+
+  void setSeenKeyPrefix(String prefix) {
+    _seenKeyPrefix = prefix;
+  }
+
+  void resetSeenKeyPrefix() {
+    _seenKeyPrefix = defaultSeenKeyPrefix;
+  }
 
   Future<bool> hasSeenForUser(String username) async {
     final prefs = await SharedPreferences.getInstance();
@@ -50,7 +64,7 @@ class OnboardingTourController extends ChangeNotifier {
   }
 
   Future<void> startForUser(String username) async {
-    await load();
+    await load(assetPath: _loadedAssetPath);
     if ((_config?.tour ?? const <TourStep>[]).isEmpty) return;
 
     _username = username;
