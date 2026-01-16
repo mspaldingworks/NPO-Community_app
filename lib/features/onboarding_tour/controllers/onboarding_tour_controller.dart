@@ -15,7 +15,7 @@ class OnboardingTourController extends ChangeNotifier {
   bool _active = false;
   int _index = 0;
   String? _username;
-  String _seenKeyPrefix = defaultSeenKeyPrefix;
+  String _seenKeyPrefixValue = defaultSeenKeyPrefix;
   String _loadedAssetPath = defaultAssetPath;
 
   bool get active => _active;
@@ -43,14 +43,14 @@ class OnboardingTourController extends ChangeNotifier {
     }
   }
 
-  String _seenKey(String username) => '$_seenKeyPrefix$username';
+  String _seenKey(String username) => '$_seenKeyPrefixValue$username';
 
   void setSeenKeyPrefix(String prefix) {
-    _seenKeyPrefix = prefix;
+    _seenKeyPrefixValue = prefix;
   }
 
   void resetSeenKeyPrefix() {
-    _seenKeyPrefix = defaultSeenKeyPrefix;
+    _seenKeyPrefixValue = defaultSeenKeyPrefix;
   }
 
   Future<bool> hasSeenForUser(String username) async {
