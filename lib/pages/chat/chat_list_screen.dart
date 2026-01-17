@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/core/services/chat_favorites_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/widgets/friends/friends_tab_view.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -59,7 +57,9 @@ class _ConversationListState extends State<ConversationList> {
   late Future<List<ConversationPreview>> _conversationsFuture;
   late final ChatService _chatService;
   final AuthService _authService = AuthService();
+  final ChatFavoritesService _chatFavoritesService = ChatFavoritesService();
   Map<int, String?> _userFlairById = {};
+  Set<int> _favoriteChatIds = <int>{};
 
   @override
   void initState() {
@@ -68,6 +68,24 @@ class _ConversationListState extends State<ConversationList> {
     // Start fetching the list of other participants immediately
     _conversationsFuture = _chatService.getAllConversations();
     _loadUserFlairMap();
+    _loadFavoriteChatIds();
+  }
+
+  Future<void> _loadFavoriteChatIds() async {
+    final ids = await _chatFavoritesService.getFavoriteChatIds();
+    if (!mounted) return;
+    setState(() {
+      _favoriteChatIds = ids;
+    });
+  }
+
+  Future<void> _toggleFavorite(int userId) async {
+    final isFavorite = _favoriteChatIds.contains(userId);
+    await _chatFavoritesService.setChatFavorite(
+      chatId: userId,
+      isFavorite: !isFavorite,
+    );
+    await _loadFavoriteChatIds();
   }
 
   Future<void> _loadUserFlairMap() async {
@@ -189,8 +207,20 @@ class _ConversationListState extends State<ConversationList> {
                         ],
                       ),
                     ),
-                    // subtitle is removed as there is no last message data
-                    // trailing is removed as there is no unread count data
+                    trailing: IconButton(
+                      tooltip: _favoriteChatIds.contains(otherUser.id)
+                          ? 'Unfavorite chat'
+                          : 'Favorite chat',
+                      icon: Icon(
+                        _favoriteChatIds.contains(otherUser.id)
+                            ? Icons.star
+                            : Icons.star_border,
+                        color: _favoriteChatIds.contains(otherUser.id)
+                            ? Colors.amber
+                            : Colors.grey,
+                      ),
+                      onPressed: () => _toggleFavorite(otherUser.id),
+                    ),
                     onTap: () {
                       // Navigate using the other user's ID
                       GoRouter.of(context).push('/chat/${otherUser.id}'); 

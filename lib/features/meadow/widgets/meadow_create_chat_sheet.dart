@@ -8,13 +8,15 @@ class MeadowCreateChatSheet extends StatefulWidget {
 }
 
 class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
+  final _emojiController = TextEditingController();
   final _topicController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _commentController = TextEditingController();
 
   @override
   void dispose() {
+    _emojiController.dispose();
     _topicController.dispose();
-    _descriptionController.dispose();
+    _commentController.dispose();
     super.dispose();
   }
 
@@ -38,6 +40,14 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
           ),
           const SizedBox(height: 12),
           TextField(
+            controller: _emojiController,
+            decoration: const InputDecoration(
+              labelText: 'Emoji',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
             controller: _topicController,
             decoration: const InputDecoration(
               labelText: 'Topic',
@@ -46,9 +56,9 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
           ),
           const SizedBox(height: 12),
           TextField(
-            controller: _descriptionController,
+            controller: _commentController,
             decoration: const InputDecoration(
-              labelText: 'Description (optional)',
+              labelText: 'First comment (optional)',
               border: OutlineInputBorder(),
             ),
             maxLines: 2,
@@ -66,14 +76,17 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
+                    final emoji = _emojiController.text.trim();
+                    if (emoji.isEmpty) return;
                     final topic = _topicController.text.trim();
                     if (topic.isEmpty) return;
                     Navigator.of(context).pop(
                       _CreateChatResult(
+                        emoji: emoji,
                         topic: topic,
-                        description: _descriptionController.text.trim().isEmpty
+                        initialComment: _commentController.text.trim().isEmpty
                             ? null
-                            : _descriptionController.text.trim(),
+                            : _commentController.text.trim(),
                       ),
                     );
                   },
@@ -89,10 +102,15 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
 }
 
 class _CreateChatResult {
-  const _CreateChatResult({required this.topic, this.description});
+  const _CreateChatResult({
+    required this.emoji,
+    required this.topic,
+    this.initialComment,
+  });
 
+  final String emoji;
   final String topic;
-  final String? description;
+  final String? initialComment;
 }
 
 _CreateChatResult? parseCreateChatResult(Object? result) {

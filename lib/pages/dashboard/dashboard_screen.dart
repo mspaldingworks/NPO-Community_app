@@ -8,6 +8,7 @@ import 'package:transconnect/core/services/calendar_service.dart';
 import 'package:transconnect/data/affirmation_quotes.dart';
 import 'package:transconnect/core/services/profile_service.dart';
 import 'package:transconnect/theme/app_theme.dart';
+import 'package:transconnect/models/comment.dart';
 import 'package:transconnect/models/post.dart';
 import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/services/auth_service.dart';
@@ -22,8 +23,11 @@ import 'package:transconnect/widgets/emergency_alert_banner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:transconnect/core/services/chat_service.dart';
+import 'package:transconnect/core/services/chat_favorites_service.dart';
+import 'package:transconnect/core/services/home_alert_service.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/core/services/report_service.dart';
+import 'package:transconnect/features/meadow/services/meadow_alert_service.dart';
 import 'package:transconnect/widgets/report_dialog.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
 import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
@@ -104,6 +108,39 @@ class _SeekForwardLargeIntent extends Intent {
   const _SeekForwardLargeIntent();
 }
 
+enum _HomeFeedItemType { friendStatus, favoriteChat }
+
+class _FavoriteChatFeedItem {
+  _FavoriteChatFeedItem({
+    required this.otherUserId,
+    required this.otherUsername,
+    required this.message,
+  });
+
+  final int otherUserId;
+  final String otherUsername;
+  final ChatMessage message;
+}
+
+class _HomeFeedItem {
+  _HomeFeedItem.friendStatus({
+    required this.friend,
+    required this.timestamp,
+  })  : type = _HomeFeedItemType.friendStatus,
+        favoriteChat = null;
+
+  _HomeFeedItem.favoriteChat({
+    required this.favoriteChat,
+    required this.timestamp,
+  })  : type = _HomeFeedItemType.favoriteChat,
+        friend = null;
+
+  final _HomeFeedItemType type;
+  final Friend? friend;
+  final _FavoriteChatFeedItem? favoriteChat;
+  final DateTime timestamp;
+}
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -117,10 +154,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final FriendService _friendService = FriendService();
   final CommunityService _communityService = CommunityService();
   final ChatService _chatService = ChatService();
+  final ChatFavoritesService _chatFavoritesService = ChatFavoritesService();
   Map<int, String?> _userFlairById = {};
   Map<int, String?> _userPicById = {};
 
   bool _hasUnreadCacheCollections = false;
+
+  static const String _lastSeenRepliesAtPrefKey =
+      'dashboard_last_seen_replies_at_v1';
+  DateTime _lastSeenRepliesAt = DateTime.fromMillisecondsSinceEpoch(0);
+  int _unreadReplyCount = 0;
 
   Future<void> _loadUnreadCacheCollections() async {
     final hasUnread = await CacheCollections.hasUnread();
@@ -128,6 +171,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() {
       _hasUnreadCacheCollections = hasUnread;
     });
+
+    _updateDashboardAlerts();
+  }
+
+  void _updateDashboardAlerts() {
+    Provider.of<HomeAlertService>(context, listen: false).setDashboardAlerts(
+      _todaysEventsCount > 0 ||
+          _hasUnreadCacheCollections ||
+          _unreadReplyCount > 0,
+    );
   }
 
   File? _profileImage;
@@ -135,6 +188,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   AffirmationQuote? _quote;
   List<Friend> _friendStatusFeed = [];
   bool _isLoadingFriendFeed = true;
+  List<_FavoriteChatFeedItem> _favoriteChatFeed = [];
+  List<_HomeFeedItem> _homeFeedItems = [];
+  bool _isLoadingFavoriteChats = true;
   final Map<int, TextEditingController> _statusCommentCtrls = {};
   final Map<int, Post> _statusPostByFriendId = {};
   final Map<int, List<ChatMessage>> _statusDmCommentsByFriendId = {};
@@ -466,6 +522,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadUnreadCacheCollections();
   }
 
+  Future<void> _loadLastSeenRepliesAt() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_lastSeenRepliesAtPrefKey);
+    if (raw == null || raw.trim().isEmpty) {
+      final now = DateTime.now();
+      await prefs.setString(_lastSeenRepliesAtPrefKey, now.toIso8601String());
+      if (!mounted) return;
+      setState(() {
+        _lastSeenRepliesAt = now;
+        _unreadReplyCount = 0;
+      });
+      return;
+    }
+    final parsed = DateTime.tryParse(raw.trim());
+    if (parsed == null) return;
+    if (!mounted) return;
+    setState(() {
+      _lastSeenRepliesAt = parsed;
+    });
+  }
+
+  Future<void> _markRepliesRead() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    await prefs.setString(_lastSeenRepliesAtPrefKey, now.toIso8601String());
+    if (!mounted) return;
+    setState(() {
+      _lastSeenRepliesAt = now;
+      _unreadReplyCount = 0;
+    });
+    _updateDashboardAlerts();
+  }
+
+  DateTime? _tryParseCommentTimestamp(Comment c) {
+    final raw = (c.updatedAt != null && c.updatedAt!.trim().isNotEmpty)
+        ? c.updatedAt!
+        : c.pubDate;
+    try {
+      return DateTime.parse(raw).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<int> _computeUnreadReplyCount() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    var me = auth.currentUser;
+    try {
+      me ??= await auth.getCurrentUser();
+    } catch (_) {}
+
+    if (me == null) return 0;
+
+    try {
+      final posts = await _communityService.fetchAllPosts();
+      final myPosts = posts.where((p) => p.author == me!.id).toList();
+      var count = 0;
+
+      for (final p in myPosts) {
+        for (final c in p.comments) {
+          final ts = _tryParseCommentTimestamp(c);
+          if (ts == null) continue;
+          if (!ts.isAfter(_lastSeenRepliesAt)) continue;
+
+          final fromMe = c.authorId == me.id || c.authorUsername == me.username;
+          if (fromMe) continue;
+
+          count += 1;
+        }
+      }
+
+      return count;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> _loadButterflyVideoPreference() async {
     if (_butterflyPrefLoaded) return;
     try {
@@ -737,6 +870,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadDashboardData() async {
+    await _loadLastSeenRepliesAt();
     await _loadUnreadCacheCollections();
     await _loadUserFlairMap();
     final allEvents = await _calendarService.fetchEvents();
@@ -809,9 +943,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return d.year == now.year && d.month == now.month && d.day == now.day;
     }).toList()..sort((a, b) => a.start.compareTo(b.start));
 
+    final unreadReplyCount = await _computeUnreadReplyCount();
+    final favoriteChatFeed = await _loadFavoriteChatFeed();
+
     if (mounted) {
       setState(() {
         _todaysEventsCount = todaysEvents.length;
+        _unreadReplyCount = unreadReplyCount;
         if (imagePath != null) {
           _profileImage = File(imagePath);
         }
@@ -819,11 +957,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _quote = quote;
         _friendStatusFeed = statuses;
         _isLoadingFriendFeed = false;
+
+        _favoriteChatFeed = favoriteChatFeed;
+        _isLoadingFavoriteChats = false;
+        _homeFeedItems = _buildHomeFeedItems(statuses, favoriteChatFeed);
       });
+    }
+
+    if (mounted) {
+      _updateDashboardAlerts();
     }
 
     await _loadStatusPostsFor(statuses);
     await _loadStatusDmCountsFor(statuses);
+  }
+
+  Future<List<_FavoriteChatFeedItem>> _loadFavoriteChatFeed() async {
+    final favoriteChatIds = await _chatFavoritesService.getFavoriteChatIds();
+    if (favoriteChatIds.isEmpty) {
+      return [];
+    }
+
+    final items = <_FavoriteChatFeedItem>[];
+    for (final chatId in favoriteChatIds) {
+      try {
+        final messages = await _chatService.getConversation(chatId);
+        final filtered = messages
+            .where((m) => !m.content.startsWith(_statusDmPrefix))
+            .toList()
+          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        if (filtered.isEmpty) continue;
+        final latest = filtered.last;
+        final username = _resolveOtherUsername(latest, chatId);
+        items.add(
+          _FavoriteChatFeedItem(
+            otherUserId: chatId,
+            otherUsername: username,
+            message: latest,
+          ),
+        );
+      } catch (_) {}
+    }
+    return items;
+  }
+
+  String _resolveOtherUsername(ChatMessage message, int otherUserId) {
+    if (message.sender.id == otherUserId) {
+      return message.sender.username;
+    }
+    if (message.recipient.id == otherUserId) {
+      return message.recipient.username;
+    }
+    return message.sender.username;
+  }
+
+  List<_HomeFeedItem> _buildHomeFeedItems(
+    List<Friend> statuses,
+    List<_FavoriteChatFeedItem> favoriteChats,
+  ) {
+    final items = <_HomeFeedItem>[
+      ...statuses.map(
+        (friend) => _HomeFeedItem.friendStatus(
+          friend: friend,
+          timestamp: friend.statusUpdatedAt ??
+              DateTime.fromMillisecondsSinceEpoch(0),
+        ),
+      ),
+      ...favoriteChats.map(
+        (chat) => _HomeFeedItem.favoriteChat(
+          favoriteChat: chat,
+          timestamp: chat.message.timestamp,
+        ),
+      ),
+    ];
+
+    items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return items;
   }
 
   List<ChatMessage> _filterStatusDmMessages(List<ChatMessage> msgs) {
@@ -1136,6 +1345,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         me?.username == 'Mad.E.Made' ||
         me?.username == 'pmaxwell';
 
+    final meadowAlerts = Provider.of<MeadowAlertService>(context, listen: true);
+    final int meadowUnreadCount = meadowAlerts.unreadChats;
+    final bool hasMeadowMessages = meadowAlerts.hasUnread;
+    final totalNewMessages = meadowUnreadCount + _unreadReplyCount;
+    final String messageCardText = totalNewMessages <= 0
+        ? 'No new messages'
+        : (totalNewMessages > 99
+            ? '99+ new messages'
+            : '$totalNewMessages new ${totalNewMessages == 1 ? 'message' : 'messages'}');
+    final bool hasAnyMessages = totalNewMessages > 0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -1192,10 +1412,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 TourAnchor(
-                  name: 'No new replies',
+                  name: 'Messages',
                   child: _buildInfoCard(
-                    Icons.notifications_none_outlined,
-                    'No new replies',
+                    Icons.mark_email_unread_outlined,
+                    messageCardText,
+                    onTap: () async {
+                      if (hasMeadowMessages) {
+                        meadowAlerts.markAllRead();
+                        if (!mounted) return;
+                        context.push('/meadow');
+                        return;
+                      }
+                      if (_unreadReplyCount > 0) {
+                        await _markRepliesRead();
+                        if (!mounted) return;
+                        context.push('/community');
+                        return;
+                      }
+                      context.push('/meadow');
+                    },
+                    isHighlighted: hasAnyMessages,
+                    highlightColor: Colors.redAccent,
                   ),
                 ),
                 TourAnchor(
@@ -1760,13 +1997,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String text, {
     VoidCallback? onTap,
     bool isHighlighted = false,
+    Color highlightColor = AppColors.tertiary,
   }) {
-    final Color backgroundColor = isHighlighted
-        ? AppColors.tertiary
-        : Colors.grey[200]!;
-    final Color contentColor = isHighlighted
-        ? AppColors.textWhite
-        : Colors.grey[700]!;
+    final Color backgroundColor =
+        isHighlighted ? highlightColor : Colors.grey[200]!;
+    final Color contentColor =
+        isHighlighted ? Colors.white : Colors.grey[700]!;
 
     return GestureDetector(
       onTap: onTap,
@@ -1777,6 +2013,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: isHighlighted
+              ? [
+                  BoxShadow(
+                    color: highlightColor.withOpacity(0.6),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : const [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1791,6 +2036,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 color: contentColor,
                 fontWeight: FontWeight.bold,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -2047,246 +2294,292 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildFriendsStatusUpdates() {
-    if (_isLoadingFriendFeed) {
-      return const SizedBox.shrink();
+    return _buildHomeFeed();
+  }
+
+  Widget _buildHomeFeed() {
+    if (_isLoadingFriendFeed && _isLoadingFavoriteChats) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Home Feed',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
     }
+
+    final items = _homeFeedItems.isNotEmpty
+        ? _homeFeedItems
+        : _buildHomeFeedItems(_friendStatusFeed, _favoriteChatFeed);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Friends Status Updates',
+          'Home Feed',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        if (_friendStatusFeed.isEmpty)
-          const Center(child: Text('No recent status updates.'))
+        if (items.isEmpty)
+          const Center(child: Text('No recent updates.'))
         else
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: _friendStatusFeed.length,
+            itemCount: items.length,
             itemBuilder: (context, index) {
-              final friend = _friendStatusFeed[index];
-              final when = friend.statusUpdatedAt;
-              final msg = friend.statusMessage?.trim() ?? '';
-              final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-              final String? pronounsDisplay = isPrivate
-                  ? null
-                  : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                        .split(RegExp(r'[\n,]'))
-                        .map((p) => p.trim())
-                        .where((p) => p.isNotEmpty)
-                        .join(' • ');
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8.0),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: GestureDetector(
-                          onTap: () {
-                            context.push('/users/${friend.id}');
-                          },
-                          child: DisplayProfilePic(
-                            radius: 20,
-                            imageUrl: friend.fullProfilePicUrl,
-                          ),
-                        ),
-                        title: GestureDetector(
-                          onTap: () {
-                            context.push('/users/${friend.id}');
-                          },
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(friend.username),
-                              if (pronounsDisplay != null &&
-                                  pronounsDisplay.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    pronounsDisplay,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        subtitle: SmartLinkBody(
-                          text: when == null ? msg : '$msg • ${timeAgo(when)}',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Builder(
-                            builder: (context) {
-                              final p = _statusPostByFriendId[friend.id];
-                              final dmCount =
-                                  _statusDmCommentsByFriendId[friend.id]
-                                      ?.length ??
-                                  0;
-                              final count =
-                                  (p?.comments.length ?? 0) +
-                                  (p == null ? dmCount : 0);
-                              final hasComments = count > 0;
-                              return IconButton(
-                                icon: const Icon(Icons.add_circle_outline),
-                                color: hasComments ? Colors.amber : Colors.grey,
-                                onPressed: () async {
-                                  if (p != null) {
-                                    try {
-                                      final refreshed = await _communityService
-                                          .fetchPostById(p.id);
-                                      if (!mounted) return;
-                                      setState(() {
-                                        _statusPostByFriendId[friend.id] =
-                                            refreshed;
-                                      });
-                                      _showStatusCommentsSheet(refreshed);
-                                      return;
-                                    } catch (_) {
-                                      _showStatusCommentsSheet(p);
-                                      return;
-                                    }
-                                  }
-                                  await _showStatusDmCommentsSheet(friend);
-                                },
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.flag_outlined),
-                            onPressed: () async {
-                              final p = _statusPostByFriendId[friend.id];
-                              final msg = friend.statusMessage?.trim() ?? '';
-                              await showReportDialog(
-                                context: context,
-                                baseRequest: ReportRequest(
-                                  type: ReportTargetType.status,
-                                  reason: '',
-                                  targetId: p?.id,
-                                  targetUserId: friend.id,
-                                  targetUsername: friend.username,
-                                  details: msg,
-                                ),
-                              );
-                            },
-                          ),
-                          DisplayProfilePic(
-                            radius: 16,
-                            imageUrl: Provider.of<AuthService>(
-                              context,
-                              listen: false,
-                            ).currentUser?.fullProfilePicUrl,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: TextField(
-                              controller: _ctrlFor(friend.id),
-                              decoration: InputDecoration(
-                                hintText:
-                                    "Comment on ${friend.username}'s status...",
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 10,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.arrow_upward_rounded),
-                                  color: Colors.red,
-                                  onPressed: () async {
-                                    final messenger = ScaffoldMessenger.of(
-                                      context,
-                                    );
-                                    final text = _ctrlFor(
-                                      friend.id,
-                                    ).text.trim();
-                                    if (text.isEmpty) return;
-                                    try {
-                                      final post =
-                                          _statusPostByFriendId[friend.id];
-                                      if (post == null) {
-                                        await _chatService.sendMessage(
-                                          recipientId: friend.id,
-                                          content: '$_statusDmPrefix$text',
-                                        );
-                                        try {
-                                          final all = await _chatService
-                                              .getConversation(friend.id);
-                                          final filtered =
-                                              _filterStatusDmMessages(all);
-                                          _statusDmCommentsByFriendId[friend
-                                                  .id] =
-                                              filtered;
-                                          if (mounted) setState(() {});
-                                        } catch (_) {}
-                                        messenger.showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Comment posted on ${friend.username}\'s status',
-                                            ),
-                                          ),
-                                        );
-                                        _ctrlFor(friend.id).clear();
-                                        return;
-                                      }
-                                      await _communityService.addComment(
-                                        postId: post.id,
-                                        content: text,
-                                      );
-                                      final refreshed = await _communityService
-                                          .fetchPostById(post.id);
-                                      if (!mounted) return;
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Comment posted on ${friend.username}\'s status',
-                                          ),
-                                        ),
-                                      );
-                                      _ctrlFor(friend.id).clear();
-                                      setState(() {
-                                        _statusPostByFriendId[friend.id] =
-                                            refreshed;
-                                      });
-                                    } catch (e) {
-                                      if (!mounted) return;
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Failed to comment: $e',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              final item = items[index];
+              switch (item.type) {
+                case _HomeFeedItemType.friendStatus:
+                  return _buildFriendStatusCard(item.friend!);
+                case _HomeFeedItemType.favoriteChat:
+                  return _buildFavoriteChatCard(item.favoriteChat!);
+              }
             },
           ),
       ],
+    );
+  }
+
+  Widget _buildFavoriteChatCard(_FavoriteChatFeedItem item) {
+    final message = item.message;
+    final when = message.timestamp;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8.0),
+      child: ListTile(
+        leading: DisplayProfilePic(
+          radius: 20,
+          backgroundColor: Colors.green.shade200,
+          imageUrl: _userPicById[item.otherUserId],
+        ),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.otherUsername,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.star, color: Colors.amber, size: 18),
+          ],
+        ),
+        subtitle: Text(
+          '${message.content} • ${timeAgo(when)}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        onTap: () {
+          context.push('/chat/${item.otherUserId}');
+        },
+      ),
+    );
+  }
+
+  Widget _buildFriendStatusCard(Friend friend) {
+    final when = friend.statusUpdatedAt;
+    final msg = friend.statusMessage?.trim() ?? '';
+    final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
+    final String? pronounsDisplay = isPrivate
+        ? null
+        : (FlairUtils.extractPronouns(friend.flair) ?? '')
+            .split(RegExp(r'[\n,]'))
+            .map((p) => p.trim())
+            .where((p) => p.isNotEmpty)
+            .join(' • ');
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: GestureDetector(
+                onTap: () {
+                  context.push('/users/${friend.id}');
+                },
+                child: DisplayProfilePic(
+                  radius: 20,
+                  imageUrl: friend.fullProfilePicUrl,
+                ),
+              ),
+              title: GestureDetector(
+                onTap: () {
+                  context.push('/users/${friend.id}');
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(friend.username),
+                    if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          pronounsDisplay,
+                          style: Theme.of(context).textTheme.bodySmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              subtitle: SmartLinkBody(
+                text: when == null ? msg : '$msg • ${timeAgo(when)}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Builder(
+                  builder: (context) {
+                    final p = _statusPostByFriendId[friend.id];
+                    final dmCount =
+                        _statusDmCommentsByFriendId[friend.id]?.length ?? 0;
+                    final count =
+                        (p?.comments.length ?? 0) + (p == null ? dmCount : 0);
+                    final hasComments = count > 0;
+                    return IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: hasComments ? Colors.amber : Colors.grey,
+                      onPressed: () async {
+                        if (p != null) {
+                          try {
+                            final refreshed =
+                                await _communityService.fetchPostById(p.id);
+                            if (!mounted) return;
+                            setState(() {
+                              _statusPostByFriendId[friend.id] = refreshed;
+                            });
+                            _showStatusCommentsSheet(refreshed);
+                            return;
+                          } catch (_) {
+                            _showStatusCommentsSheet(p);
+                            return;
+                          }
+                        }
+                        await _showStatusDmCommentsSheet(friend);
+                      },
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.flag_outlined),
+                  onPressed: () async {
+                    final p = _statusPostByFriendId[friend.id];
+                    final msg = friend.statusMessage?.trim() ?? '';
+                    await showReportDialog(
+                      context: context,
+                      baseRequest: ReportRequest(
+                        type: ReportTargetType.status,
+                        reason: '',
+                        targetId: p?.id,
+                        targetUserId: friend.id,
+                        targetUsername: friend.username,
+                        details: msg,
+                      ),
+                    );
+                  },
+                ),
+                DisplayProfilePic(
+                  radius: 16,
+                  imageUrl: Provider.of<AuthService>(
+                    context,
+                    listen: false,
+                  ).currentUser?.fullProfilePicUrl,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _ctrlFor(friend.id),
+                    decoration: InputDecoration(
+                      hintText: "Comment on ${friend.username}'s status...",
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.arrow_upward_rounded),
+                        color: Colors.red,
+                        onPressed: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final text = _ctrlFor(friend.id).text.trim();
+                          if (text.isEmpty) return;
+                          try {
+                            final post = _statusPostByFriendId[friend.id];
+                            if (post == null) {
+                              await _chatService.sendMessage(
+                                recipientId: friend.id,
+                                content: '$_statusDmPrefix$text',
+                              );
+                              try {
+                                final all = await _chatService.getConversation(
+                                  friend.id,
+                                );
+                                final filtered = _filterStatusDmMessages(all);
+                                _statusDmCommentsByFriendId[friend.id] =
+                                    filtered;
+                                if (mounted) setState(() {});
+                              } catch (_) {}
+                              messenger.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Comment posted on ${friend.username}\'s status',
+                                  ),
+                                ),
+                              );
+                              _ctrlFor(friend.id).clear();
+                              return;
+                            }
+                            await _communityService.addComment(
+                              postId: post.id,
+                              content: text,
+                            );
+                            final refreshed =
+                                await _communityService.fetchPostById(post.id);
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Comment posted on ${friend.username}\'s status',
+                                ),
+                              ),
+                            );
+                            _ctrlFor(friend.id).clear();
+                            setState(() {
+                              _statusPostByFriendId[friend.id] = refreshed;
+                            });
+                          } catch (e) {
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to comment: $e'),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -21,7 +21,11 @@ class PostDetailScreen extends StatefulWidget {
   final int groupId;
   final int postId;
 
-  const PostDetailScreen({super.key, required this.groupId, required this.postId});
+  const PostDetailScreen({
+    super.key,
+    required this.groupId,
+    required this.postId,
+  });
 
   @override
   State<PostDetailScreen> createState() => _PostDetailScreenState();
@@ -63,7 +67,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       final users = await _authService.getAllUsers();
       if (!mounted) return;
       setState(() {
-        _userPicByUsername = {for (final u in users) u.username: u.fullProfilePicUrl};
+        _userPicByUsername = {
+          for (final u in users) u.username: u.fullProfilePicUrl,
+        };
         _userFlairByUsername = {for (final u in users) u.username: u.flair};
       });
     } catch (_) {
@@ -92,9 +98,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _loadPost(); // Refresh the post data to show the new comment
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add comment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add comment: $e')));
       }
     }
   }
@@ -110,9 +116,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
       }
     }
   }
@@ -128,9 +134,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete comment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete comment: $e')));
       }
     }
   }
@@ -246,15 +252,22 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _loadPost();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update comment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to update comment: $e')));
       }
     }
   }
 
-  void _showAddCommentDialog() {
-    _commentController.clear();
+  void _showAddCommentDialog({String? initialText}) {
+    if (initialText == null) {
+      _commentController.clear();
+    } else {
+      _commentController.text = initialText;
+      _commentController.selection = TextSelection.collapsed(
+        offset: _commentController.text.length,
+      );
+    }
     _commentImage = null;
     showDialog<void>(
       context: context,
@@ -274,14 +287,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 children: [
                   OutlinedButton.icon(
                     onPressed: () async {
-                      final picked = await _commentImagePicker.pickImage(source: ImageSource.gallery);
+                      final picked = await _commentImagePicker.pickImage(
+                        source: ImageSource.gallery,
+                      );
                       if (picked == null) return;
                       final file = File(picked.path);
                       final bytes = await file.length();
                       if (bytes > _maxCommentImageBytes) {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Image too large. Max 10MB.')),
+                            const SnackBar(
+                              content: Text('Image too large. Max 10MB.'),
+                            ),
                           );
                         }
                         return;
@@ -302,21 +319,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(6),
-                            child: Image.file(_commentImage!, fit: BoxFit.cover, width: 48, height: 48),
+                            child: Image.file(
+                              _commentImage!,
+                              fit: BoxFit.cover,
+                              width: 48,
+                              height: 48,
+                            ),
                           ),
                           Positioned(
                             right: -6,
                             top: -10,
                             child: IconButton(
                               iconSize: 18,
-                              onPressed: () { setState(() { _commentImage = null; }); },
+                              onPressed: () {
+                                setState(() {
+                                  _commentImage = null;
+                                });
+                              },
                               icon: const Icon(Icons.close),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
-                  ]
+                  ],
                 ],
               ),
             ],
@@ -351,7 +377,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           FutureBuilder<Post>(
             future: _postFuture,
             builder: (context, snapshot) {
-              if (!snapshot.hasData || currentUserId == null) return const SizedBox.shrink();
+              if (!snapshot.hasData || currentUserId == null)
+                return const SizedBox.shrink();
               final post = snapshot.data!;
               if (post.author == currentUserId) {
                 return Row(
@@ -365,8 +392,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             type: ReportTargetType.post,
                             reason: '',
                             targetId: post.id,
-                            targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
-                            details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                            targetUsername: post.isAnonymous
+                                ? 'Anonymous'
+                                : (post.authorUsername ?? 'Unknown user'),
+                            details: '${post.title ?? ''}\n\n${post.body ?? ''}'
+                                .trim(),
                           ),
                         );
                       },
@@ -374,12 +404,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
-                        context.push('/community/group/${widget.groupId}/post/${post.id}/edit', extra: post);
+                        context.push(
+                          '/community/group/${widget.groupId}/post/${post.id}/edit',
+                          extra: post,
+                        );
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () => _showDeleteConfirmationDialog(isPost: true),
+                      onPressed: () =>
+                          _showDeleteConfirmationDialog(isPost: true),
                     ),
                   ],
                 );
@@ -393,8 +427,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       type: ReportTargetType.post,
                       reason: '',
                       targetId: post.id,
-                      targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
-                      details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                      targetUsername: post.isAnonymous
+                          ? 'Anonymous'
+                          : (post.authorUsername ?? 'Unknown user'),
+                      details: '${post.title ?? ''}\n\n${post.body ?? ''}'
+                          .trim(),
                     ),
                   );
                 },
@@ -428,7 +465,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(post.title ?? '[No Title]', style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  post.title ?? '[No Title]',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 8),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -441,20 +481,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       },
                       child: DisplayProfilePic(
                         radius: 20,
-                        imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                        imageUrl:
+                            post.authorProfilePic ??
+                            _userPicByUsername[post.authorUsername ?? ''],
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Builder(
                         builder: (context) {
-                          final String? pronounsDisplay = post.isAnonymous || authorIsPrivate
+                          final String? pronounsDisplay =
+                              post.isAnonymous || authorIsPrivate
                               ? null
                               : (FlairUtils.extractPronouns(authorFlair) ?? '')
-                                  .split(RegExp(r'[\n,]'))
-                                  .map((p) => p.trim())
-                                  .where((p) => p.isNotEmpty)
-                                  .join(' • ');
+                                    .split(RegExp(r'[\n,]'))
+                                    .map((p) => p.trim())
+                                    .where((p) => p.isNotEmpty)
+                                    .join(' • ');
 
                           return GestureDetector(
                             onTap: () {
@@ -468,12 +511,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 Text(
                                   'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
                                 ),
-                                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                if (pronounsDisplay != null &&
+                                    pronounsDisplay.isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2),
                                     child: Text(
                                       pronounsDisplay,
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ),
                               ],
@@ -497,7 +543,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
                       'Edited ${_formatEditedLabel(post.updatedAt) ?? ''}',
-                      style: const TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                 const SizedBox(height: 16),
@@ -522,7 +572,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 type: ReportTargetType.photo,
                                 reason: '',
                                 targetId: post.id,
-                                targetUsername: post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user'),
+                                targetUsername: post.isAnonymous
+                                    ? 'Anonymous'
+                                    : (post.authorUsername ?? 'Unknown user'),
                                 targetUrl: src,
                                 details: 'Post photo',
                               ),
@@ -550,15 +602,18 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   itemBuilder: (context, index) {
                     final comment = post.comments[index];
                     final isCommentAuthor = comment.authorId == currentUserId;
-                    final commentFlair = _userFlairByUsername[comment.authorUsername];
-                    final commentIsPrivate = FlairUtils.isProfilePrivate(commentFlair);
+                    final commentFlair =
+                        _userFlairByUsername[comment.authorUsername];
+                    final commentIsPrivate = FlairUtils.isProfilePrivate(
+                      commentFlair,
+                    );
                     final String? pronounsDisplay = commentIsPrivate
                         ? null
                         : (FlairUtils.extractPronouns(commentFlair) ?? '')
-                            .split(RegExp(r'[\n,]'))
-                            .map((p) => p.trim())
-                            .where((p) => p.isNotEmpty)
-                            .join(' • ');
+                              .split(RegExp(r'[\n,]'))
+                              .map((p) => p.trim())
+                              .where((p) => p.isNotEmpty)
+                              .join(' • ');
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -572,7 +627,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             },
                             child: DisplayProfilePic(
                               radius: 20,
-                              imageUrl: comment.authorProfilePic ?? _userPicByUsername[comment.authorUsername],
+                              imageUrl:
+                                  comment.authorProfilePic ??
+                                  _userPicByUsername[comment.authorUsername],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -585,62 +642,105 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                     GestureDetector(
                                       onTap: () {
                                         if (comment.authorId <= 0) return;
-                                        context.push('/users/${comment.authorId}');
+                                        context.push(
+                                          '/users/${comment.authorId}',
+                                        );
                                       },
                                       child: Text(
                                         comment.authorUsername,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                     if (comment.authorIsStaff)
                                       Padding(
-                                        padding: const EdgeInsets.only(left: 8.0),
+                                        padding: const EdgeInsets.only(
+                                          left: 8.0,
+                                        ),
                                         child: Chip(
-                                          avatar: const Icon(Icons.shield, size: 12, color: Colors.white),
-                                          label: const Text('Admin', style: TextStyle(fontSize: 10, color: Colors.white)),
+                                          avatar: const Icon(
+                                            Icons.shield,
+                                            size: 12,
+                                            color: Colors.white,
+                                          ),
+                                          label: const Text(
+                                            'Admin',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                           backgroundColor: AppColors.primary,
-                                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4.0,
+                                          ),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
                                         ),
                                       ),
                                   ],
                                 ),
-                                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                if (pronounsDisplay != null &&
+                                    pronounsDisplay.isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2),
                                     child: Text(
                                       pronounsDisplay,
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ),
                                 Text(
                                   _formatRelative(comment.pubDate),
-                                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 if (comment.isEdited)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2.0),
                                     child: Text(
                                       'Edited ${_formatEditedLabel(comment.updatedAt) ?? ''}',
-                                      style: const TextStyle(color: Colors.grey, fontSize: 11, fontStyle: FontStyle.italic),
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 11,
+                                        fontStyle: FontStyle.italic,
+                                      ),
                                     ),
                                   ),
                                 const SizedBox(height: 4),
                                 SmartLinkBody(text: comment.content),
-                                TextButton(
-                                  onPressed: () async {
-                                    await showReportDialog(
-                                      context: context,
-                                      baseRequest: ReportRequest(
-                                        type: ReportTargetType.comment,
-                                        reason: '',
-                                        targetId: comment.id,
-                                        targetUsername: comment.authorUsername,
-                                        details: comment.content,
-                                      ),
-                                    );
-                                  },
-                                  child: const Text('Report'),
+                                Row(
+                                  children: [
+                                    TextButton(
+                                      onPressed: () {
+                                        _showAddCommentDialog(
+                                          initialText:
+                                              '@${comment.authorUsername} ',
+                                        );
+                                      },
+                                      child: const Text('Reply'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () async {
+                                        await showReportDialog(
+                                          context: context,
+                                          baseRequest: ReportRequest(
+                                            type: ReportTargetType.comment,
+                                            reason: '',
+                                            targetId: comment.id,
+                                            targetUsername:
+                                                comment.authorUsername,
+                                            details: comment.content,
+                                          ),
+                                        );
+                                      },
+                                      child: const Text('Report'),
+                                    ),
+                                  ],
                                 ),
                                 if (isCommentAuthor)
                                   Padding(
@@ -648,11 +748,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                     child: Row(
                                       children: [
                                         TextButton(
-                                          onPressed: () => _showEditCommentDialog(comment),
+                                          onPressed: () =>
+                                              _showEditCommentDialog(comment),
                                           child: const Text('Edit'),
                                         ),
                                         TextButton(
-                                          onPressed: () => _showDeleteCommentConfirmationDialog(comment.id),
+                                          onPressed: () =>
+                                              _showDeleteCommentConfirmationDialog(
+                                                comment.id,
+                                              ),
                                           child: const Text('Delete'),
                                         ),
                                       ],

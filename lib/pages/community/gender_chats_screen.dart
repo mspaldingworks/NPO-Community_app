@@ -58,7 +58,10 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final groups = snapshot.data ?? [];
-          final generalGroup = _findByNames(groups, ['general']);
+          final generalGroup = _findByNames(
+            groups,
+            ['the meadow', 'meadow', 'general chat', 'general'],
+          );
           final hobbiesGroup = _findByNames(groups, ['hobbies', 'hobby']);
           final items = <_CardItem>[
             _CardItem(

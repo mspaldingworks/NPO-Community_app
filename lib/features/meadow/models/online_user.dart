@@ -7,6 +7,7 @@ class OnlineUser {
     required this.pronounSlots,
     required this.position,
     required this.lastSeen,
+    this.activeChatId,
     this.isCurrentUser = false,
   });
 
@@ -15,6 +16,7 @@ class OnlineUser {
   final List<String> pronounSlots;
   final Offset position;
   final DateTime lastSeen;
+  final String? activeChatId;
   final bool isCurrentUser;
 
   OnlineUser copyWith({
@@ -23,6 +25,7 @@ class OnlineUser {
     List<String>? pronounSlots,
     Offset? position,
     DateTime? lastSeen,
+    String? activeChatId,
     bool? isCurrentUser,
   }) {
     return OnlineUser(
@@ -31,6 +34,7 @@ class OnlineUser {
       pronounSlots: pronounSlots ?? this.pronounSlots,
       position: position ?? this.position,
       lastSeen: lastSeen ?? this.lastSeen,
+      activeChatId: activeChatId ?? this.activeChatId,
       isCurrentUser: isCurrentUser ?? this.isCurrentUser,
     );
   }

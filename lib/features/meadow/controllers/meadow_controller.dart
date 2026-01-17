@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:transconnect/features/meadow/data/meadow_repository.dart';
+import 'package:transconnect/features/meadow/models/meadow_chat_comment.dart';
 import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
 import 'package:transconnect/features/meadow/models/online_user.dart';
 
@@ -38,6 +39,8 @@ class MeadowController extends ChangeNotifier {
   Offset? get flyTarget => _flyTarget;
 
   String get currentUserId => _currentUserId;
+
+  String get currentUserName => _currentUserName;
 
   OnlineUser? get currentUser {
     for (final user in _onlineUsers) {
@@ -88,18 +91,33 @@ class MeadowController extends ChangeNotifier {
   }
 
   Future<MeadowChatFlower> createChat({
+    required String emoji,
     required String topic,
     required Size meadowSize,
     required EdgeInsets padding,
-    String? description,
+    String? initialComment,
   }) async {
     final position = _randomPosition(meadowSize, padding);
     return _repository.createChat(
+      emoji: emoji,
       topic: topic,
       createdBy: _currentUserName,
       createdByUserId: _currentUserId,
       position: position,
-      description: description,
+      initialComment: initialComment,
+    );
+  }
+
+  Stream<List<MeadowChatComment>> watchChatComments({required String chatId}) {
+    return _repository.watchChatComments(chatId: chatId);
+  }
+
+  Future<void> sendChatComment({required String chatId, required String content}) {
+    return _repository.addChatComment(
+      chatId: chatId,
+      authorId: _currentUserId,
+      authorName: _currentUserName,
+      content: content,
     );
   }
 

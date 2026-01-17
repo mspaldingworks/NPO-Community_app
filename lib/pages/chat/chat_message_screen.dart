@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:transconnect/core/constants/api_endpoints.dart';
 import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/auth_service.dart';
+import 'package:transconnect/core/services/chat_favorites_service.dart';
 import 'package:transconnect/core/services/chat_service.dart';
 import 'package:transconnect/models/chat_message.dart';
 import 'package:transconnect/models/user.dart';
@@ -29,6 +30,7 @@ class ChatMessageScreen extends StatefulWidget {
 
 class _ChatMessageScreenState extends State<ChatMessageScreen> {
   final ChatService _chatService = ChatService();
+  final ChatFavoritesService _chatFavoritesService = ChatFavoritesService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _messageFocusNode = FocusNode();
@@ -43,6 +45,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
 
   String _otherUsername = 'Chat'; 
   late User _currentUser;
+  bool _isFavoriteChat = false;
 
   @override
   void initState() {
@@ -93,14 +96,15 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       // Only attempt to find and set username if explicitly requested 
       // or if messages were previously empty
       if (updateUsername || _messages.isEmpty) {
-        final otherParticipantMessage = messages.firstWhere(
+        if (messages.isNotEmpty) {
+          final otherParticipantMessage = messages.firstWhere(
             (m) => m.sender.id != _currentUser.id,
             orElse: () => messages.firstWhere(
-                (m) => m.recipient.id != _currentUser.id),
-        );
-        
-        if (otherParticipantMessage != null) {
-          final otherUser = otherParticipantMessage.sender.id != _currentUser.id 
+              (m) => m.recipient.id != _currentUser.id,
+            ),
+          );
+
+          final otherUser = otherParticipantMessage.sender.id != _currentUser.id
               ? otherParticipantMessage.sender
               : otherParticipantMessage.recipient;
           _otherUsername = otherUser.username;
@@ -132,6 +136,31 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     }
   }
 
+  Future<void> _loadFavoriteStatus() async {
+    final otherUserId = int.tryParse(widget.conversationId);
+    if (otherUserId == null) return;
+
+    final favorites = await _chatFavoritesService.getFavoriteChatIds();
+    if (!mounted) return;
+    setState(() {
+      _isFavoriteChat = favorites.contains(otherUserId);
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final otherUserId = int.tryParse(widget.conversationId);
+    if (otherUserId == null) return;
+
+    await _chatFavoritesService.setChatFavorite(
+      chatId: otherUserId,
+      isFavorite: !_isFavoriteChat,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isFavoriteChat = !_isFavoriteChat;
+    });
+  }
+
 
   Future<void> _initializeData() async {
     try {
@@ -140,6 +169,8 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       
       // Pass the username finding responsibility to _fetchMessages
       await _fetchMessages(updateUsername: true);
+
+      await _loadFavoriteStatus();
 
     } catch (e) {
       if (!mounted) return;
@@ -611,6 +642,16 @@ Future<void> _sendMessage() async {
       appBar: AppBar(
         title: Text(_otherUsername), // Use the determined other username
         // You might want to add a profile pic here if User model has it
+        actions: [
+          IconButton(
+            tooltip: _isFavoriteChat ? 'Unfavorite chat' : 'Favorite chat',
+            icon: Icon(
+              _isFavoriteChat ? Icons.star : Icons.star_border,
+              color: _isFavoriteChat ? Colors.amber : null,
+            ),
+            onPressed: _toggleFavorite,
+          ),
+        ],
       ),
       body: Column(
         children: [

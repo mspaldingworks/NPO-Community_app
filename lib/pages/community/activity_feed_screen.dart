@@ -618,6 +618,17 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
               parentPost: item.parentPost,
               groupName: _groupName(item.groupId),
               onOpenDetail: () => _openDetail(item),
+              onReply: () {
+                final post = item.parentPost;
+                if (post == null) {
+                  _openDetail(item);
+                  return;
+                }
+                _showCommentComposer(
+                  post,
+                  initialText: '@${comment.authorUsername} ',
+                );
+              },
               onReport: () async {
                 await showReportDialog(
                   context: context,
@@ -638,8 +649,14 @@ class _ActivityFeedScreenState extends State<ActivityFeedScreen> {
     );
   }
 
-  Future<void> _showCommentComposer(Post post) async {
+  Future<void> _showCommentComposer(Post post, {String? initialText}) async {
     final controller = TextEditingController();
+    if (initialText != null) {
+      controller.text = initialText;
+      controller.selection = TextSelection.collapsed(
+        offset: controller.text.length,
+      );
+    }
     File? image;
     bool submitting = false;
 
@@ -1224,6 +1241,7 @@ class _FeedCommentCard extends StatelessWidget {
   final Post? parentPost;
   final String groupName;
   final VoidCallback onOpenDetail;
+  final VoidCallback onReply;
   final Future<void> Function() onReport;
 
   const _FeedCommentCard({
@@ -1232,6 +1250,7 @@ class _FeedCommentCard extends StatelessWidget {
     required this.parentPost,
     required this.groupName,
     required this.onOpenDetail,
+    required this.onReply,
     required this.onReport,
   });
 
@@ -1306,6 +1325,12 @@ class _FeedCommentCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
+                  TextButton.icon(
+                    onPressed: onReply,
+                    icon: const Icon(Icons.reply),
+                    label: const Text('Reply'),
+                  ),
+                  const SizedBox(width: 8),
                   TextButton.icon(
                     onPressed: onOpenDetail,
                     icon: const Icon(Icons.open_in_new),

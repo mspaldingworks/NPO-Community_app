@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:transconnect/core/services/home_alert_service.dart';
 import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
@@ -19,19 +21,21 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasHomeAlerts =
+        Provider.of<HomeAlertService>(context, listen: true).hasAlerts;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        destinations: const [
-          NavigationDestination(
+        destinations: [
+          const NavigationDestination(
             label: 'Community',
             icon: TourAnchor(
               name: 'Community',
               child: Icon(Icons.group),
             ),
           ),
-          NavigationDestination(
+          const NavigationDestination(
             label: 'Exchange',
             icon: TourAnchor(
               name: 'Exchange',
@@ -42,26 +46,62 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Home',
             icon: TourAnchor(
               name: 'Home',
-              child: Icon(Icons.home),
+              child: _NavGlowIcon(
+                icon: Icons.home,
+                glow: hasHomeAlerts,
+              ),
+            ),
+            selectedIcon: TourAnchor(
+              name: 'Home',
+              child: _NavGlowIcon(
+                icon: Icons.home,
+                glow: hasHomeAlerts,
+              ),
             ),
           ),
-          NavigationDestination(
+          const NavigationDestination(
             label: 'Resources',
             icon: TourAnchor(
               name: 'Resources',
               child: Icon(Icons.book),
             ),
           ),
-          NavigationDestination(
-            label: 'Events',
+          const NavigationDestination(
+            label: 'The Meadow',
             icon: TourAnchor(
-              name: 'Events',
-              child: Icon(Icons.calendar_month_outlined),
+              name: 'The Meadow',
+              child: Icon(Icons.local_florist),
             ),
           ),
         ],
         onDestinationSelected: _goBranch,
       ),
+    );
+  }
+}
+
+class _NavGlowIcon extends StatelessWidget {
+  const _NavGlowIcon({required this.icon, required this.glow});
+
+  final IconData icon;
+  final bool glow;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: glow
+            ? [
+                BoxShadow(
+                  color: Colors.redAccent.withOpacity(0.7),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ]
+            : const [],
+      ),
+      child: Icon(icon),
     );
   }
 }

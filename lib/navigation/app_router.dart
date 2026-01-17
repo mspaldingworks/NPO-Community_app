@@ -164,8 +164,11 @@ class AppRouter {
                       final groupName = state.extra as String? ?? 'Group';
 
                       final lowered = groupName.trim().toLowerCase();
-                      final isGeneral =
-                          lowered == 'general' || lowered == 'general chat' || lowered.startsWith('general ');
+                      final isGeneral = lowered == 'general'
+                          || lowered == 'general chat'
+                          || lowered.startsWith('general ')
+                          || lowered == 'the meadow'
+                          || lowered == 'meadow';
                       if (isGeneral) {
                         return MeadowScreen(groupId: id, groupName: groupName);
                       }
@@ -282,9 +285,18 @@ class AppRouter {
               ),
             ],
           ),
-          // Events
+          // The Meadow + Events (reachable from Home cards)
           StatefulShellBranch(
             routes: [
+              GoRoute(
+                path: '/meadow',
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: MeadowScreen(
+                    groupId: 0,
+                    groupName: 'The Meadow',
+                  ),
+                ),
+              ),
               GoRoute(
                 path: '/events/calendar',
                 pageBuilder: (context, state) =>

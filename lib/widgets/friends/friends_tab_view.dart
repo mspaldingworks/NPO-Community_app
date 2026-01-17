@@ -8,6 +8,7 @@ import 'package:transconnect/models/user.dart';
 import 'package:transconnect/core/utils/time_ago.dart';
 import 'package:transconnect/widgets/display_profile_pic.dart';
 import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:transconnect/core/services/chat_favorites_service.dart';
 
 class FriendsTabView extends StatefulWidget {
   const FriendsTabView({Key? key}) : super(key: key);
@@ -18,12 +19,33 @@ class FriendsTabView extends StatefulWidget {
 
 class _FriendsTabViewState extends State<FriendsTabView> {
   late final FriendsController _friendsController;
+  final ChatFavoritesService _chatFavoritesService = ChatFavoritesService();
+
+  Set<int> _favoriteChatIds = <int>{};
 
   @override
   void initState() {
     super.initState();
     _friendsController = FriendsController();
     _fetchData();
+    _loadFavoriteChatIds();
+  }
+
+  Future<void> _loadFavoriteChatIds() async {
+    final ids = await _chatFavoritesService.getFavoriteChatIds();
+    if (!mounted) return;
+    setState(() {
+      _favoriteChatIds = ids;
+    });
+  }
+
+  Future<void> _toggleFavorite(int userId) async {
+    final isFavorite = _favoriteChatIds.contains(userId);
+    await _chatFavoritesService.setChatFavorite(
+      chatId: userId,
+      isFavorite: !isFavorite,
+    );
+    await _loadFavoriteChatIds();
   }
 
   Future<void> _fetchData() async {
@@ -166,6 +188,20 @@ class _FriendsTabViewState extends State<FriendsTabView> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          IconButton(
+            tooltip: _favoriteChatIds.contains(friend.id)
+                ? 'Unfavorite chat'
+                : 'Favorite chat',
+            icon: Icon(
+              _favoriteChatIds.contains(friend.id)
+                  ? Icons.star
+                  : Icons.star_border,
+              color: _favoriteChatIds.contains(friend.id)
+                  ? Colors.amber
+                  : Colors.grey,
+            ),
+            onPressed: () => _toggleFavorite(friend.id),
+          ),
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Message',

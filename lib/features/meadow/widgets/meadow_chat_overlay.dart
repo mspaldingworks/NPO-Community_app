@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:transconnect/features/meadow/controllers/meadow_controller.dart';
+import 'package:transconnect/features/meadow/models/meadow_chat_comment.dart';
 import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
 
 class MeadowChatOverlay extends StatefulWidget {
@@ -19,20 +20,38 @@ class MeadowChatOverlay extends StatefulWidget {
 }
 
 class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
+  final TextEditingController _messageController = TextEditingController();
+  late final Stream<List<MeadowChatComment>> _commentsStream;
+
   @override
   void initState() {
     super.initState();
+    _commentsStream = widget.controller.watchChatComments(
+      chatId: widget.chatId,
+    );
     widget.controller.joinChat(widget.chatId);
   }
 
   @override
   void dispose() {
+    _messageController.dispose();
     widget.controller.leaveChat(widget.chatId);
     super.dispose();
   }
 
-   @override
-   Widget build(BuildContext context) {
+  Future<void> _send() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+    await widget.controller.sendChatComment(
+      chatId: widget.chatId,
+      content: text,
+    );
+    if (!mounted) return;
+    _messageController.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
@@ -72,10 +91,9 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            chat!.topic,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            '${chat!.emoji} ${chat!.topic}',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -107,16 +125,30 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
                 ),
                 const Divider(height: 24),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.green.shade200,
-                          child: Text('${index + 1}'),
-                        ),
-                        title: Text('Meadow message ${index + 1}'),
-                        subtitle: const Text('Let\'s chat about this topic!'),
+                  child: StreamBuilder<List<MeadowChatComment>>(
+                    stream: _commentsStream,
+                    builder: (context, snapshot) {
+                      final comments =
+                          snapshot.data ?? const <MeadowChatComment>[];
+                      if (comments.isEmpty) {
+                        return const Center(child: Text('No messages yet.'));
+                      }
+                      return ListView.builder(
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          final c = comments[index];
+                          final letter = c.authorName.trim().isNotEmpty
+                              ? c.authorName.trim()[0].toUpperCase()
+                              : '?';
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.green.shade200,
+                              child: Text(letter),
+                            ),
+                            title: Text(c.authorName),
+                            subtitle: Text(c.content),
+                          );
+                        },
                       );
                     },
                   ),
@@ -126,6 +158,7 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
                   children: [
                     Expanded(
                       child: TextField(
+                        controller: _messageController,
                         decoration: InputDecoration(
                           hintText: 'Send a message...',
                           filled: true,
@@ -135,13 +168,12 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
                             borderSide: BorderSide.none,
                           ),
                         ),
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => _send(),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed: () {},
-                    ),
+                    IconButton(icon: const Icon(Icons.send), onPressed: _send),
                   ],
                 ),
               ],
@@ -150,7 +182,7 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
         );
       },
     );
-   }
+  }
 
   Future<void> _showReportSheet(BuildContext context) async {
     final result = await showModalBottomSheet<_ReportResult>(
@@ -167,9 +199,9 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
     );
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report sent. Thank you.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Report sent. Thank you.')));
     }
   }
 }
@@ -206,9 +238,9 @@ class _ReportChatSheetState extends State<_ReportChatSheet> {
         children: [
           Text(
             'Report chat',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(

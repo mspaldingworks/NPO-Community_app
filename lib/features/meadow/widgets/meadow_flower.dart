@@ -24,7 +24,8 @@ class MeadowFlower extends StatelessWidget {
     final asset = _flowerAssets[flower.id.hashCode.abs() % _flowerAssets.length];
 
     final scale = (1 + (flower.participantCount * 0.12)).clamp(1.0, 1.7);
-    final scaledSize = size * scale;
+    final redWindowBoost = asset.toLowerCase().contains('red flower') ? 1.18 : 1.0;
+    final scaledSize = size * scale * redWindowBoost;
     return Positioned(
       left: flower.position.dx - scaledSize / 2,
       top: flower.position.dy - scaledSize / 2,
@@ -63,11 +64,13 @@ class MeadowFlower extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                flower.topic,
+                '${flower.emoji} ${flower.topic}',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
