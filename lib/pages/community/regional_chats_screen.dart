@@ -201,10 +201,7 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
                   ];
                 case 'louisville':
                   return [
-                    'assets/media/Kentuckiana-Regions-Map-2048x1046.jpg',
-                    'assets/media/ky_$slug.jpg',
-                    'assets/media/louisville_ky_southern_indiana.jpg',
-                    'assets/media/ky_$slug.png',
+                    'assets/media/Regions-Map-2048x1046.jpg',
                   ];
                 case 'northern ky':
                   return [
@@ -220,10 +217,7 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
                   ];
                 case 'central ky':
                   return [
-                    'assets/media/CentalKY-Regions-Map-2048x1046.jpg',
-                    'assets/media/CentralKY-Regions-Map-2048x1046.jpg',
-                    'assets/media/ky_$slug.jpg',
-                    'assets/media/ky_$slug.png',
+                    'assets/media/Regions-Map-2048x1046.jpg',
                   ];
               }
               return [

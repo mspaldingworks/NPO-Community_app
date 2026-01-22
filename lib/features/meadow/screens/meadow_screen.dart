@@ -39,7 +39,12 @@ class MeadowScreen extends StatefulWidget {
 
 class _MeadowScreenState extends State<MeadowScreen> {
   static const _padding = EdgeInsets.all(40);
-  static const _backgroundAsset = 'assets/meadow/backgrounds/All Grass.png';
+  static const List<String> _backgroundAssets = [
+    'assets/meadow/backgrounds/meadow_bg_1.png',
+    'assets/meadow/backgrounds/meadow_bg_2.png',
+    'assets/meadow/backgrounds/meadow_bg_3.png',
+    'assets/meadow/backgrounds/meadow_bg_4.png',
+  ];
   static const _meadowTourAsset = 'assets/meadow_tour.json';
   static const _leaveFadeDuration = Duration(milliseconds: 900);
 
@@ -693,23 +698,18 @@ class _MeadowBackground extends StatelessWidget {
           Column(
             children: List.generate(
               sections,
-              (index) => SizedBox(
-                height: size.height,
-                width: size.width,
-                child: index.isOdd
-                    ? Transform(
-                        alignment: Alignment.center,
-                        transform: Matrix4.rotationX(pi),
-                        child: Image.asset(
-                          _MeadowScreenState._backgroundAsset,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Image.asset(
-                        _MeadowScreenState._backgroundAsset,
-                        fit: BoxFit.cover,
-                      ),
-              ),
+              (index) {
+                final assets = _MeadowScreenState._backgroundAssets;
+                final asset = assets[index % assets.length];
+                return SizedBox(
+                  height: size.height,
+                  width: size.width,
+                  child: Image.asset(
+                    asset,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
             ),
           ),
           Container(
