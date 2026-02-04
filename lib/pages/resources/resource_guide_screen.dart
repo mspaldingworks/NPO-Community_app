@@ -204,6 +204,7 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
         } else {
           return Column(
             children: [
+              _buildMigrationPlannerCard(context),
               _buildSearchAndFilter(),
               Expanded(
                 child: ListView.builder(
@@ -396,6 +397,39 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                   tabs: _tags.map((tag) => Tab(text: tag)).toList(),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMigrationPlannerCard(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            const Icon(Icons.route_outlined, size: 32),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Plan your migration', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Plan routes from Kentucky with restrooms, camera overlays, and border presets.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            FilledButton(
+              onPressed: () => context.push('/resources/migration'),
+              child: const Text('Open'),
+            ),
           ],
         ),
       ),

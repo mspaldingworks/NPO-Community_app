@@ -67,3 +67,34 @@ The project follows a structured directory layout to maintain organization and s
     - `widgets`: Reusable widgets that are shared across multiple screens.
 
 This structure helps in separating concerns and making the codebase easier to navigate and maintain.
+
+## Migration planner (Resources > Plan your migration)
+
+This feature adds a Kentucky-focused route planner using OpenStreetMap tiles and the OSRM routing engine.
+It also integrates Refuge Restrooms along the route and optional Flock camera overlays.
+
+### Configuration
+
+Set the following Dart defines at build time to point at your own infrastructure:
+
+- `ROUTING_BASE_URL` (default: `https://router.project-osrm.org`)
+- `TILE_SERVER_URL` (default: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`)
+- `RESTROOM_BASE_URL` (default: `https://www.refugerestrooms.org/api/v1`)
+
+Example:
+
+```
+flutter run \
+  --dart-define=ROUTING_BASE_URL=https://your-osrm.example.com \
+  --dart-define=TILE_SERVER_URL=https://your-tile-server.example.com/{z}/{x}/{y}.png
+```
+
+### OSRM / Valhalla setup
+
+- OSRM: run a self-hosted `osrm-routed` instance (driving profile). Point `ROUTING_BASE_URL` at that host.
+- Valhalla: not wired yet, but the routing provider abstraction in `lib/features/migration_planner/data/services/` is ready to swap.
+
+### Refuge Restrooms API usage
+
+The app uses the public "by location" endpoint described at https://www.refugerestrooms.org/api/docs/
+Results are cached per route to avoid excessive requests.

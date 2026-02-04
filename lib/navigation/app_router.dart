@@ -30,6 +30,7 @@ import 'package:transconnect/pages/exchange/exchange_post_detail_screen.dart';
 import 'package:transconnect/pages/resources/create_resource_screen.dart';
 import 'package:transconnect/pages/resources/edit_resource_screen.dart';
 import 'package:transconnect/pages/resources/resources_screen.dart';
+import 'package:transconnect/features/migration_planner/presentation/migration_planner_screen.dart';
 import 'package:transconnect/pages/profile/profile_screen.dart';
 import 'package:transconnect/pages/profile/public_user_profile_screen.dart';
 import 'package:transconnect/pages/settings/app_info_screen.dart';
@@ -280,6 +281,10 @@ class AppRouter {
                       final resource = state.extra as Resource;
                       return EditResourceScreen(resource: resource);
                     },
+                  ),
+                  GoRoute(
+                    path: 'migration',
+                    builder: (context, state) => const MigrationPlannerScreen(),
                   ),
                 ],
               ),

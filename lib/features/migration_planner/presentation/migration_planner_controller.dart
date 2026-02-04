@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:transconnect/features/migration_planner/data/destinations.dart';
+import 'package:transconnect/features/migration_planner/data/services/camera_overlay_service.dart';
+import 'package:transconnect/features/migration_planner/data/services/restroom_service.dart';
+import 'package:transconnect/features/migration_planner/data/services/routing_service.dart';
+import 'package:transconnect/features/migration_planner/domain/models/camera_location.dart';
+import 'package:transconnect/features/migration_planner/domain/models/destination.dart';
+import 'package:transconnect/features/migration_planner/domain/models/restroom.dart';
+import 'package:transconnect/features/migration_planner/domain/models/route_plan.dart';
+import 'package:meta/meta.dart';
+
+class MigrationPlannerController extends ChangeNotifier {
+  MigrationPlannerController({
+    RoutingService? routingService,
+    RestroomService? restroomService,
+    CameraOverlayService? cameraOverlayService,
+  })  : _routingService = routingService ?? RoutingService(),
+        _restroomService = restroomService ?? RestroomService(),
+        _cameraOverlayService = cameraOverlayService ?? const CameraOverlayService();
+
+  final RoutingService _routingService;
+  final RestroomService _restroomService;
+  final CameraOverlayService _cameraOverlayService;
+
+  LatLng? _origin;
+  DestinationType _destinationType = DestinationType.illinoisEntry;
+  DestinationPreset? _destination;
+  bool _includeAlternatives = true;
+  bool _showRestrooms = true;
+  bool _showCameras = true;
+  double _sampleIntervalKm = 25;
+  bool _isLoading = false;
+  String? _errorMessage;
+  RoutePlan? _routePlan;
+  List<Restroom> _restrooms = [];
+
+  LatLng? get origin => _origin;
+  DestinationType get destinationType => _destinationType;
+  DestinationPreset? get destination => _destination;
+  bool get includeAlternatives => _includeAlternatives;
+  bool get showRestrooms => _showRestrooms;
+  bool get showCameras => _showCameras;
+  double get sampleIntervalKm => _sampleIntervalKm;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  RoutePlan? get routePlan => _routePlan;
+  List<Restroom> get restrooms => _restrooms;
+  List<DestinationPreset> get availableDestinations =>
+      MigrationDestinations.byType(_destinationType);
+  List<CameraLocation> get cameras => _cameraOverlayService.getLocations();
+
+  void setOrigin(LatLng origin) {
+    _origin = origin;
+    notifyListeners();
+  }
+
+  void setDestinationType(DestinationType type) {
+    _destinationType = type;
+    _destination = null;
+    notifyListeners();
+  }
+
+  void setDestination(DestinationPreset preset) {
+    _destination = preset;
+    notifyListeners();
+  }
+
+  void setIncludeAlternatives(bool value) {
+    _includeAlternatives = value;
+    notifyListeners();
+  }
+
+  void setShowRestrooms(bool value) {
+    _showRestrooms = value;
+    notifyListeners();
+  }
+
+  void setShowCameras(bool value) {
+    _showCameras = value;
+    notifyListeners();
+  }
+
+  void setSampleIntervalKm(double value) {
+    _sampleIntervalKm = value;
+    notifyListeners();
+  }
+
+  Future<void> useCurrentLocation() async {
+    _errorMessage = null;
+    notifyListeners();
+
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      final request = await Geolocator.requestPermission();
+      if (request == LocationPermission.denied || request == LocationPermission.deniedForever) {
+        _errorMessage = 'Location permission denied.';
+        notifyListeners();
+        return;
+      }
+    }
+
+    final position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    _origin = LatLng(position.latitude, position.longitude);
+    notifyListeners();
+  }
+
+  Future<void> planRoute() async {
+    if (_origin == null || _destination == null) {
+      _errorMessage = 'Select an origin and destination first.';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final plan = await _routingService.planRoute(
+        origin: _origin!,
+        destination: LatLng(_destination!.latitude, _destination!.longitude),
+        alternatives: _includeAlternatives,
+      );
+
+      _routePlan = plan;
+
+      if (_showRestrooms) {
+        final samples = _routingService.sampleRoute(plan, intervalKm: _sampleIntervalKm);
+        final cacheKey = _buildCacheKey(_origin!, _destination!, _sampleIntervalKm);
+        _restrooms = await _restroomService.fetchRestroomsAlongRoute(
+          cacheKey: cacheKey,
+          samples: samples,
+        );
+      } else {
+        _restrooms = [];
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  @visibleForTesting
+  void setRoutePlanForTesting(RoutePlan plan, List<Restroom> restrooms) {
+    _routePlan = plan;
+    _restrooms = restrooms;
+    notifyListeners();
+  }
+
+  String _buildCacheKey(LatLng origin, DestinationPreset destination, double intervalKm) {
+    return '${origin.latitude},${origin.longitude}|${destination.id}|${intervalKm.toStringAsFixed(1)}';
+  }
+}
