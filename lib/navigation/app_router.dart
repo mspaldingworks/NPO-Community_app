@@ -283,6 +283,10 @@ class AppRouter {
                     },
                   ),
                   GoRoute(
+                    path: 'planner',
+                    redirect: (context, state) => '/resources/migration',
+                  ),
+                  GoRoute(
                     path: 'migration',
                     builder: (context, state) => const MigrationPlannerScreen(),
                   ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transconnect/features/geocaching/models/geocache.dart';
 import 'package:transconnect/features/geocaching/repositories/geocache_repository.dart';
 import 'package:transconnect/features/geocaching/utils/cache_password.dart';
 import 'package:transconnect/pages/resources/resource_guide_screen.dart';
@@ -186,6 +185,13 @@ class _ResourcesScreenState extends State<ResourcesScreen> with SingleTickerProv
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resource Guide'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.route),
+            tooltip: 'Plan your migration',
+            onPressed: () => context.push('/resources/migration'),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           onTap: (index) async {
