@@ -30,6 +30,42 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
   late final MigrationPlannerController _fallbackController;
   LatLng? _lastSyncedOrigin;
 
+  double? _parseSignedCoordinate(String raw, {required bool isLatitude}) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+
+    final normalized = trimmed
+        .toUpperCase()
+        .replaceAll('°', '')
+        .replaceAll(',', '')
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    final match = RegExp(r'^([NSEW])?\s*([-+]?\d+(?:\.\d+)?)\s*([NSEW])?$').firstMatch(normalized);
+    if (match == null) return null;
+
+    final dir1 = match.group(1);
+    final dir2 = match.group(3);
+    final direction = dir2 ?? dir1;
+    if (direction != null && dir1 != null && dir2 != null && dir1 != dir2) {
+      return null;
+    }
+
+    final value = double.tryParse(match.group(2)!);
+    if (value == null) return null;
+
+    if (isLatitude) {
+      if (direction != null && direction != 'N' && direction != 'S') return null;
+      final signed = direction == 'S' ? -value.abs() : value;
+      if (signed < -90 || signed > 90) return null;
+      return signed;
+    }
+
+    if (direction != null && direction != 'E' && direction != 'W') return null;
+    final signed = direction == 'W' ? -value.abs() : value;
+    if (signed < -180 || signed > 180) return null;
+    return signed;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -204,8 +240,8 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
                 const SizedBox(width: 12),
                 OutlinedButton(
                   onPressed: () {
-                    final lat = double.tryParse(_latController.text);
-                    final lng = double.tryParse(_lngController.text);
+                    final lat = _parseSignedCoordinate(_latController.text, isLatitude: true);
+                    final lng = _parseSignedCoordinate(_lngController.text, isLatitude: false);
                     if (lat == null || lng == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Enter valid coordinates.')),
