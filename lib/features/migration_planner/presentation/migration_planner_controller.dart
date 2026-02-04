@@ -21,8 +21,9 @@ class MigrationPlannerController extends ChangeNotifier {
         _cameraOverlayService = cameraOverlayService ?? const CameraOverlayService();
 
   static const LatLng _clarkMemorialBridgeWaypoint = LatLng(38.26361, -85.75139);
-  static const LatLng _abrahamLincolnBridge = LatLng(38.26444, -85.74361);
-  static const double _avoidBridgeRadiusMeters = 900;
+  static const double _ohioRiverDowntownLatitude = 38.27;
+  static const double _downtownCorridorRadiusMeters = 9000;
+  static const double _alreadyOnClarkRadiusMeters = 600;
 
   final RoutingService _routingService;
   final RestroomService _restroomService;
@@ -133,7 +134,10 @@ class MigrationPlannerController extends ChangeNotifier {
 
       var plan = initial;
       var usedClarkWaypoint = false;
-      if (_routeUsesAbrahamLincolnBridge(initial)) {
+
+      if (_routeAlreadyUsesClarkBridge(initial)) {
+        usedClarkWaypoint = false;
+      } else if (_shouldForceClarkBridge(initial)) {
         usedClarkWaypoint = true;
         plan = await _routingService.planRoute(
           origin: _origin!,
@@ -175,10 +179,33 @@ class MigrationPlannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _routeUsesAbrahamLincolnBridge(RoutePlan plan) {
+  bool _shouldForceClarkBridge(RoutePlan plan) {
+    if (!_routeCrossesDowntownOhioRiver(plan)) return false;
+    return _routePassesNearDowntownCorridor(plan);
+  }
+
+  bool _routeAlreadyUsesClarkBridge(RoutePlan plan) {
     for (final point in plan.geometry) {
-      final distance = GeoUtils.distanceMeters(point, _abrahamLincolnBridge);
-      if (distance <= _avoidBridgeRadiusMeters) return true;
+      final distance = GeoUtils.distanceMeters(point, _clarkMemorialBridgeWaypoint);
+      if (distance <= _alreadyOnClarkRadiusMeters) return true;
+    }
+    return false;
+  }
+
+  bool _routeCrossesDowntownOhioRiver(RoutePlan plan) {
+    var minLat = double.infinity;
+    var maxLat = -double.infinity;
+    for (final point in plan.geometry) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+    }
+    return minLat < _ohioRiverDowntownLatitude && maxLat > _ohioRiverDowntownLatitude;
+  }
+
+  bool _routePassesNearDowntownCorridor(RoutePlan plan) {
+    for (final point in plan.geometry) {
+      final distance = GeoUtils.distanceMeters(point, _clarkMemorialBridgeWaypoint);
+      if (distance <= _downtownCorridorRadiusMeters) return true;
     }
     return false;
   }
