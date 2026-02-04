@@ -21,12 +21,14 @@ class OsrmRoutingProvider implements RoutingProvider {
   Future<RoutePlan> fetchRoute({
     required LatLng origin,
     required LatLng destination,
+    List<LatLng> waypoints = const [],
     bool alternatives = true,
   }) async {
+    final coordinates = <LatLng>[origin, ...waypoints, destination]
+        .map((point) => '${point.longitude},${point.latitude}')
+        .join(';');
     final uri = Uri.parse(
-      '$_baseUrl/route/v1/driving/'
-      '${origin.longitude},${origin.latitude};'
-      '${destination.longitude},${destination.latitude}',
+      '$_baseUrl/route/v1/driving/$coordinates',
     ).replace(
       queryParameters: {
         'overview': 'full',

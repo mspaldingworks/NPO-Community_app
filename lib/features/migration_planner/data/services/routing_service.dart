@@ -12,11 +12,13 @@ class RoutingService {
   Future<RoutePlan> planRoute({
     required LatLng origin,
     required LatLng destination,
+    List<LatLng> waypoints = const [],
     bool alternatives = true,
   }) {
     return _provider.fetchRoute(
       origin: origin,
       destination: destination,
+      waypoints: waypoints,
       alternatives: alternatives,
     );
   }

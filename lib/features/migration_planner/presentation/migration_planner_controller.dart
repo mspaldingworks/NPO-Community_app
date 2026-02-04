@@ -9,6 +9,7 @@ import 'package:transconnect/features/migration_planner/domain/models/camera_loc
 import 'package:transconnect/features/migration_planner/domain/models/destination.dart';
 import 'package:transconnect/features/migration_planner/domain/models/restroom.dart';
 import 'package:transconnect/features/migration_planner/domain/models/route_plan.dart';
+import 'package:transconnect/features/migration_planner/domain/utils/geo_utils.dart';
 
 class MigrationPlannerController extends ChangeNotifier {
   MigrationPlannerController({
@@ -18,6 +19,10 @@ class MigrationPlannerController extends ChangeNotifier {
   })  : _routingService = routingService ?? RoutingService(),
         _restroomService = restroomService ?? RestroomService(),
         _cameraOverlayService = cameraOverlayService ?? const CameraOverlayService();
+
+  static const LatLng _clarkMemorialBridgeWaypoint = LatLng(38.26361, -85.75139);
+  static const LatLng _abrahamLincolnBridge = LatLng(38.26444, -85.74361);
+  static const double _avoidBridgeRadiusMeters = 900;
 
   final RoutingService _routingService;
   final RestroomService _restroomService;
@@ -119,17 +124,35 @@ class MigrationPlannerController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final plan = await _routingService.planRoute(
+      final destinationPoint = LatLng(_destination!.latitude, _destination!.longitude);
+      final initial = await _routingService.planRoute(
         origin: _origin!,
-        destination: LatLng(_destination!.latitude, _destination!.longitude),
+        destination: destinationPoint,
         alternatives: _includeAlternatives,
       );
+
+      var plan = initial;
+      var usedClarkWaypoint = false;
+      if (_routeUsesAbrahamLincolnBridge(initial)) {
+        usedClarkWaypoint = true;
+        plan = await _routingService.planRoute(
+          origin: _origin!,
+          destination: destinationPoint,
+          waypoints: const [_clarkMemorialBridgeWaypoint],
+          alternatives: _includeAlternatives,
+        );
+      }
 
       _routePlan = plan;
 
       if (_showRestrooms) {
         final samples = _routingService.sampleRoute(plan, intervalKm: _sampleIntervalKm);
-        final cacheKey = _buildCacheKey(_origin!, _destination!, _sampleIntervalKm);
+        final cacheKey = _buildCacheKey(
+          _origin!,
+          _destination!,
+          _sampleIntervalKm,
+          viaClarkBridge: usedClarkWaypoint,
+        );
         _restrooms = await _restroomService.fetchRestroomsAlongRoute(
           cacheKey: cacheKey,
           samples: samples,
@@ -152,7 +175,20 @@ class MigrationPlannerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _buildCacheKey(LatLng origin, DestinationPreset destination, double intervalKm) {
-    return '${origin.latitude},${origin.longitude}|${destination.id}|${intervalKm.toStringAsFixed(1)}';
+  bool _routeUsesAbrahamLincolnBridge(RoutePlan plan) {
+    for (final point in plan.geometry) {
+      final distance = GeoUtils.distanceMeters(point, _abrahamLincolnBridge);
+      if (distance <= _avoidBridgeRadiusMeters) return true;
+    }
+    return false;
+  }
+
+  String _buildCacheKey(
+    LatLng origin,
+    DestinationPreset destination,
+    double intervalKm, {
+    required bool viaClarkBridge,
+  }) {
+    return '${origin.latitude},${origin.longitude}|${destination.id}|${intervalKm.toStringAsFixed(1)}|clark=${viaClarkBridge ? 1 : 0}';
   }
 }

@@ -5,6 +5,7 @@ abstract class RoutingProvider {
   Future<RoutePlan> fetchRoute({
     required LatLng origin,
     required LatLng destination,
+    List<LatLng> waypoints = const [],
     bool alternatives = true,
   });
 }
