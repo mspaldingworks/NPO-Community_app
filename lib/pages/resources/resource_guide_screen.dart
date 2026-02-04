@@ -76,6 +76,12 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
           .toList();
       allTags.insert(0, 'All');
 
+      final existing = _tabController;
+      if (existing != null) {
+        existing.removeListener(_handleTabSelection);
+        existing.dispose();
+      }
+
       setState(() {
         _allResources = resources;
         _filteredResources = resources;
@@ -90,7 +96,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
   }
 
   void _handleTabSelection() {
-    if (_tabController!.indexIsChanging) {
+    final controller = _tabController;
+    if (controller == null) return;
+    if (controller.indexIsChanging) {
       _filterResources();
     }
   }

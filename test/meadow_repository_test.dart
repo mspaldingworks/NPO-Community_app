@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:transconnect/features/meadow/data/meadow_repository.dart';
 
@@ -12,6 +11,7 @@ void main() {
 
     test('createChat joins creator and updates participantCount', () async {
       final chat = await repo.createChat(
+        emoji: '🌼',
         topic: 'Test topic',
         createdBy: 'Creator',
         createdByUserId: 'creator-id',
@@ -26,6 +26,7 @@ void main() {
 
     test('leaveChat removes flower when last participant leaves', () async {
       final chat = await repo.createChat(
+        emoji: '🌼',
         topic: 'Temporary chat',
         createdBy: 'Creator',
         createdByUserId: 'creator-id',

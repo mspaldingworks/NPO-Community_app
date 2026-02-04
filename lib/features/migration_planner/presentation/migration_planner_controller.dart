@@ -9,7 +9,6 @@ import 'package:transconnect/features/migration_planner/domain/models/camera_loc
 import 'package:transconnect/features/migration_planner/domain/models/destination.dart';
 import 'package:transconnect/features/migration_planner/domain/models/restroom.dart';
 import 'package:transconnect/features/migration_planner/domain/models/route_plan.dart';
-import 'package:meta/meta.dart';
 
 class MigrationPlannerController extends ChangeNotifier {
   MigrationPlannerController({

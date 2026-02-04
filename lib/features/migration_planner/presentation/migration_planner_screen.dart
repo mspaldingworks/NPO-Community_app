@@ -13,8 +13,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 class MigrationPlannerScreen extends StatefulWidget {
   final MigrationPlannerController? controller;
+  final bool showMap;
 
-  const MigrationPlannerScreen({super.key, this.controller});
+  const MigrationPlannerScreen({super.key, this.controller, this.showMap = true});
 
   @override
   State<MigrationPlannerScreen> createState() => _MigrationPlannerScreenState();
@@ -23,8 +24,11 @@ class MigrationPlannerScreen extends StatefulWidget {
 class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
   final TextEditingController _latController = TextEditingController();
   final TextEditingController _lngController = TextEditingController();
+  final FocusNode _latFocusNode = FocusNode();
+  final FocusNode _lngFocusNode = FocusNode();
   final MapController _mapController = MapController();
   late final MigrationPlannerController _fallbackController;
+  LatLng? _lastSyncedOrigin;
 
   @override
   void initState() {
@@ -36,6 +40,8 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
   void dispose() {
     _latController.dispose();
     _lngController.dispose();
+    _latFocusNode.dispose();
+    _lngFocusNode.dispose();
     if (widget.controller == null) {
       _fallbackController.dispose();
     }
@@ -44,8 +50,20 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
 
   void _syncOriginFields(LatLng? origin) {
     if (origin == null) return;
-    _latController.text = origin.latitude.toStringAsFixed(5);
-    _lngController.text = origin.longitude.toStringAsFixed(5);
+
+    final last = _lastSyncedOrigin;
+    if (last != null && last.latitude == origin.latitude && last.longitude == origin.longitude) {
+      return;
+    }
+
+    // Don't clobber user input while they are typing.
+    if (_latFocusNode.hasFocus || _lngFocusNode.hasFocus) return;
+
+    _lastSyncedOrigin = origin;
+    final nextLat = origin.latitude.toStringAsFixed(5);
+    final nextLng = origin.longitude.toStringAsFixed(5);
+    if (_latController.text != nextLat) _latController.text = nextLat;
+    if (_lngController.text != nextLng) _lngController.text = nextLng;
   }
 
   @override
@@ -78,15 +96,16 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
                       style: const TextStyle(color: Colors.red),
                     ),
                   ),
-                SizedBox(
-                  height: 360,
-                  child: _buildMap(
-                    context,
-                    controller,
-                    origin: origin,
-                    destination: destination,
+                if (widget.showMap)
+                  SizedBox(
+                    height: 360,
+                    child: _buildMap(
+                      context,
+                      controller,
+                      origin: origin,
+                      destination: destination,
+                    ),
                   ),
-                ),
                 if (routePlan != null) RouteSummaryCard(plan: routePlan),
                 if (controller.restrooms.isNotEmpty)
                   _buildRestroomSummary(controller.restrooms),
@@ -130,9 +149,9 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
               'Always follow local laws, prioritize personal safety, and contact emergency services if needed.',
             ),
             const SizedBox(height: 8),
-            Wrap(
+            const Wrap(
               spacing: 8,
-              children: const [
+              children: [
                 Chip(label: Text('911 for emergencies')),
                 Chip(label: Text('Know your rights')),
                 Chip(label: Text('Travel with trusted contacts')),
@@ -158,6 +177,7 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
                 Expanded(
                   child: TextField(
                     controller: _latController,
+                    focusNode: _latFocusNode,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Latitude'),
                   ),
@@ -166,6 +186,7 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
                 Expanded(
                   child: TextField(
                     controller: _lngController,
+                    focusNode: _lngFocusNode,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(labelText: 'Longitude'),
                   ),
@@ -214,7 +235,8 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
             Text('Destination presets', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             DropdownButtonFormField<DestinationType>(
-              value: controller.destinationType,
+              key: const ValueKey('migration_destination_type'),
+              initialValue: controller.destinationType,
               decoration: const InputDecoration(labelText: 'Destination type'),
               items: const [
                 DropdownMenuItem(
@@ -236,7 +258,8 @@ class _MigrationPlannerScreenState extends State<MigrationPlannerScreen> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<DestinationPreset>(
-              value: controller.destination,
+              key: ValueKey('migration_destination_${controller.destinationType.name}'),
+              initialValue: controller.destination,
               decoration: const InputDecoration(labelText: 'Choose a destination'),
               items: destinations
                   .map(
