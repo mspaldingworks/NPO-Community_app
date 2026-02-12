@@ -74,6 +74,7 @@ flutter:
     - assets/onboarding_tour.json
     - assets/meadow_tour.json
     - assets/media/twc_primary_logo.png
+    - assets/media/Icon-maskable-512.png
     - assets/media/NorthernKY-Regions-Map-2048x1046.jpg
     - assets/media/SouthCentralKY-Regions-Map-2048x1046.jpg
     - assets/media/EasternKY-Regions-Map-2048x1046.jpg

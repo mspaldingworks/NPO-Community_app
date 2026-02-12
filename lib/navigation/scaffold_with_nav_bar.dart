@@ -47,16 +47,16 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Home',
             icon: TourAnchor(
               name: 'Home',
-              child: _NavGlowIcon(
-                icon: Icons.home,
+              child: _NavGlow(
                 glow: hasHomeAlerts,
+                child: const _NavLogoMark(),
               ),
             ),
             selectedIcon: TourAnchor(
               name: 'Home',
-              child: _NavGlowIcon(
-                icon: Icons.home,
+              child: _NavGlow(
                 glow: hasHomeAlerts,
+                child: const _NavLogoMark(),
               ),
             ),
           ),
@@ -81,10 +81,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
   }
 }
 
-class _NavGlowIcon extends StatelessWidget {
-  const _NavGlowIcon({required this.icon, required this.glow});
+class _NavGlow extends StatelessWidget {
+  const _NavGlow({required this.child, required this.glow});
 
-  final IconData icon;
+  final Widget child;
   final bool glow;
 
   @override
@@ -95,14 +95,36 @@ class _NavGlowIcon extends StatelessWidget {
         boxShadow: glow
             ? [
                 BoxShadow(
-                  color: Colors.redAccent.withOpacity(0.7),
+                  color: Colors.redAccent.withAlpha(179),
                   blurRadius: 12,
                   spreadRadius: 2,
                 ),
               ]
             : const [],
       ),
-      child: Icon(icon),
+      child: child,
+    );
+  }
+}
+
+class _NavLogoMark extends StatelessWidget {
+  const _NavLogoMark();
+
+  static const String _assetPath = 'assets/media/Icon-maskable-512.png';
+
+  @override
+  Widget build(BuildContext context) {
+    final size = IconTheme.of(context).size ?? 24;
+    return SizedBox.square(
+      dimension: size,
+      child: Image.asset(
+        _assetPath,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+        errorBuilder: (context, error, stackTrace) {
+          return const Icon(Icons.home);
+        },
+      ),
     );
   }
 }
