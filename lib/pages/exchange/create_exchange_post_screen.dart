@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:transconnect/core/services/community_service.dart';
 import 'package:transconnect/core/services/exchange_service.dart';
 import 'package:transconnect/models/group.dart';
+import 'package:transconnect/widgets/marketplace/firearm_policy_dialog.dart';
 
 class CreateExchangePostScreen extends StatefulWidget {
   const CreateExchangePostScreen({super.key});
@@ -158,6 +159,16 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
         _emojiError = 'Please add at least one emoji tag.';
         _emojiPickerShowing = true;
       });
+      return;
+    }
+
+    final agreed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const FirearmPolicyDialog(),
+    );
+
+    if (agreed != true || !mounted) {
       return;
     }
 
