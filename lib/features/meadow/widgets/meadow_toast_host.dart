@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/features/meadow/data/meadow_repository.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
-import 'package:transconnect/features/meadow/services/meadow_alert_service.dart';
+import 'package:npo_community/features/meadow/data/meadow_repository.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
 
 class MeadowToastHost extends StatefulWidget {
   const MeadowToastHost({
@@ -26,9 +26,9 @@ class _MeadowToastHostState extends State<MeadowToastHost> {
   @override
   void initState() {
     super.initState();
-    _subscription = InMemoryMeadowRepository.instance
-        .watchChatCreated()
-        .listen(_handleChatCreated);
+    _subscription = InMemoryMeadowRepository.instance.watchChatCreated().listen(
+      _handleChatCreated,
+    );
   }
 
   @override

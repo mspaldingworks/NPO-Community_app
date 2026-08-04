@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/models/group.dart';
-import 'package:transconnect/theme/app_theme.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/models/group.dart';
+import 'package:npo_community/theme/app_theme.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 class PostListScreen extends StatefulWidget {
   final int groupId;
@@ -68,9 +68,7 @@ class _PostListScreenState extends State<PostListScreen> {
         _userPicByUsername = {
           for (final u in users) u.username: u.fullProfilePicUrl,
         };
-        _userFlairByUsername = {
-          for (final u in users) u.username: u.flair,
-        };
+        _userFlairByUsername = {for (final u in users) u.username: u.flair};
       });
     } catch (_) {
       // Ignore silently; avatars will remain placeholders
@@ -91,9 +89,9 @@ class _PostListScreenState extends State<PostListScreen> {
       );
       _refreshPosts();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete post: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
     }
   }
 
@@ -102,7 +100,9 @@ class _PostListScreenState extends State<PostListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Post?'),
-        content: const Text('Are you sure you want to delete this post? This action cannot be undone.'),
+        content: const Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -123,12 +123,13 @@ class _PostListScreenState extends State<PostListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = Provider.of<AuthService>(context, listen: false).currentUser;
+    final currentUser = Provider.of<AuthService>(
+      context,
+      listen: false,
+    ).currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.groupName),
-      ),
+      appBar: AppBar(title: Text(widget.groupName)),
       body: RefreshIndicator(
         onRefresh: _refreshPosts,
         child: FutureBuilder<List<Post>>(
@@ -156,14 +157,18 @@ class _PostListScreenState extends State<PostListScreen> {
                 DateTime _parse(Post p) {
                   final s = p.pubDate ?? p.updatedAt;
                   if (s != null && s.isNotEmpty) {
-                    try { return DateTime.parse(s).toLocal(); } catch (_) {}
+                    try {
+                      return DateTime.parse(s).toLocal();
+                    } catch (_) {}
                   }
                   return DateTime.fromMillisecondsSinceEpoch(0);
                 }
+
                 final da = _parse(a);
                 final db = _parse(b);
                 return db.compareTo(da);
               }
+
               posts.sort(_cmp);
 
               return ListView.builder(
@@ -173,11 +178,17 @@ class _PostListScreenState extends State<PostListScreen> {
                     return FutureBuilder<Group>(
                       future: _groupFuture,
                       builder: (context, groupSnap) {
-                        final imgUrl = groupSnap.hasData ? groupSnap.data!.fullImageUrl : null;
+                        final imgUrl = groupSnap.hasData
+                            ? groupSnap.data!.fullImageUrl
+                            : null;
                         if (imgUrl == null) return const SizedBox.shrink();
 
-                        final token = SharedPreferencesService().getData('user_token');
-                        final headers = token != null ? {'Authorization': 'Token $token'} : null;
+                        final token = SharedPreferencesService().getData(
+                          'user_token',
+                        );
+                        final headers = token != null
+                            ? {'Authorization': 'Token $token'}
+                            : null;
 
                         return Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -186,24 +197,28 @@ class _PostListScreenState extends State<PostListScreen> {
                             child: CachedNetworkImage(
                               imageUrl: imgUrl,
                               httpHeaders: headers,
-                              imageBuilder: (context, imageProvider) => SizedBox(
-                                height: 180,
-                                width: double.infinity,
-                                child: Image(
-                                  image: imageProvider,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                              imageBuilder: (context, imageProvider) =>
+                                  SizedBox(
+                                    height: 180,
+                                    width: double.infinity,
+                                    child: Image(
+                                      image: imageProvider,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                               placeholder: (context, url) => Container(
                                 height: 180,
                                 alignment: Alignment.center,
                                 child: const SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               ),
-                              errorWidget: (context, url, error) => const SizedBox.shrink(),
+                              errorWidget: (context, url, error) =>
+                                  const SizedBox.shrink(),
                             ),
                           ),
                         );
@@ -211,11 +226,15 @@ class _PostListScreenState extends State<PostListScreen> {
                     );
                   }
                   final post = posts[index - 1];
-                  final postDate = post.pubDate != null ? DateTime.parse(post.pubDate!) : DateTime.now();
+                  final postDate = post.pubDate != null
+                      ? DateTime.parse(post.pubDate!)
+                      : DateTime.now();
                   String editedLabel = '';
                   if (post.isEdited && post.updatedAt != null) {
                     try {
-                      final editedDate = DateTime.parse(post.updatedAt!).toLocal();
+                      final editedDate = DateTime.parse(
+                        post.updatedAt!,
+                      ).toLocal();
                       editedLabel = ' · Edited ${timeago.format(editedDate)}';
                     } catch (_) {
                       editedLabel = ' · Edited';
@@ -224,19 +243,27 @@ class _PostListScreenState extends State<PostListScreen> {
                   final displayAuthor = post.isAnonymous
                       ? 'Anonymous'
                       : (post.authorUsername ?? 'Unknown user');
-                  final authorFlair = _userFlairByUsername[post.authorUsername ?? ''];
-                  final authorIsPrivate = FlairUtils.isProfilePrivate(authorFlair);
-                  final String? pronounsDisplay = post.isAnonymous || authorIsPrivate
+                  final authorFlair =
+                      _userFlairByUsername[post.authorUsername ?? ''];
+                  final authorIsPrivate = FlairUtils.isProfilePrivate(
+                    authorFlair,
+                  );
+                  final String? pronounsDisplay =
+                      post.isAnonymous || authorIsPrivate
                       ? null
                       : (FlairUtils.extractPronouns(authorFlair) ?? '')
-                          .split(RegExp(r'[\n,]'))
-                          .map((p) => p.trim())
-                          .where((p) => p.isNotEmpty)
-                          .join(' • ');
-                  final isOwner = currentUser != null && currentUser.id == post.author;
+                            .split(RegExp(r'[\n,]'))
+                            .map((p) => p.trim())
+                            .where((p) => p.isNotEmpty)
+                            .join(' • ');
+                  final isOwner =
+                      currentUser != null && currentUser.id == post.author;
 
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     child: InkWell(
                       onTap: () {
                         GoRouter.of(context).push(
@@ -260,13 +287,18 @@ class _PostListScreenState extends State<PostListScreen> {
                                   },
                                   child: DisplayProfilePic(
                                     radius: 20,
-                                    imageUrl: post.authorProfilePic ?? _userPicByUsername[post.authorUsername ?? ''],
+                                    imageUrl:
+                                        post.authorProfilePic ??
+                                        _userPicByUsername[post
+                                                .authorUsername ??
+                                            ''],
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -274,33 +306,63 @@ class _PostListScreenState extends State<PostListScreen> {
                                             onTap: () {
                                               if (post.isAnonymous) return;
                                               if (post.author == null) return;
-                                              context.push('/users/${post.author}');
+                                              context.push(
+                                                '/users/${post.author}',
+                                              );
                                             },
-                                            child: Text(displayAuthor, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                            child: Text(
+                                              displayAuthor,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
                                           if (post.authorIsStaff)
                                             Padding(
-                                              padding: const EdgeInsets.only(left: 8.0),
+                                              padding: const EdgeInsets.only(
+                                                left: 8.0,
+                                              ),
                                               child: Chip(
-                                                avatar: const Icon(Icons.shield, size: 12, color: Colors.white),
-                                                label: const Text('Admin', style: TextStyle(fontSize: 10, color: Colors.white)),
-                                                backgroundColor: AppColors.primary,
-                                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                avatar: const Icon(
+                                                  Icons.shield,
+                                                  size: 12,
+                                                  color: Colors.white,
+                                                ),
+                                                label: const Text(
+                                                  'Admin',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                backgroundColor:
+                                                    AppColors.primary,
+                                                materialTapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
                                               ),
                                             ),
                                         ],
                                       ),
-                                      if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                                      if (pronounsDisplay != null &&
+                                          pronounsDisplay.isNotEmpty)
                                         Padding(
-                                          padding: const EdgeInsets.only(top: 2),
+                                          padding: const EdgeInsets.only(
+                                            top: 2,
+                                          ),
                                           child: Text(
                                             pronounsDisplay,
-                                            style: Theme.of(context).textTheme.bodySmall,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
                                           ),
                                         ),
                                       Text(
                                         'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${timeago.format(postDate)}$editedLabel',
-                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -323,7 +385,9 @@ class _PostListScreenState extends State<PostListScreen> {
                                           reason: '',
                                           targetId: post.id,
                                           targetUsername: displayAuthor,
-                                          details: '${post.title ?? ''}\n\n${post.body ?? ''}'.trim(),
+                                          details:
+                                              '${post.title ?? ''}\n\n${post.body ?? ''}'
+                                                  .trim(),
                                         ),
                                       );
                                       return;
@@ -349,16 +413,18 @@ class _PostListScreenState extends State<PostListScreen> {
                                       ),
                                     ];
                                     if (isOwner) {
-                                      items.addAll(const <PopupMenuEntry<String>>[
-                                        PopupMenuItem<String>(
-                                          value: 'edit',
-                                          child: Text('Edit'),
-                                        ),
-                                        PopupMenuItem<String>(
-                                          value: 'delete',
-                                          child: Text('Delete'),
-                                        ),
-                                      ]);
+                                      items.addAll(
+                                        const <PopupMenuEntry<String>>[
+                                          PopupMenuItem<String>(
+                                            value: 'edit',
+                                            child: Text('Edit'),
+                                          ),
+                                          PopupMenuItem<String>(
+                                            value: 'delete',
+                                            child: Text('Delete'),
+                                          ),
+                                        ],
+                                      );
                                     }
                                     return items;
                                   },
@@ -366,7 +432,10 @@ class _PostListScreenState extends State<PostListScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Text(post.title ?? '', style: Theme.of(context).textTheme.titleLarge),
+                            Text(
+                              post.title ?? '',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                             const SizedBox(height: 8),
                             SmartLinkBody(text: post.body),
                             if (post.images.isNotEmpty) ...[
@@ -418,7 +487,9 @@ class _PostListScreenState extends State<PostListScreen> {
         name: 'Add Post',
         child: FloatingActionButton(
           onPressed: () async {
-            final result = await context.push('/community/group/${widget.groupId}/create-post');
+            final result = await context.push(
+              '/community/group/${widget.groupId}/create-post',
+            );
             if (result == true && mounted) {
               _loadPosts();
             }

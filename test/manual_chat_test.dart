@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:transconnect/core/services/chat_service.dart';
+import 'package:npo_community/core/services/chat_service.dart';
 
 void main() {
   test('manual chat runner (skipped)', () {}, skip: true);
@@ -27,7 +27,9 @@ Future<void> runManualChatTest() async {
         if (message.isTyping) {
           final userId = message.data['user_id'];
           final isTyping = message.data['is_typing'];
-          print('   👉 User $userId is ${isTyping ? 'typing...' : 'not typing'}');
+          print(
+            '   👉 User $userId is ${isTyping ? 'typing...' : 'not typing'}',
+          );
         } else if (message.isMessage) {
           print('   💬 New message: ${message.data}');
         } else if (message.isReadReceipt) {

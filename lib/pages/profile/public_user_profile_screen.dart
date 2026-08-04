@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
 
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
@@ -13,7 +13,8 @@ class PublicUserProfileScreen extends StatefulWidget {
   const PublicUserProfileScreen({super.key, required this.userId});
 
   @override
-  State<PublicUserProfileScreen> createState() => _PublicUserProfileScreenState();
+  State<PublicUserProfileScreen> createState() =>
+      _PublicUserProfileScreenState();
 }
 
 class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
@@ -69,7 +70,8 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
 
           final isPrivate = FlairUtils.isProfilePrivate(user.flair);
           final pronouns = FlairUtils.extractPronouns(user.flair) ?? '';
-          final mutualAid = (FlairUtils.extractMutualAidEmojis(user.flair) ?? '').trim();
+          final mutualAid =
+              (FlairUtils.extractMutualAidEmojis(user.flair) ?? '').trim();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -130,7 +132,8 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     ),
                   )
                 else ...[
-                  if (user.fullName != null && user.fullName!.trim().isNotEmpty) ...[
+                  if (user.fullName != null &&
+                      user.fullName!.trim().isNotEmpty) ...[
                     Text('Name', style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 6),
                     Text(user.fullName!.trim()),
@@ -143,13 +146,20 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     const SizedBox(height: 16),
                   ],
                   if (pronouns.trim().isNotEmpty) ...[
-                    Text('Pronouns', style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      'Pronouns',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 6),
                     Text(pronouns.trim()),
                     const SizedBox(height: 16),
                   ],
-                  if (user.statusMessage != null && user.statusMessage!.trim().isNotEmpty) ...[
-                    Text('Status', style: Theme.of(context).textTheme.titleSmall),
+                  if (user.statusMessage != null &&
+                      user.statusMessage!.trim().isNotEmpty) ...[
+                    Text(
+                      'Status',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: 6),
                     Text(user.statusMessage!.trim()),
                   ],

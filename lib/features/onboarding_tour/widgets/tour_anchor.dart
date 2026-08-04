@@ -1,15 +1,11 @@
 import 'package:flutter/widgets.dart';
-import 'package:transconnect/features/onboarding_tour/services/tour_anchor_registry.dart';
+import 'package:npo_community/features/onboarding_tour/services/tour_anchor_registry.dart';
 
 class TourAnchor extends StatefulWidget {
   final String name;
   final Widget child;
 
-  const TourAnchor({
-    super.key,
-    required this.name,
-    required this.child,
-  });
+  const TourAnchor({super.key, required this.name, required this.child});
 
   @override
   State<TourAnchor> createState() => _TourAnchorState();
@@ -43,9 +39,6 @@ class _TourAnchorState extends State<TourAnchor> {
 
   @override
   Widget build(BuildContext context) {
-    return KeyedSubtree(
-      key: _anchorKey,
-      child: widget.child,
-    );
+    return KeyedSubtree(key: _anchorKey, child: widget.child);
   }
 }

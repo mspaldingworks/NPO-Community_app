@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/friends_controller.dart';
+import 'package:npo_community/core/services/friends_controller.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/models/friend_request.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/utils/time_ago.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:npo_community/models/friend_request.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/utils/time_ago.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
 
 class PendingSentTile extends StatelessWidget {
   final FriendRequest request;
@@ -24,10 +24,10 @@ class PendingSentTile extends StatelessWidget {
     final String? pronounsDisplay = isPrivate
         ? null
         : (FlairUtils.extractPronouns(toUser.flair) ?? '')
-            .split(RegExp(r'[\n,]'))
-            .map((p) => p.trim())
-            .where((p) => p.isNotEmpty)
-            .join(' • ');
+              .split(RegExp(r'[\n,]'))
+              .map((p) => p.trim())
+              .where((p) => p.isNotEmpty)
+              .join(' • ');
 
     final subtitleText = request.createdAt != null
         ? 'Sent ${timeAgo(request.createdAt!)}'
@@ -44,7 +44,10 @@ class PendingSentTile extends StatelessWidget {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(toUser.username, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            toUser.username,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -61,16 +64,22 @@ class PendingSentTile extends StatelessWidget {
         onPressed: isInProgress
             ? null
             : () async {
-          final success = await controller.declineRequest(toUser.username);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(success ? 'Friend request canceled.' : 'Failed to cancel request.'),
-                backgroundColor: success ? Colors.grey : Colors.red,
-              ),
-            );
-          }
-        },
+                final success = await controller.declineRequest(
+                  toUser.username,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        success
+                            ? 'Friend request canceled.'
+                            : 'Failed to cancel request.',
+                      ),
+                      backgroundColor: success ? Colors.grey : Colors.red,
+                    ),
+                  );
+                }
+              },
         style: OutlinedButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.error,
           side: BorderSide(color: Theme.of(context).colorScheme.error),

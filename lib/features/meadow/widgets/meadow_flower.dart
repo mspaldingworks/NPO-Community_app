@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
 
 class MeadowFlower extends StatelessWidget {
   const MeadowFlower({
@@ -21,10 +21,13 @@ class MeadowFlower extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = _flowerAssets[flower.id.hashCode.abs() % _flowerAssets.length];
+    final asset =
+        _flowerAssets[flower.id.hashCode.abs() % _flowerAssets.length];
 
     final scale = (1 + (flower.participantCount * 0.12)).clamp(1.0, 1.7);
-    final redWindowBoost = asset.toLowerCase().contains('red flower') ? 1.18 : 1.0;
+    final redWindowBoost = asset.toLowerCase().contains('red flower')
+        ? 1.18
+        : 1.0;
     final scaledSize = size * scale * redWindowBoost;
     return Positioned(
       left: flower.position.dx - scaledSize / 2,
@@ -50,10 +53,7 @@ class MeadowFlower extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(scaledSize / 2),
-                child: Image.asset(
-                  asset,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.asset(asset, fit: BoxFit.cover),
               ),
             ),
             const SizedBox(height: 3),
@@ -66,9 +66,9 @@ class MeadowFlower extends StatelessWidget {
               child: Text(
                 '${flower.emoji} ${flower.topic}',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),

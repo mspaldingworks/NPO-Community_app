@@ -16,7 +16,10 @@ class PronounButterflyParts {
   final String? center;
 
   factory PronounButterflyParts.fromPronouns(List<String> pronouns) {
-    final cleaned = pronouns.map((p) => p.trim()).where((p) => p.isNotEmpty).toList();
+    final cleaned = pronouns
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
     final String? p0 = cleaned.isNotEmpty ? cleaned[0] : null;
     final String? p1 = cleaned.length > 1 ? cleaned[1] : null;
     final String? p2 = cleaned.length > 2 ? cleaned[2] : null;
@@ -40,11 +43,7 @@ class PronounButterflyParts {
 }
 
 class PronounButterfly extends StatelessWidget {
-  const PronounButterfly({
-    super.key,
-    required this.pronouns,
-    this.size = 240,
-  });
+  const PronounButterfly({super.key, required this.pronouns, this.size = 240});
 
   final List<String> pronouns;
   final double size;
@@ -115,7 +114,10 @@ class _PronounButterflyAvatarState extends State<PronounButterflyAvatar>
   @override
   void initState() {
     super.initState();
-    _flapController = AnimationController(vsync: this, duration: widget.flapSpeed);
+    _flapController = AnimationController(
+      vsync: this,
+      duration: widget.flapSpeed,
+    );
     if (widget.isFlapping) {
       _flapController.repeat();
     }
@@ -229,10 +231,7 @@ class ButterflyViewerWindow extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
@@ -265,10 +264,12 @@ String _assetKeyForPronoun(String? pronoun) {
   final firstToken = p.split('/').first.trim().toLowerCase();
 
   if (firstToken == 'she' || firstToken == 'her') return 'She.Her';
-  if (firstToken == 'he' || firstToken == 'him' || firstToken == 'hw') return 'He.Him';
+  if (firstToken == 'he' || firstToken == 'him' || firstToken == 'hw')
+    return 'He.Him';
   if (firstToken == 'they' || firstToken == 'them') return 'They.Them';
 
-  if (firstToken == 'xe' || firstToken == 'xem' || firstToken == 'xyr') return 'Xe.Xem';
+  if (firstToken == 'xe' || firstToken == 'xem' || firstToken == 'xyr')
+    return 'Xe.Xem';
 
   if (firstToken == 'ze' ||
       firstToken == 'zir' ||

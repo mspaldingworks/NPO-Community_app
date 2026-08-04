@@ -1,4 +1,4 @@
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 
 class FavoritesService {
   final SharedPreferencesService _prefsService = SharedPreferencesService();

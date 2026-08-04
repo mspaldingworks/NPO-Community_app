@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/pages/community/mutual_aid_screen.dart';
-import 'package:transconnect/pages/exchange/work_and_services_screen.dart';
+import 'package:npo_community/pages/community/mutual_aid_screen.dart';
+import 'package:npo_community/pages/exchange/work_and_services_screen.dart';
 
 class ExchangeHubScreen extends StatelessWidget {
   final int initialTabIndex;

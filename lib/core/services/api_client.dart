@@ -3,21 +3,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/config/app_config.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 
-import 'package:transconnect/core/services/api_client_interface.dart';
+import 'package:npo_community/core/services/api_client_interface.dart';
 
-/// A parent class for making generic API calls, now handling authentication 
+/// A parent class for making generic API calls, now handling authentication
 /// token retrieval and standardized response processing.
 class ApiClient implements ApiClientInterface {
-  final String _baseUrl = 'https://api.luxashome.com';
   final Logger _logger = Logger();
-  
-  static const String _authTokenKey = 'user_token';
-  final SharedPreferencesService _prefsService; 
 
-  ApiClient() : _prefsService = SharedPreferencesService(); 
-  
+  static const String _authTokenKey = 'user_token';
+  final SharedPreferencesService _prefsService;
+
+  ApiClient() : _prefsService = SharedPreferencesService();
+
   String get authToken {
     final token = _prefsService.getData(_authTokenKey);
     if (token == null) {
@@ -25,7 +25,7 @@ class ApiClient implements ApiClientInterface {
     }
     return token;
   }
-  
+
   Map<String, String> get authHeaders => {
     'Content-Type': 'application/json',
     'Authorization': 'Token $authToken',
@@ -33,7 +33,10 @@ class ApiClient implements ApiClientInterface {
 
   /// Processes the HTTP response, checks the status code, and decodes the body.
   /// Throws an Exception on failure or returns the decoded JSON/null on success.
-  dynamic _processResponse(http.Response response, {int expectedStatusCode = 200}) {
+  dynamic _processResponse(
+    http.Response response, {
+    int expectedStatusCode = 200,
+  }) {
     if (response.statusCode == expectedStatusCode) {
       if (response.body.isNotEmpty) {
         return jsonDecode(response.body);
@@ -54,8 +57,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   Uri _buildUri(String urlPath) {
-    final path = urlPath.startsWith('/') ? urlPath.substring(1) : urlPath;
-    final uri = Uri.parse('$_baseUrl/$path');
+    final uri = AppConfig.current.apiUri(urlPath);
     _logger.i('Requesting URL: $uri');
     return uri;
   }
@@ -114,10 +116,7 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('GET Requesting URL: $uri');
-      final response = await http.get(
-        uri,
-        headers: jsonHeaders,
-      );
+      final response = await http.get(uri, headers: jsonHeaders);
       _logger.i('GET Response: ${response.statusCode} ${response.body}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } catch (e) {
@@ -156,10 +155,7 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('DELETE Requesting URL: $uri');
-      final response = await http.delete(
-        uri,
-        headers: jsonHeaders,
-      );
+      final response = await http.delete(uri, headers: jsonHeaders);
       _logger.i('DELETE Response: ${response.statusCode} ${response.body}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } catch (e) {

@@ -1,4 +1,4 @@
-import 'package:transconnect/models/comment.dart';
+import 'package:npo_community/models/comment.dart';
 
 class Post {
   final int id;
@@ -46,7 +46,9 @@ class Post {
 
   factory Post.fromJson(Map<String, dynamic> json) {
     var commentsList = json['comments'] as List? ?? [];
-    List<Comment> comments = commentsList.map((i) => Comment.fromJson(i)).toList();
+    List<Comment> comments = commentsList
+        .map((i) => Comment.fromJson(i))
+        .toList();
 
     // Robustly parse the group ID
     final dynamic groupValue = json['group'];
@@ -65,7 +67,8 @@ class Post {
     } else if (authorValue is String) {
       authorId = int.tryParse(authorValue);
     } else if (authorValue is Map) {
-      final dynamic nestedId = authorValue['id'] ?? authorValue['user_id'] ?? authorValue['pk'];
+      final dynamic nestedId =
+          authorValue['id'] ?? authorValue['user_id'] ?? authorValue['pk'];
       if (nestedId is int) {
         authorId = nestedId;
       } else if (nestedId is String) {
@@ -76,27 +79,32 @@ class Post {
     authorId ??= json['author_id'] as int?;
     authorId ??= json['user_id'] as int?;
 
-    final authorUsername = json['author_username'] as String?
-        ?? json['author_display_name'] as String?
-        ?? json['author_name'] as String?
-        ?? json['created_by'] as String?
-        ?? json['user'] as String?
-        ?? (json['author'] is Map
-            ? ((json['author'] as Map)['username'] as String?
-                ?? (json['author'] as Map)['display_name'] as String?
-                ?? (json['author'] as Map)['name'] as String?)
+    final authorUsername =
+        json['author_username'] as String? ??
+        json['author_display_name'] as String? ??
+        json['author_name'] as String? ??
+        json['created_by'] as String? ??
+        json['user'] as String? ??
+        (json['author'] is Map
+            ? ((json['author'] as Map)['username'] as String? ??
+                  (json['author'] as Map)['display_name'] as String? ??
+                  (json['author'] as Map)['name'] as String?)
             : null);
 
-    final authorProfilePic = json['author_profile_pic'] as String?
-        ?? json['author_avatar'] as String?
-        ?? json['author_profile_image'] as String?
-        ?? (json['author'] is Map
-            ? ((json['author'] as Map)['profile_pic'] as String?
-                ?? (json['author'] as Map)['avatar'] as String?)
+    final authorProfilePic =
+        json['author_profile_pic'] as String? ??
+        json['author_avatar'] as String? ??
+        json['author_profile_image'] as String? ??
+        (json['author'] is Map
+            ? ((json['author'] as Map)['profile_pic'] as String? ??
+                  (json['author'] as Map)['avatar'] as String?)
             : null);
 
-    final authorIsStaff = json['author_is_staff'] as bool? ??
-        (json['author'] is Map ? (json['author'] as Map)['is_staff'] as bool? : false) ??
+    final authorIsStaff =
+        json['author_is_staff'] as bool? ??
+        (json['author'] is Map
+            ? (json['author'] as Map)['is_staff'] as bool?
+            : false) ??
         false;
 
     final emojisData = json['emojis'] as List?;
@@ -105,15 +113,19 @@ class Post {
         : <String>[];
 
     final String? primaryEmoji = (json['emoji'] as String?)?.trim();
-    if (primaryEmoji != null && primaryEmoji.isNotEmpty && !emojisList.contains(primaryEmoji)) {
+    if (primaryEmoji != null &&
+        primaryEmoji.isNotEmpty &&
+        !emojisList.contains(primaryEmoji)) {
       emojisList.insert(0, primaryEmoji);
     }
 
-    final String? updatedAt = json['updated_at'] as String?
-        ?? json['modified_at'] as String?
-        ?? json['edited_at'] as String?;
+    final String? updatedAt =
+        json['updated_at'] as String? ??
+        json['modified_at'] as String? ??
+        json['edited_at'] as String?;
 
-    final isAnonymous = (json['anonymous'] as bool?) ??
+    final isAnonymous =
+        (json['anonymous'] as bool?) ??
         (json['is_anonymous'] as bool?) ??
         false;
 
@@ -121,16 +133,16 @@ class Post {
     final imagesData = json['images'] as List?;
     final List<String> images = imagesData != null
         ? imagesData
-            .map((e) {
-              if (e is String) return e;
-              if (e is Map) {
-                final dynamic url = e['url'] ?? e['image_url'] ?? e['image'];
-                if (url is String) return url;
-              }
-              return e.toString();
-            })
-            .where((u) => u.trim().isNotEmpty)
-            .toList()
+              .map((e) {
+                if (e is String) return e;
+                if (e is Map) {
+                  final dynamic url = e['url'] ?? e['image_url'] ?? e['image'];
+                  if (url is String) return url;
+                }
+                return e.toString();
+              })
+              .where((u) => u.trim().isNotEmpty)
+              .toList()
         : const <String>[];
 
     return Post(

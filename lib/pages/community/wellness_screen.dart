@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/group.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/group.dart';
 
 class WellnessScreen extends StatefulWidget {
   const WellnessScreen({super.key});
@@ -58,7 +58,7 @@ class _WellnessScreenState extends State<WellnessScreen> {
             'sexual health',
             'sexual-health',
             'sexual health & wellness',
-            'sexual'
+            'sexual',
           ]);
           final beautyGroup = _findByNames(groups, [
             'beauty',
@@ -76,21 +76,66 @@ class _WellnessScreenState extends State<WellnessScreen> {
             'workout',
           ]);
 
-          final kink = _findByNames(groups, ['kink', 'kinky', 'bdsm', 'fetish']);
-          final prepPep = _findByNames(groups, ['prep', 'pep', 'hiv prevention', 'prep & pep', 'prep/pep']);
-          final stiTesting = _findByNames(groups, ['sti testing', 'std testing', 'testing', 'clinics', 'clinic']);
-          final saferSex = _findByNames(groups, ['safer sex', 'sex ed', 'sex education']);
+          final kink = _findByNames(groups, [
+            'kink',
+            'kinky',
+            'bdsm',
+            'fetish',
+          ]);
+          final prepPep = _findByNames(groups, [
+            'prep',
+            'pep',
+            'hiv prevention',
+            'prep & pep',
+            'prep/pep',
+          ]);
+          final stiTesting = _findByNames(groups, [
+            'sti testing',
+            'std testing',
+            'testing',
+            'clinics',
+            'clinic',
+          ]);
+          final saferSex = _findByNames(groups, [
+            'safer sex',
+            'sex ed',
+            'sex education',
+          ]);
           final consent = _findByNames(groups, ['consent', 'boundaries']);
 
           final items = <_CardItem>[
-            _CardItem(title: 'Wellness (General)', icon: Icons.favorite, group: wellnessGeneral),
+            _CardItem(
+              title: 'Wellness (General)',
+              icon: Icons.favorite,
+              group: wellnessGeneral,
+            ),
             _CardItem(title: 'Beauty', icon: Icons.face, group: beautyGroup),
-            _CardItem(title: 'Physical Wellness', icon: Icons.fitness_center, group: physicalWellness),
+            _CardItem(
+              title: 'Physical Wellness',
+              icon: Icons.fitness_center,
+              group: physicalWellness,
+            ),
             _CardItem(title: 'Kink', icon: Icons.favorite_border, group: kink),
-            _CardItem(title: 'PrEP & PEP Access', icon: Icons.medication, group: prepPep),
-            _CardItem(title: 'STI Testing & Clinics', icon: Icons.medical_services, group: stiTesting),
-            _CardItem(title: 'Safer Sex Tips', icon: Icons.health_and_safety, group: saferSex),
-            _CardItem(title: 'Consent & Boundaries', icon: Icons.rule, group: consent),
+            _CardItem(
+              title: 'PrEP & PEP Access',
+              icon: Icons.medication,
+              group: prepPep,
+            ),
+            _CardItem(
+              title: 'STI Testing & Clinics',
+              icon: Icons.medical_services,
+              group: stiTesting,
+            ),
+            _CardItem(
+              title: 'Safer Sex Tips',
+              icon: Icons.health_and_safety,
+              group: saferSex,
+            ),
+            _CardItem(
+              title: 'Consent & Boundaries',
+              icon: Icons.rule,
+              group: consent,
+            ),
           ];
 
           return GridView.builder(
@@ -110,7 +155,10 @@ class _WellnessScreenState extends State<WellnessScreen> {
                 onTap: item.group == null
                     ? null
                     : () {
-                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                        GoRouter.of(context).push(
+                          '/community/group/${item.group!.id}',
+                          extra: item.group!.name,
+                        );
                       },
               );
             },

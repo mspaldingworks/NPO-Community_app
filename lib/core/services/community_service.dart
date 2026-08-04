@@ -1,10 +1,10 @@
-import 'package:transconnect/core/services/api_client.dart';
+import 'package:npo_community/core/services/api_client.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:transconnect/core/constants/api_endpoints.dart';
-import 'package:transconnect/models/comment.dart';
-import 'package:transconnect/models/group.dart';
-import 'package:transconnect/models/post.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
+import 'package:npo_community/models/comment.dart';
+import 'package:npo_community/models/group.dart';
+import 'package:npo_community/models/post.dart';
 
 class CommunityService extends ApiClient {
   CommunityService();
@@ -16,7 +16,7 @@ class CommunityService extends ApiClient {
       urlPath: '/api/groups/',
       jsonHeaders: authHeaders,
     );
-    
+
     final List<dynamic> data = result as List<dynamic>;
     return data.map((json) => Group.fromJson(json)).toList();
   }
@@ -36,15 +36,20 @@ class CommunityService extends ApiClient {
       ..fields['anonymous'] = anonymous.toString();
 
     if (imageFilePath != null && imageFilePath.isNotEmpty) {
-      request.files.add(await http.MultipartFile.fromPath('image', imageFilePath));
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFilePath),
+      );
     }
 
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode != 201) {
-      throw Exception('Failed to add comment: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to add comment: ${response.statusCode} ${response.body}',
+      );
     }
-    final Map<String, dynamic> json = jsonDecode(response.body) as Map<String, dynamic>;
+    final Map<String, dynamic> json =
+        jsonDecode(response.body) as Map<String, dynamic>;
     return Comment.fromJson(json);
   }
 
@@ -84,18 +89,18 @@ class CommunityService extends ApiClient {
     final streamed = await request.send();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode != 201) {
-      throw Exception('Failed to create post: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to create post: ${response.statusCode} ${response.body}',
+      );
     }
-    final Map<String, dynamic> json = jsonDecode(response.body) as Map<String, dynamic>;
+    final Map<String, dynamic> json =
+        jsonDecode(response.body) as Map<String, dynamic>;
     return Post.fromJson(json);
   }
 
   /// Fetches all posts.
   Future<List<Post>> fetchAllPosts() async {
-    final result = await read(
-      urlPath: '/api/posts/',
-      jsonHeaders: authHeaders,
-    );
+    final result = await read(urlPath: '/api/posts/', jsonHeaders: authHeaders);
 
     final List<dynamic> allPostsJson = result as List<dynamic>;
     return allPostsJson.map((json) => Post.fromJson(json)).toList();
@@ -104,13 +109,12 @@ class CommunityService extends ApiClient {
   /// Fetches all posts for a given group by its ID.
   /// NOTE: This still filters on the client-side as per the original implementation.
   Future<List<Post>> fetchPostsForGroup(int groupId) async {
-    final result = await read(
-      urlPath: '/api/posts/',
-      jsonHeaders: authHeaders,
-    );
+    final result = await read(urlPath: '/api/posts/', jsonHeaders: authHeaders);
 
     final List<dynamic> allPostsJson = result as List<dynamic>;
-    final List<Post> allPosts = allPostsJson.map((json) => Post.fromJson(json)).toList();
+    final List<Post> allPosts = allPostsJson
+        .map((json) => Post.fromJson(json))
+        .toList();
 
     return allPosts.where((post) => post.groupId == groupId).toList();
   }
@@ -134,7 +138,7 @@ class CommunityService extends ApiClient {
         'body': body,
         'feeling': feeling,
         'emoji': emojis.isNotEmpty ? emojis.first : null,
-        'emojis': emojis, 
+        'emojis': emojis,
         'public': public,
         'anonymous': anonymous,
       },
@@ -149,7 +153,7 @@ class CommunityService extends ApiClient {
       urlPath: '/api/posts/$postId/',
       jsonHeaders: authHeaders,
     );
-    
+
     return Post.fromJson(result as Map<String, dynamic>);
   }
 
@@ -250,7 +254,10 @@ class CommunityService extends ApiClient {
   }
 
   /// Updates a comment.
-  Future<Comment> updateComment(int commentId, Map<String, dynamic> updates) async {
+  Future<Comment> updateComment(
+    int commentId,
+    Map<String, dynamic> updates,
+  ) async {
     final result = await update(
       urlPath: '/api/comments/$commentId/',
       jsonHeaders: authHeaders,
@@ -279,9 +286,6 @@ class CommunityService extends ApiClient {
 
   /// Deletes a post.
   Future<void> deletePost(int postId) async {
-    await delete(
-      urlPath: '/api/posts/$postId/',
-      jsonHeaders: authHeaders,
-    );
+    await delete(urlPath: '/api/posts/$postId/', jsonHeaders: authHeaders);
   }
 }

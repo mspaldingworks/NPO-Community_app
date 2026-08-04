@@ -7,17 +7,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:transconnect/core/constants/api_endpoints.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/core/services/exchange_service.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/models/comment.dart';
-import 'package:transconnect/models/group.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/exchange_service.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/models/comment.dart';
+import 'package:npo_community/models/group.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 enum ActivityFeedItemType { post, comment }
 

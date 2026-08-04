@@ -1,11 +1,11 @@
 {
-    "name": "transconnect",
-    "short_name": "transconnect",
+    "name": "NPO Community",
+    "short_name": "NPO Community",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "A stakeholder engagement and stewardship platform for nonprofits.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

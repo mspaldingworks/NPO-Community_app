@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final int groupId;
@@ -45,7 +45,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You can select only one emoji to describe your feeling.')),
+        const SnackBar(
+          content: Text(
+            'You can select only one emoji to describe your feeling.',
+          ),
+        ),
       );
     }
   }
@@ -55,7 +59,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       setState(() {
         _selectedEmojis.removeLast();
         if (_selectedEmojis.isEmpty) {
-          _emojiError = 'Please select an emoji to describe how you are feeling.';
+          _emojiError =
+              'Please select an emoji to describe how you are feeling.';
         }
       });
     }
@@ -109,7 +114,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     });
 
     try {
-      final derivedEmoji = _selectedEmojis.isNotEmpty ? _selectedEmojis.first : '';
+      final derivedEmoji = _selectedEmojis.isNotEmpty
+          ? _selectedEmojis.first
+          : '';
       await _communityService.createPostMultipart(
         groupId: widget.groupId,
         title: _titleController.text.trim(),
@@ -129,9 +136,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create post: $e')));
       }
     } finally {
       if (mounted) {
@@ -179,7 +186,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       name: "What's on your mind?",
                       child: TextFormField(
                         controller: _bodyController,
-                        decoration: const InputDecoration(labelText: 'What\'s on your mind?'),
+                        decoration: const InputDecoration(
+                          labelText: 'What\'s on your mind?',
+                        ),
                         maxLines: 8,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -200,7 +209,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           });
                         },
                         title: const Text('Post anonymously'),
-                        subtitle: const Text('When enabled, your username will not be shown to others.'),
+                        subtitle: const Text(
+                          'When enabled, your username will not be shown to others.',
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16.0),
@@ -212,7 +223,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           decoration: InputDecoration(
                             labelText: 'How are you feeling?',
                             border: const OutlineInputBorder(),
-                            helperText: 'Tap to select exactly one emoji that matches your feeling.',
+                            helperText:
+                                'Tap to select exactly one emoji that matches your feeling.',
                             errorText: _emojiError,
                           ),
                           child: Wrap(
@@ -220,28 +232,33 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             children: _selectedEmojis.isEmpty
                                 ? [
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 4.0),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 4.0,
+                                      ),
                                       child: Text('Tap to choose an emoji'),
                                     ),
                                   ]
                                 : _selectedEmojis
-                                    .map(
-                                      (emoji) => Chip(
-                                        label: Text(
-                                          emoji,
-                                          style: const TextStyle(fontSize: 24),
+                                      .map(
+                                        (emoji) => Chip(
+                                          label: Text(
+                                            emoji,
+                                            style: const TextStyle(
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                          onDeleted: () {
+                                            setState(() {
+                                              _selectedEmojis.remove(emoji);
+                                              if (_selectedEmojis.isEmpty) {
+                                                _emojiError =
+                                                    'Please select an emoji to describe how you are feeling.';
+                                              }
+                                            });
+                                          },
                                         ),
-                                        onDeleted: () {
-                                          setState(() {
-                                            _selectedEmojis.remove(emoji);
-                                            if (_selectedEmojis.isEmpty) {
-                                              _emojiError = 'Please select an emoji to describe how you are feeling.';
-                                            }
-                                          });
-                                        },
-                                      ),
-                                    )
-                                    .toList(),
+                                      )
+                                      .toList(),
                           ),
                         ),
                       ),
@@ -252,9 +269,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         TourAnchor(
                           name: 'Add photos (${_images.length}/$_maxImages)',
                           child: OutlinedButton.icon(
-                            onPressed: _images.length >= _maxImages || _isLoading ? null : _addImage,
+                            onPressed:
+                                _images.length >= _maxImages || _isLoading
+                                ? null
+                                : _addImage,
                             icon: const Icon(Icons.photo_library_outlined),
-                            label: Text('Add photos (${_images.length}/$_maxImages)'),
+                            label: Text(
+                              'Add photos (${_images.length}/$_maxImages)',
+                            ),
                           ),
                         ),
                       ],
@@ -284,13 +306,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                                   iconSize: 18,
                                   padding: EdgeInsets.zero,
                                   constraints: const BoxConstraints(),
-                                  onPressed: _isLoading ? null : () => _removeImage(i),
+                                  onPressed: _isLoading
+                                      ? null
+                                      : () => _removeImage(i),
                                   icon: const CircleAvatar(
                                     radius: 10,
                                     child: Icon(Icons.close, size: 14),
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           );
                         }),
@@ -302,7 +326,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submitForm,
                         child: _isLoading
-                            ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                            ? const CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              )
                             : const Text('Create Post'),
                       ),
                     ),

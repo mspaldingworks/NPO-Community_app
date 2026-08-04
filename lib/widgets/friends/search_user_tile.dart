@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/friends_controller.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:npo_community/core/services/friends_controller.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
 
 class SearchUserTile extends StatelessWidget {
   final Friend user;
@@ -19,10 +19,10 @@ class SearchUserTile extends StatelessWidget {
     final String? pronounsDisplay = isPrivate
         ? null
         : (FlairUtils.extractPronouns(user.flair) ?? '')
-            .split(RegExp(r'[\n,]'))
-            .map((p) => p.trim())
-            .where((p) => p.isNotEmpty)
-            .join(' • ');
+              .split(RegExp(r'[\n,]'))
+              .map((p) => p.trim())
+              .where((p) => p.isNotEmpty)
+              .join(' • ');
 
     return ListTile(
       leading: GestureDetector(
@@ -34,7 +34,10 @@ class SearchUserTile extends StatelessWidget {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(user.username, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            user.username,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 2),
@@ -45,7 +48,9 @@ class SearchUserTile extends StatelessWidget {
             ),
         ],
       ),
-      subtitle: isPrivate ? const Text('Private profile') : Text(user.city ?? 'No location'),
+      subtitle: isPrivate
+          ? const Text('Private profile')
+          : Text(user.city ?? 'No location'),
       onTap: () {
         context.push('/users/${user.id}');
       },
@@ -53,19 +58,29 @@ class SearchUserTile extends StatelessWidget {
         onPressed: isSent
             ? null
             : () async {
-                final success = await controller.sendFriendRequest(user.username);
+                final success = await controller.sendFriendRequest(
+                  user.username,
+                );
                 if (success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Friend request sent!'), backgroundColor: Colors.green),
+                    const SnackBar(
+                      content: Text('Friend request sent!'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 } else if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to send request.'), backgroundColor: Colors.red),
+                    const SnackBar(
+                      content: Text('Failed to send request.'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               },
         style: ElevatedButton.styleFrom(
-          backgroundColor: isSent ? Colors.grey : Theme.of(context).primaryColor,
+          backgroundColor: isSent
+              ? Colors.grey
+              : Theme.of(context).primaryColor,
         ),
         child: Text(isSent ? 'Sent' : 'Add'),
       ),

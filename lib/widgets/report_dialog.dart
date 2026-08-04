@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/report_service.dart';
+import 'package:npo_community/core/services/report_service.dart';
 
 Future<void> showReportDialog({
   required BuildContext context,
   required ReportRequest baseRequest,
 }) async {
   final outerContext = context;
-  final detailsController = TextEditingController(text: baseRequest.details ?? '');
+  final detailsController = TextEditingController(
+    text: baseRequest.details ?? '',
+  );
 
   final reasons = <String>[
     'Harassment or bullying',
@@ -18,7 +20,9 @@ Future<void> showReportDialog({
     'Other',
   ];
 
-  String selectedReason = baseRequest.reason.isNotEmpty ? baseRequest.reason : reasons.first;
+  String selectedReason = baseRequest.reason.isNotEmpty
+      ? baseRequest.reason
+      : reasons.first;
   bool submitting = false;
 
   await showDialog<void>(
@@ -36,10 +40,10 @@ Future<void> showReportDialog({
                   initialValue: selectedReason,
                   decoration: const InputDecoration(labelText: 'Reason'),
                   items: reasons
-                      .map((r) => DropdownMenuItem<String>(
-                            value: r,
-                            child: Text(r),
-                          ))
+                      .map(
+                        (r) =>
+                            DropdownMenuItem<String>(value: r, child: Text(r)),
+                      )
                       .toList(),
                   onChanged: submitting
                       ? null
@@ -63,7 +67,9 @@ Future<void> showReportDialog({
             ),
             actions: [
               TextButton(
-                onPressed: submitting ? null : () => Navigator.of(dialogContext).pop(),
+                onPressed: submitting
+                    ? null
+                    : () => Navigator.of(dialogContext).pop(),
                 child: const Text('Cancel'),
               ),
               TextButton(
@@ -94,13 +100,17 @@ Future<void> showReportDialog({
 
                           if (outerContext.mounted) {
                             ScaffoldMessenger.of(outerContext).showSnackBar(
-                              const SnackBar(content: Text('Report sent to moderators.')),
+                              const SnackBar(
+                                content: Text('Report sent to moderators.'),
+                              ),
                             );
                           }
                         } catch (e) {
                           if (outerContext.mounted) {
                             ScaffoldMessenger.of(outerContext).showSnackBar(
-                              SnackBar(content: Text('Failed to send report: $e')),
+                              SnackBar(
+                                content: Text('Failed to send report: $e'),
+                              ),
                             );
                           }
                         } finally {

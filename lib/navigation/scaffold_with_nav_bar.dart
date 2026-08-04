@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/home_alert_service.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/core/services/home_alert_service.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
-  const ScaffoldWithNavBar({
-    required this.navigationShell,
-    super.key,
-  });
+  const ScaffoldWithNavBar({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
@@ -21,8 +18,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasHomeAlerts =
-        Provider.of<HomeAlertService>(context, listen: true).hasAlerts;
+    final hasHomeAlerts = Provider.of<HomeAlertService>(
+      context,
+      listen: true,
+    ).hasAlerts;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
@@ -31,10 +30,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
         destinations: [
           const NavigationDestination(
             label: 'Community',
-            icon: TourAnchor(
-              name: 'Community',
-              child: Icon(Icons.group),
-            ),
+            icon: TourAnchor(name: 'Community', child: Icon(Icons.group)),
           ),
           const NavigationDestination(
             label: 'Exchange',
@@ -47,25 +43,16 @@ class ScaffoldWithNavBar extends StatelessWidget {
             label: 'Home',
             icon: TourAnchor(
               name: 'Home',
-              child: _NavGlow(
-                glow: hasHomeAlerts,
-                child: const _NavLogoMark(),
-              ),
+              child: _NavGlow(glow: hasHomeAlerts, child: const _NavLogoMark()),
             ),
             selectedIcon: TourAnchor(
               name: 'Home',
-              child: _NavGlow(
-                glow: hasHomeAlerts,
-                child: const _NavLogoMark(),
-              ),
+              child: _NavGlow(glow: hasHomeAlerts, child: const _NavLogoMark()),
             ),
           ),
           const NavigationDestination(
             label: 'Resources',
-            icon: TourAnchor(
-              name: 'Resources',
-              child: Icon(Icons.book),
-            ),
+            icon: TourAnchor(name: 'Resources', child: Icon(Icons.book)),
           ),
           const NavigationDestination(
             label: 'The Meadow',

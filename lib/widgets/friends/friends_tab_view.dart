@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/friends_controller.dart';
+import 'package:npo_community/core/services/friends_controller.dart';
 import 'pending_request_tile.dart';
 import 'pending_sent_tile.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/core/utils/time_ago.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/core/services/chat_favorites_service.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/core/utils/time_ago.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/core/services/chat_favorites_service.dart';
 
 class FriendsTabView extends StatefulWidget {
   const FriendsTabView({Key? key}) : super(key: key);
@@ -146,9 +146,9 @@ class _FriendsTabViewState extends State<FriendsTabView> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -158,17 +158,20 @@ class _FriendsTabViewState extends State<FriendsTabView> {
     final String? pronounsDisplay = isPrivate
         ? null
         : (FlairUtils.extractPronouns(friend.flair) ?? '')
-            .split(RegExp(r'[\n,]'))
-            .map((p) => p.trim())
-            .where((p) => p.isNotEmpty)
-            .join(' • ');
+              .split(RegExp(r'[\n,]'))
+              .map((p) => p.trim())
+              .where((p) => p.isNotEmpty)
+              .join(' • ');
 
     return ListTile(
       leading: GestureDetector(
         onTap: () {
           context.push('/users/${friend.id}');
         },
-        child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+        child: DisplayProfilePic(
+          radius: 20,
+          imageUrl: friend.fullProfilePicUrl,
+        ),
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,14 +238,19 @@ class _FriendsTabViewState extends State<FriendsTabView> {
             ),
             ListTile(
               leading: const Icon(Icons.person_remove, color: Colors.red),
-              title: const Text('Remove Friend', style: TextStyle(color: Colors.red)),
+              title: const Text(
+                'Remove Friend',
+                style: TextStyle(color: Colors.red),
+              ),
               onTap: () async {
                 Navigator.pop(context);
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Remove Friend'),
-                    content: Text('Are you sure you want to remove ${friend.username} from your friends?'),
+                    content: Text(
+                      'Are you sure you want to remove ${friend.username} from your friends?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
@@ -250,17 +258,26 @@ class _FriendsTabViewState extends State<FriendsTabView> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Remove', style: TextStyle(color: Colors.red)),
+                        child: const Text(
+                          'Remove',
+                          style: TextStyle(color: Colors.red),
+                        ),
                       ),
                     ],
                   ),
                 );
 
                 if (confirmed == true) {
-                  final success = await _friendsController.removeFriend(friend.username);
+                  final success = await _friendsController.removeFriend(
+                    friend.username,
+                  );
                   if (success && mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${friend.username} removed from friends')),
+                      SnackBar(
+                        content: Text(
+                          '${friend.username} removed from friends',
+                        ),
+                      ),
                     );
                   } else if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

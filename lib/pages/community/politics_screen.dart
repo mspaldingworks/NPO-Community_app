@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/group.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/group.dart';
 
 class PoliticsScreen extends StatefulWidget {
   const PoliticsScreen({super.key});
@@ -52,11 +52,24 @@ class _PoliticsScreenState extends State<PoliticsScreen> {
           }
           final groups = snapshot.data ?? [];
 
-          final organizing = _findByNames(groups, ['organizing', 'organising', 'organizing/advocacy', 'organising/advocacy']);
-          final advocacy = _findByNames(groups, ['advocacy', 'advocacy group', 'advocacy groups']);
+          final organizing = _findByNames(groups, [
+            'organizing',
+            'organising',
+            'organizing/advocacy',
+            'organising/advocacy',
+          ]);
+          final advocacy = _findByNames(groups, [
+            'advocacy',
+            'advocacy group',
+            'advocacy groups',
+          ]);
 
           final items = <_CardItem>[
-            _CardItem(title: 'Organizing', icon: Icons.campaign, group: organizing),
+            _CardItem(
+              title: 'Organizing',
+              icon: Icons.campaign,
+              group: organizing,
+            ),
             _CardItem(title: 'Advocacy', icon: Icons.gavel, group: advocacy),
           ];
 
@@ -77,7 +90,10 @@ class _PoliticsScreenState extends State<PoliticsScreen> {
                 onTap: item.group == null
                     ? null
                     : () {
-                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                        GoRouter.of(context).push(
+                          '/community/group/${item.group!.id}',
+                          extra: item.group!.name,
+                        );
                       },
               );
             },

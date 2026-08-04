@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/group.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/group.dart';
 
 class PhotoAlbumScreen extends StatefulWidget {
   const PhotoAlbumScreen({super.key});
@@ -53,7 +53,11 @@ class _PhotoAlbumScreenState extends State<PhotoAlbumScreen> {
           final groups = snapshot.data ?? [];
 
           final hugbox = _findByNames(groups, ['hugbox', 'hug box']);
-          final honest = _findByNames(groups, ['honest improvement', 'honest-improvement', 'improvement']);
+          final honest = _findByNames(groups, [
+            'honest improvement',
+            'honest-improvement',
+            'improvement',
+          ]);
 
           final items = <_CardItem>[
             _CardItem(
@@ -88,7 +92,10 @@ class _PhotoAlbumScreenState extends State<PhotoAlbumScreen> {
                 onTap: item.group == null
                     ? null
                     : () {
-                        GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                        GoRouter.of(context).push(
+                          '/community/group/${item.group!.id}',
+                          extra: item.group!.name,
+                        );
                       },
               );
             },
@@ -104,7 +111,12 @@ class _CardItem {
   final String subtitle;
   final IconData icon;
   final Group? group;
-  _CardItem({required this.title, required this.subtitle, required this.icon, this.group});
+  _CardItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.group,
+  });
 }
 
 class _IconCard extends StatelessWidget {
@@ -113,7 +125,12 @@ class _IconCard extends StatelessWidget {
   final IconData iconData;
   final VoidCallback? onTap;
 
-  const _IconCard({required this.title, required this.subtitle, required this.iconData, this.onTap});
+  const _IconCard({
+    required this.title,
+    required this.subtitle,
+    required this.iconData,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

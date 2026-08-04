@@ -1,4 +1,4 @@
-import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
 
 class Group {
   final int id;
@@ -11,7 +11,13 @@ class Group {
     return Group(
       id: json['id'] as int,
       name: json['name'] as String,
-      image: (json['image_url'] ?? json['image'] ?? json['group_image'] ?? json['avatarUrl'] ?? json['avatar_url']) as String?,
+      image:
+          (json['image_url'] ??
+                  json['image'] ??
+                  json['group_image'] ??
+                  json['avatarUrl'] ??
+                  json['avatar_url'])
+              as String?,
     );
   }
 

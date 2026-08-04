@@ -40,13 +40,16 @@ class LinkPreviewService {
   Uri? extractFirstUrl(String? text) {
     if (text == null) return null;
 
-    final match = RegExp(r'(https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)', caseSensitive: false)
-        .firstMatch(text);
+    final match = RegExp(
+      r'(https?:\/\/[^\s<>()]+|www\.[^\s<>()]+)',
+      caseSensitive: false,
+    ).firstMatch(text);
     final raw = match?.group(0);
     if (raw == null || raw.trim().isEmpty) return null;
 
     var candidate = raw.trim();
-    while (candidate.isNotEmpty && RegExp(r'[\]\[\)\(\}\{\.,!?:;]$').hasMatch(candidate)) {
+    while (candidate.isNotEmpty &&
+        RegExp(r'[\]\[\)\(\}\{\.,!?:;]$').hasMatch(candidate)) {
       candidate = candidate.substring(0, candidate.length - 1);
     }
 
@@ -72,10 +75,11 @@ class LinkPreviewService {
 
     final hasDefaultPort =
         (scheme == 'http' && normalized.hasPort && normalized.port == 80) ||
-            (scheme == 'https' && normalized.hasPort && normalized.port == 443);
+        (scheme == 'https' && normalized.hasPort && normalized.port == 443);
 
-    final portPart =
-        normalized.hasPort && !hasDefaultPort ? ':${normalized.port}' : '';
+    final portPart = normalized.hasPort && !hasDefaultPort
+        ? ':${normalized.port}'
+        : '';
 
     var path = normalized.path;
     if (path.endsWith('/') && path.length > 1) {
@@ -98,15 +102,17 @@ class LinkPreviewService {
       return inflight;
     }
 
-    final future = _fetchAndParse(uri).then((value) {
-      _cache[key] = value;
-      _inFlight.remove(key);
-      return value;
-    }).catchError((_) {
-      _cache[key] = null;
-      _inFlight.remove(key);
-      return null;
-    });
+    final future = _fetchAndParse(uri)
+        .then((value) {
+          _cache[key] = value;
+          _inFlight.remove(key);
+          return value;
+        })
+        .catchError((_) {
+          _cache[key] = null;
+          _inFlight.remove(key);
+          return null;
+        });
 
     _inFlight[key] = future;
     return future;
@@ -131,16 +137,14 @@ class LinkPreviewService {
     final html = utf8.decode(response.bodyBytes, allowMalformed: true);
     final baseUrl = response.request?.url ?? uri;
 
-    final siteName = _extractMetaContent(
-          html,
-          property: 'og:site_name',
-        ) ??
-        baseUrl.host;
+    final siteName =
+        _extractMetaContent(html, property: 'og:site_name') ?? baseUrl.host;
 
-    final title = _extractMetaContent(html, property: 'og:title') ??
-        _extractTitle(html);
+    final title =
+        _extractMetaContent(html, property: 'og:title') ?? _extractTitle(html);
 
-    final description = _extractMetaContent(html, property: 'og:description') ??
+    final description =
+        _extractMetaContent(html, property: 'og:description') ??
         _extractMetaContent(html, name: 'description') ??
         _extractMetaContent(html, name: 'Description');
 
@@ -180,11 +184,7 @@ class LinkPreviewService {
     }
   }
 
-  String? _extractMetaContent(
-    String html, {
-    String? property,
-    String? name,
-  }) {
+  String? _extractMetaContent(String html, {String? property, String? name}) {
     final key = property ?? name;
     if (key == null) return null;
 

@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/message_model.dart';
-import 'package:transconnect/models/chat_message.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/chat_service.dart';
+import 'package:npo_community/models/message_model.dart';
+import 'package:npo_community/models/chat_message.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 class ChatScreen extends StatefulWidget {
   final int channelId;
@@ -79,9 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('# ${widget.channelId}'),
-      ),
+      appBar: AppBar(title: Text('# ${widget.channelId}')),
       body: Column(
         children: [
           Expanded(
@@ -97,12 +95,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     username,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isMe ? Theme.of(context).colorScheme.primary : null,
+                      color: isMe
+                          ? Theme.of(context).colorScheme.primary
+                          : null,
                     ),
                   ),
                   subtitle: SmartLinkBody(text: message.content),
                 );
-              }, 
+              },
             ),
           ),
           Padding(

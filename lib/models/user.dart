@@ -1,4 +1,4 @@
-import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
 
 class User {
   final int id;
@@ -50,24 +50,28 @@ class User {
     DateTime? parseDate(dynamic v) {
       if (v == null) return null;
       if (v is String && v.isNotEmpty) {
-        try { return DateTime.parse(v).toLocal(); } catch (_) { return null; }
+        try {
+          return DateTime.parse(v).toLocal();
+        } catch (_) {
+          return null;
+        }
       }
       return null;
     }
 
     return User(
-id: parsedId,
+      id: parsedId,
       username: json['username'] as String,
       email: json['email'] as String? ?? '',
       city: json['city'] as String?,
       statusMessage: json['status_message'] as String?,
       statusUpdatedAt: parseDate(
         json['status_updated_at'] ??
-        json['statusUpdatedAt'] ??
-        json['status_updated'] ??
-        json['status_time'] ??
-        json['status_at'] ??
-        json['updated_at']
+            json['statusUpdatedAt'] ??
+            json['status_updated'] ??
+            json['status_time'] ??
+            json['status_at'] ??
+            json['updated_at'],
       ),
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
@@ -81,7 +85,7 @@ id: parsedId,
   String? get fullProfilePicUrl {
     if (profilePic == null) return null;
     // Check if the API accidently sent a full URL, otherwise append host
-    if (profilePic!.startsWith('http')) return profilePic; 
+    if (profilePic!.startsWith('http')) return profilePic;
     return ApiEndpoints.host + (profilePic ?? "");
   }
 }
@@ -122,7 +126,11 @@ class Friend {
     DateTime? parseDate(dynamic v) {
       if (v == null) return null;
       if (v is String && v.isNotEmpty) {
-        try { return DateTime.parse(v).toLocal(); } catch (_) { return null; }
+        try {
+          return DateTime.parse(v).toLocal();
+        } catch (_) {
+          return null;
+        }
       }
       return null;
     }
@@ -135,11 +143,11 @@ class Friend {
       statusMessage: json['status_message'] as String?,
       statusUpdatedAt: parseDate(
         json['status_updated_at'] ??
-        json['statusUpdatedAt'] ??
-        json['status_updated'] ??
-        json['status_time'] ??
-        json['status_at'] ??
-        json['updated_at']
+            json['statusUpdatedAt'] ??
+            json['status_updated'] ??
+            json['status_time'] ??
+            json['status_at'] ??
+            json['updated_at'],
       ),
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,

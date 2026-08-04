@@ -1,53 +1,44 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/pages/auth/signin_screen.dart';
-import 'package:transconnect/pages/auth/register_screen.dart';
-import 'package:transconnect/pages/auth/onboarding_screen.dart';
-import 'package:transconnect/pages/auth/video_splash_screen.dart';
-import 'package:transconnect/pages/chat/chat_list_screen.dart';
-import 'package:transconnect/pages/chat/chat_message_screen.dart';
-import 'package:transconnect/pages/chat/create_conversation_screen.dart';
-import 'package:transconnect/pages/chat/select_friends_for_chat_screen.dart';
-import 'package:transconnect/pages/community/community_screen.dart';
-import 'package:transconnect/pages/community/post_list_screen.dart';
-import 'package:transconnect/pages/community/create_post_screen.dart';
-import 'package:transconnect/pages/community/post_detail_screen.dart';
-import 'package:transconnect/pages/community/edit_post_screen.dart';
-import 'package:transconnect/pages/community/regional_chats_screen.dart';
-import 'package:transconnect/pages/community/gender_chats_screen.dart';
-import 'package:transconnect/pages/community/wellness_screen.dart';
-import 'package:transconnect/pages/community/photo_album_screen.dart';
-import 'package:transconnect/pages/community/politics_screen.dart';
-import 'package:transconnect/pages/friends/user_search_screen.dart';
-import 'package:transconnect/pages/dev/chat_test_screen.dart';
-import 'package:transconnect/navigation/scaffold_with_nav_bar.dart';
-import 'package:transconnect/pages/dashboard/dashboard_screen.dart';
-import 'package:transconnect/pages/exchange/exchange_hub_screen.dart';
-import 'package:transconnect/pages/exchange/create_exchange_post_screen.dart';
-import 'package:transconnect/pages/exchange/exchange_post_detail_screen.dart';
-import 'package:transconnect/pages/resources/create_resource_screen.dart';
-import 'package:transconnect/pages/resources/edit_resource_screen.dart';
-import 'package:transconnect/pages/resources/resources_screen.dart';
-import 'package:transconnect/features/migration_planner/presentation/migration_planner_screen.dart';
-import 'package:transconnect/pages/profile/profile_screen.dart';
-import 'package:transconnect/pages/profile/public_user_profile_screen.dart';
-import 'package:transconnect/pages/settings/app_info_screen.dart';
-import 'package:transconnect/pages/settings/settings_screen.dart';
-import 'package:transconnect/models/resource.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/pages/forms/lgl_form_screen.dart';
-import 'package:transconnect/pages/events/calendar_screen.dart';
-import 'package:transconnect/pages/admin/moderation_screen.dart';
-import 'package:transconnect/features/geocaching/models/geopoint.dart';
-import 'package:transconnect/features/geocaching/models/geocache_query.dart';
-import 'package:transconnect/features/geocaching/screens/cache_details_screen.dart';
-import 'package:transconnect/features/geocaching/screens/cache_admin_screen.dart';
-import 'package:transconnect/features/geocaching/screens/geocache_filter_screen.dart';
-import 'package:transconnect/features/geocaching/screens/geocache_list_screen.dart';
-import 'package:transconnect/features/geocaching/screens/place_cache_screen.dart';
-import 'package:transconnect/features/meadow/screens/meadow_screen.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/pages/auth/signin_screen.dart';
+import 'package:npo_community/pages/auth/register_screen.dart';
+import 'package:npo_community/pages/auth/onboarding_screen.dart';
+import 'package:npo_community/pages/auth/video_splash_screen.dart';
+import 'package:npo_community/pages/chat/chat_list_screen.dart';
+import 'package:npo_community/pages/chat/chat_message_screen.dart';
+import 'package:npo_community/pages/chat/create_conversation_screen.dart';
+import 'package:npo_community/pages/chat/select_friends_for_chat_screen.dart';
+import 'package:npo_community/pages/community/community_screen.dart';
+import 'package:npo_community/pages/community/post_list_screen.dart';
+import 'package:npo_community/pages/community/create_post_screen.dart';
+import 'package:npo_community/pages/community/post_detail_screen.dart';
+import 'package:npo_community/pages/community/edit_post_screen.dart';
+import 'package:npo_community/pages/community/regional_chats_screen.dart';
+import 'package:npo_community/pages/community/gender_chats_screen.dart';
+import 'package:npo_community/pages/community/wellness_screen.dart';
+import 'package:npo_community/pages/community/photo_album_screen.dart';
+import 'package:npo_community/pages/community/politics_screen.dart';
+import 'package:npo_community/pages/friends/user_search_screen.dart';
+import 'package:npo_community/pages/dev/chat_test_screen.dart';
+import 'package:npo_community/navigation/scaffold_with_nav_bar.dart';
+import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
+import 'package:npo_community/pages/exchange/exchange_hub_screen.dart';
+import 'package:npo_community/pages/exchange/create_exchange_post_screen.dart';
+import 'package:npo_community/pages/exchange/exchange_post_detail_screen.dart';
+import 'package:npo_community/pages/resources/create_resource_screen.dart';
+import 'package:npo_community/pages/resources/edit_resource_screen.dart';
+import 'package:npo_community/pages/resources/resources_screen.dart';
+import 'package:npo_community/pages/profile/profile_screen.dart';
+import 'package:npo_community/pages/profile/public_user_profile_screen.dart';
+import 'package:npo_community/pages/settings/app_info_screen.dart';
+import 'package:npo_community/pages/settings/settings_screen.dart';
+import 'package:npo_community/models/resource.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/pages/events/calendar_screen.dart';
+import 'package:npo_community/pages/admin/moderation_screen.dart';
+import 'package:npo_community/features/meadow/screens/meadow_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -165,11 +156,12 @@ class AppRouter {
                       final groupName = state.extra as String? ?? 'Group';
 
                       final lowered = groupName.trim().toLowerCase();
-                      final isGeneral = lowered == 'general'
-                          || lowered == 'general chat'
-                          || lowered.startsWith('general ')
-                          || lowered == 'the meadow'
-                          || lowered == 'meadow';
+                      final isGeneral =
+                          lowered == 'general' ||
+                          lowered == 'general chat' ||
+                          lowered.startsWith('general ') ||
+                          lowered == 'the meadow' ||
+                          lowered == 'meadow';
                       if (isGeneral) {
                         return MeadowScreen(groupId: id, groupName: groupName);
                       }
@@ -282,14 +274,6 @@ class AppRouter {
                       return EditResourceScreen(resource: resource);
                     },
                   ),
-                  GoRoute(
-                    path: 'planner',
-                    redirect: (context, state) => '/resources/migration',
-                  ),
-                  GoRoute(
-                    path: 'migration',
-                    builder: (context, state) => const MigrationPlannerScreen(),
-                  ),
                 ],
               ),
             ],
@@ -300,10 +284,7 @@ class AppRouter {
               GoRoute(
                 path: '/meadow',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: MeadowScreen(
-                    groupId: 0,
-                    groupName: 'The Meadow',
-                  ),
+                  child: MeadowScreen(groupId: 0, groupName: 'The Meadow'),
                 ),
               ),
               GoRoute(
@@ -338,52 +319,8 @@ class AppRouter {
         },
       ),
       GoRoute(
-        path: '/forms/lgl',
-        builder: (context, state) => const LglFormScreen(),
-      ),
-
-      GoRoute(
         path: '/admin/moderation',
         builder: (context, state) => const ModerationScreen(),
-      ),
-
-      GoRoute(
-        path: '/geocaching',
-        builder: (context, state) => const GeocacheListScreen(),
-        routes: [
-          GoRoute(
-            path: 'admin',
-            builder: (context, state) => const CacheAdminScreen(),
-          ),
-          GoRoute(
-            path: 'filters',
-            builder: (context, state) {
-              final initial = state.extra as GeocacheQuery;
-              return GeocacheFilterScreen(initial: initial);
-            },
-          ),
-          GoRoute(
-            path: 'place',
-            builder: (context, state) {
-              final location = state.extra as GeoPoint;
-              return PlaceCacheScreen(location: location);
-            },
-          ),
-          GoRoute(
-            path: 'edit/:id',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return PlaceCacheScreen(cacheId: id);
-            },
-          ),
-          GoRoute(
-            path: 'cache/:id',
-            builder: (context, state) {
-              final id = state.pathParameters['id']!;
-              return CacheDetailsScreen(cacheId: id);
-            },
-          ),
-        ],
       ),
 
       // Development-only routes
@@ -400,11 +337,6 @@ class AppRouter {
       final bool onSplashOrOnboarding =
           location == '/splash' || location == '/onboarding';
 
-      const adminUsernames = <String>['Mad.E', 'Mad.E.Made', 'pmaxwell'];
-      final isAdmin = adminUsernames.contains(
-        authService.currentUser?.username,
-      );
-
       if (!loggedIn && !onAuthRoute && !onSplashOrOnboarding) {
         return '/splash';
       }
@@ -412,13 +344,10 @@ class AppRouter {
         return '/home';
       }
 
-      if (location.startsWith('/admin') && !isAdmin) {
+      if (location.startsWith('/admin')) {
         return '/home';
       }
 
-      if (location.startsWith('/geocaching/admin') && !isAdmin) {
-        return '/geocaching';
-      }
       return null;
     },
   );

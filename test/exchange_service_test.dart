@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:transconnect/core/services/exchange_service.dart';
+import 'package:npo_community/core/services/exchange_service.dart';
 
 void main() {
   test('ExchangeMetadata encodes and parses round-trip', () {

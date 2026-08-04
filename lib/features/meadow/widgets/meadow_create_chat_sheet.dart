@@ -34,9 +34,9 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
         children: [
           Text(
             'Create temporary chat',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           TextField(

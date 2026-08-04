@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
 
 class MeadowAlertService extends ChangeNotifier {
   int _unreadChats = 0;

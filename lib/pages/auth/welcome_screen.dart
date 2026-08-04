@@ -19,13 +19,13 @@ class WelcomeScreen extends StatelessWidget {
                 const FlutterLogo(size: 120),
                 const SizedBox(height: 48),
                 Text(
-                  'Welcome to TransConnect',
+                  'Welcome to NPO Community',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'A safe space for the trans and gender-diverse community.',
+                  'A private workspace for nonprofit stakeholders.',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),

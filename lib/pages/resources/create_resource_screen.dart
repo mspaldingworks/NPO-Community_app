@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/resource_service.dart';
+import 'package:npo_community/core/services/resource_service.dart';
 
 class CreateResourceScreen extends StatefulWidget {
   const CreateResourceScreen({super.key});
@@ -61,7 +61,10 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   }
 
   void _syncTagsController() {
-    final combined = <String>{..._parseControllerTags(), ..._selectedSuggestedTags};
+    final combined = <String>{
+      ..._parseControllerTags(),
+      ..._selectedSuggestedTags,
+    };
     _tagsController.text = combined.join(', ');
   }
 
@@ -83,7 +86,10 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   }
 
   Future<void> _openTagsPicker() async {
-    final initial = <String>{..._selectedSuggestedTags, ..._parseControllerTags()};
+    final initial = <String>{
+      ..._selectedSuggestedTags,
+      ..._parseControllerTags(),
+    };
     final picked = await showModalBottomSheet<Set<String>>(
       context: context,
       isScrollControlled: true,
@@ -105,7 +111,13 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                   children: [
                     Row(
                       children: [
-                        const Text('Select Tags', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Text(
+                          'Select Tags',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const Spacer(),
                         TextButton(
                           onPressed: () => setModalState(() => temp.clear()),
@@ -124,12 +136,17 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                           return FilterChip(
                             label: Text(
                               tag,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             selected: selected,
                             selectedColor: color,
                             // Use a slightly lighter (but still saturated) variant for unselected state
-                            backgroundColor: HSLColor.fromColor(color).withLightness(0.50).toColor(),
+                            backgroundColor: HSLColor.fromColor(
+                              color,
+                            ).withLightness(0.50).toColor(),
                             shape: const StadiumBorder(),
                             checkmarkColor: Colors.white,
                             onSelected: (value) => setModalState(() {
@@ -148,10 +165,14 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () => Navigator.of(context).pop(temp),
                         child: const Text('Done'),
@@ -199,10 +220,15 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
       });
 
       try {
-        final tags = <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList();
+        final tags = <String>{
+          ..._parseControllerTags(),
+          ..._selectedSuggestedTags,
+        }.toList();
         // Normalize URL (add https:// if no scheme provided)
         String url = _urlController.text.trim();
-        if (url.isNotEmpty && !url.startsWith('http://') && !url.startsWith('https://')) {
+        if (url.isNotEmpty &&
+            !url.startsWith('http://') &&
+            !url.startsWith('https://')) {
           url = 'https://$url';
         }
 
@@ -220,13 +246,15 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Resource added successfully!')),
           );
-          Navigator.of(context).pop(true); // Pop with a result to indicate success
+          Navigator.of(
+            context,
+          ).pop(true); // Pop with a result to indicate success
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add resource: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to add resource: $e')));
         }
       } finally {
         if (mounted) {
@@ -241,9 +269,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Resource'),
-      ),
+      appBar: AppBar(title: const Text('Create New Resource')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -272,8 +298,9 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                 value: _selectedType,
                 hint: const Text('Select Resource Type'),
                 isExpanded: true,
-                items: ['Blog', 'Website', 'Video', 'Article', 'Other']
-                    .map((String value) {
+                items: ['Blog', 'Website', 'Video', 'Article', 'Other'].map((
+                  String value,
+                ) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -284,7 +311,8 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                     _selectedType = newValue;
                   });
                 },
-                validator: (value) => value == null ? 'Please select a type' : null,
+                validator: (value) =>
+                    value == null ? 'Please select a type' : null,
               ),
               const SizedBox(height: 16.0),
               TextFormField(
@@ -293,8 +321,11 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                 validator: (value) {
                   final v = value?.trim() ?? '';
                   if (v.isEmpty) return 'Please enter a URL';
-                  final probe = Uri.tryParse(v.startsWith('http') ? v : 'https://$v');
-                  if (probe == null || probe.host.isEmpty) return 'Please enter a valid URL';
+                  final probe = Uri.tryParse(
+                    v.startsWith('http') ? v : 'https://$v',
+                  );
+                  if (probe == null || probe.host.isEmpty)
+                    return 'Please enter a valid URL';
                   return null;
                 },
               ),
@@ -306,58 +337,78 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _tagsController,
-                decoration: const InputDecoration(labelText: 'Tags (comma-separated)'),
+                decoration: const InputDecoration(
+                  labelText: 'Tags (comma-separated)',
+                ),
               ),
               const SizedBox(height: 12.0),
               // Multi-select dropdown-style control
-              Builder(builder: (context) {
-                final selectedAll = <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    InkWell(
-                      onTap: _openTagsPicker,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Select Tags',
-                          border: OutlineInputBorder(),
-                          suffixIcon: Icon(Icons.arrow_drop_down),
-                        ),
-                        child: Text(
-                          selectedAll.isEmpty ? 'Choose one or more' : '${selectedAll.length} selected',
-                          style: Theme.of(context).textTheme.bodyMedium,
+              Builder(
+                builder: (context) {
+                  final selectedAll = <String>{
+                    ..._parseControllerTags(),
+                    ..._selectedSuggestedTags,
+                  }.toList();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      InkWell(
+                        onTap: _openTagsPicker,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Select Tags',
+                            border: OutlineInputBorder(),
+                            suffixIcon: Icon(Icons.arrow_drop_down),
+                          ),
+                          child: Text(
+                            selectedAll.isEmpty
+                                ? 'Choose one or more'
+                                : '${selectedAll.length} selected',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 12.0),
               // Selected tags as removable, colored chips
-              Builder(builder: (context) {
-                final selectedAll = <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList();
-                if (selectedAll.isEmpty) return const SizedBox.shrink();
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Selected Tags', style: Theme.of(context).textTheme.labelLarge),
-                    const SizedBox(height: 8.0),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: -8,
-                      children: selectedAll.map((tag) {
-                        final color = _colorForTag(tag);
-                        return InputChip(
-                          label: Text(tag, style: const TextStyle(color: Colors.white)),
-                          backgroundColor: color,
-                          onDeleted: () => _removeTag(tag),
-                          deleteIconColor: Colors.white,
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                );
-              }),
+              Builder(
+                builder: (context) {
+                  final selectedAll = <String>{
+                    ..._parseControllerTags(),
+                    ..._selectedSuggestedTags,
+                  }.toList();
+                  if (selectedAll.isEmpty) return const SizedBox.shrink();
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Selected Tags',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: 8.0),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: -8,
+                        children: selectedAll.map((tag) {
+                          final color = _colorForTag(tag);
+                          return InputChip(
+                            label: Text(
+                              tag,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: color,
+                            onDeleted: () => _removeTag(tag),
+                            deleteIconColor: Colors.white,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 8.0),
               const SizedBox(height: 16.0),
               SwitchListTile(
@@ -375,11 +426,15 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading
-                    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
                     : const Text('Add Resource'),
               ),
             ],

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/models/user.dart';
 
 class SelectFriendsForChatScreen extends StatefulWidget {
   const SelectFriendsForChatScreen({super.key});
@@ -12,9 +10,9 @@ class SelectFriendsForChatScreen extends StatefulWidget {
       _SelectFriendsForChatScreenState();
 }
 
-class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen> {
+class _SelectFriendsForChatScreenState
+    extends State<SelectFriendsForChatScreen> {
   final AuthService _authService = AuthService();
-  final ChatService _chatService = ChatService();
   late Future<User> _userProfileFuture;
   final Set<Friend> _selectedFriends = {};
   bool _isLoading = false;
@@ -112,8 +110,9 @@ class _SelectFriendsForChatScreenState extends State<SelectFriendsForChatScreen>
               itemCount: friends.length,
               itemBuilder: (context, index) {
                 final friend = friends[index];
-                final isSelected =
-                    _selectedFriends.any((selected) => selected.id == friend.id);
+                final isSelected = _selectedFriends.any(
+                  (selected) => selected.id == friend.id,
+                );
 
                 return CheckboxListTile(
                   title: Text(friend.username),

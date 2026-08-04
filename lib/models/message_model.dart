@@ -1,4 +1,4 @@
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/models/user.dart';
 
 class Message {
   final String id;
@@ -24,7 +24,9 @@ class Message {
       userId: json['user_id'] as String,
       content: json['content'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      profile: json['profiles'] == null ? null : User.fromJson(json['profiles']),
+      profile: json['profiles'] == null
+          ? null
+          : User.fromJson(json['profiles']),
     );
   }
 }

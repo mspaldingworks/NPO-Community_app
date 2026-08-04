@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class DevMenu extends StatefulWidget {
   final Widget child;
-  
-  const DevMenu({
-    super.key,
-    required this.child,
-  });
+
+  const DevMenu({super.key, required this.child});
 
   @override
   State<DevMenu> createState() => _DevMenuState();
@@ -16,25 +12,26 @@ class DevMenu extends StatefulWidget {
 class _DevMenuState extends State<DevMenu> {
   int _tapCount = 0;
   DateTime? _lastTap;
-  
+
   void _handleTap() {
     final now = DateTime.now();
-    
-    if (_lastTap != null && now.difference(_lastTap!) < const Duration(seconds: 2)) {
+
+    if (_lastTap != null &&
+        now.difference(_lastTap!) < const Duration(seconds: 2)) {
       _tapCount++;
     } else {
       _tapCount = 1;
     }
-    
+
     _lastTap = now;
-    
+
     // Show dev menu after 5 taps
     if (_tapCount >= 5) {
       _tapCount = 0;
       _showDevMenu();
     }
   }
-  
+
   void _showDevMenu() {
     showDialog(
       context: context,
@@ -55,12 +52,9 @@ class _DevMenuState extends State<DevMenu> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleTap,
-      child: widget.child,
-    );
+    return GestureDetector(onTap: _handleTap, child: widget.child);
   }
 }

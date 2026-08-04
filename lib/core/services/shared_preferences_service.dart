@@ -9,7 +9,8 @@ class SharedPreferencesService {
   // This ensures a single instance (Singleton pattern).
   SharedPreferencesService._privateConstructor();
 
-  static final SharedPreferencesService _instance = SharedPreferencesService._privateConstructor();
+  static final SharedPreferencesService _instance =
+      SharedPreferencesService._privateConstructor();
 
   factory SharedPreferencesService() {
     return _instance;

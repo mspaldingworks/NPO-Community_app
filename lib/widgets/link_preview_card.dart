@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/link_preview_service.dart';
+import 'package:npo_community/core/services/link_preview_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LinkPreviewCard extends StatefulWidget {
   final String? urlOrText;
   final Uri? url;
 
-  const LinkPreviewCard({
-    super.key,
-    this.urlOrText,
-    this.url,
-  });
+  const LinkPreviewCard({super.key, this.urlOrText, this.url});
 
   @override
   State<LinkPreviewCard> createState() => _LinkPreviewCardState();
@@ -29,13 +25,15 @@ class _LinkPreviewCardState extends State<LinkPreviewCard> {
   @override
   void didUpdateWidget(covariant LinkPreviewCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.urlOrText != widget.urlOrText || oldWidget.url != widget.url) {
+    if (oldWidget.urlOrText != widget.urlOrText ||
+        oldWidget.url != widget.url) {
       _resolve();
     }
   }
 
   void _resolve() {
-    final uri = widget.url ?? LinkPreviewService().extractFirstUrl(widget.urlOrText);
+    final uri =
+        widget.url ?? LinkPreviewService().extractFirstUrl(widget.urlOrText);
     _resolved = uri;
     _future = uri == null ? null : LinkPreviewService().fetchMetadata(uri);
   }
@@ -144,9 +142,7 @@ class _LinkPreviewCardState extends State<LinkPreviewCard> {
                             siteName,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
+                            style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: Colors.grey.shade700),
                           ),
                           if (title.isNotEmpty) ...[
@@ -155,9 +151,7 @@ class _LinkPreviewCardState extends State<LinkPreviewCard> {
                               title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w600),
                             ),
                           ],

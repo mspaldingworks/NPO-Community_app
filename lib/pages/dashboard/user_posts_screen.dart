@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/post.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/post.dart';
 
 class UserPostsScreen extends StatefulWidget {
   const UserPostsScreen({super.key});
@@ -32,9 +32,7 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Posts'),
-      ),
+      appBar: AppBar(title: const Text('My Posts')),
       body: FutureBuilder<List<Post>>(
         future: _postsFuture,
         builder: (context, snapshot) {
@@ -76,7 +74,11 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
                 elevation: 2,
                 child: ListTile(
                   leading: const Icon(Icons.chat_bubble_outline),
-                  title: Text(post.title?.isNotEmpty == true ? post.title! : 'Untitled Post'),
+                  title: Text(
+                    post.title?.isNotEmpty == true
+                        ? post.title!
+                        : 'Untitled Post',
+                  ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -87,7 +89,9 @@ class _UserPostsScreenState extends State<UserPostsScreen> {
                         children: [
                           const Icon(Icons.message_outlined, size: 16),
                           const SizedBox(width: 4),
-                          Text('$commentCount comment${commentCount == 1 ? '' : 's'}'),
+                          Text(
+                            '$commentCount comment${commentCount == 1 ? '' : 's'}',
+                          ),
                         ],
                       ),
                     ],

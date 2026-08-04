@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:transconnect/core/constants/api_endpoints.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 
 class DisplayProfilePic extends StatelessWidget {
   final String? imageUrl;
@@ -23,17 +23,17 @@ class DisplayProfilePic extends StatelessWidget {
       if (url == null || url.isEmpty) return null;
       final u = url.trim();
       if (u.startsWith('http://') || u.startsWith('https://')) {
-        // Fix broken URLs missing a slash after host (e.g. https://api.luxashome.commedia/...)
+        // Repair malformed absolute media URLs missing the slash before media/.
         final broken = RegExp(r'^(https?:\/\/[^\/]+)media\/');
         final match = broken.firstMatch(u);
         if (match != null) {
-          return u.replaceRange(match.start, match.end, '${match.group(1)!}/media/');
+          return u.replaceRange(
+            match.start,
+            match.end,
+            '${match.group(1)!}/media/',
+          );
         }
         return u;
-      }
-      // Handle host-only URLs without scheme
-      if (u.startsWith('api.luxashome.com') || u.startsWith('www.api.luxashome.com')) {
-        return 'https://$u';
       }
       if (u.startsWith('/')) return ApiEndpoints.host + u;
       if (u.startsWith('media/')) return '${ApiEndpoints.host}/$u';
@@ -44,7 +44,9 @@ class DisplayProfilePic extends StatelessWidget {
     final token = SharedPreferencesService().getData('user_token');
     final headers = token != null ? {'Authorization': 'Token $token'} : null;
     assert(() {
-      debugPrint('[DisplayProfilePic] raw="$imageUrl" -> resolved="$resolved" tokenPresent=${token != null}');
+      debugPrint(
+        '[DisplayProfilePic] raw="$imageUrl" -> resolved="$resolved" tokenPresent=${token != null}',
+      );
       return true;
     }());
 
@@ -72,7 +74,8 @@ class DisplayProfilePic extends StatelessWidget {
                     child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
-                errorWidget: (context, url, error) => Icon(placeholderIcon, size: radius),
+                errorWidget: (context, url, error) =>
+                    Icon(placeholderIcon, size: radius),
               ),
             ),
     );

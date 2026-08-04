@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/pronoun_butterfly.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/widgets/pronoun_butterfly.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -38,9 +38,15 @@ class _ProfileImagePicker extends StatelessWidget {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.white.withOpacity(0.18),
-                  backgroundImage: profileImage != null ? FileImage(profileImage!) : null,
+                  backgroundImage: profileImage != null
+                      ? FileImage(profileImage!)
+                      : null,
                   child: profileImage == null
-                      ? const Icon(Icons.person, size: 50, color: Colors.white70)
+                      ? const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.white70,
+                        )
                       : null,
                 ),
                 Positioned(
@@ -53,7 +59,11 @@ class _ProfileImagePicker extends StatelessWidget {
                       border: Border.all(color: Colors.white70, width: 1.2),
                     ),
                     padding: const EdgeInsets.all(8),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -80,7 +90,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _statusMessageController = TextEditingController();
   final _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
-  final TextEditingController _customPronounController = TextEditingController();
+  final TextEditingController _customPronounController =
+      TextEditingController();
   static const String _defaultPronoun = 'No Pronouns';
   static const Set<String> _blockedPronouns = {'woman'};
   final Set<String> _selectedPronouns = <String>{_defaultPronoun};
@@ -132,15 +143,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return pronoun.trim().toLowerCase() == _defaultPronoun.toLowerCase();
   }
 
-  bool _startsOrContainsToken(String value, String token) {
-    final v = value.toLowerCase();
-    final t = token.toLowerCase();
-    return v.startsWith(t) || v.contains('/$t') || v.contains('$t/');
-  }
-
   Color _contrastTextColor(List<Color> colors) {
     if (colors.isEmpty) return Colors.white;
-    final avgLuminance = colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) / colors.length;
+    final avgLuminance =
+        colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) /
+        colors.length;
     return avgLuminance > 0.55 ? Colors.black : Colors.white;
   }
 
@@ -200,7 +207,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (t == 'xe' || t == 'xem' || t == 'xyr') return xeGreen;
 
       // Ze/Zir family (includes common variants used in the list)
-      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') return zePurple;
+      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie')
+        return zePurple;
 
       if (t == 'fae' || t == 'faer') return faeLightGreen;
       if (t == 'ae' || t == 'aer') return aeSilver;
@@ -214,7 +222,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return null;
     }
 
-    final parts = pronoun.split('/').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final parts = pronoun
+        .split('/')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     final colors = <Color>[];
     for (final part in parts) {
       final c = colorForPart(part);
@@ -255,15 +267,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 colors: colors,
               ),
               borderRadius: borderRadius,
-              border: Border.all(color: borderSide.color, width: borderSide.width),
+              border: Border.all(
+                color: borderSide.color,
+                width: borderSide.width,
+              ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Text(
               pronoun,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
             ),
           ),
         ),
@@ -278,10 +290,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: FilterChip(
         label: Text(
           pronoun,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
         ),
         selected: isSelected,
         onSelected: (_) => _togglePronounSelection(pronoun),
@@ -289,9 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         selectedColor: colors.first,
         showCheckmark: false,
         side: borderSide,
-        shape: RoundedRectangleBorder(
-          borderRadius: borderRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),
     );
@@ -314,7 +321,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _pickProfileImage() async {
     try {
-      final XFile? picked = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
       if (picked != null) {
         setState(() {
           _profileImage = File(picked.path);
@@ -322,9 +331,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unable to pick image: $e')));
       }
     }
   }
@@ -336,7 +345,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (_isDefaultPronoun(pronoun)) {
       setState(() {
-        if (_selectedPronouns.length == 1 && _selectedPronouns.contains(_defaultPronoun)) {
+        if (_selectedPronouns.length == 1 &&
+            _selectedPronouns.contains(_defaultPronoun)) {
           return;
         }
         _selectedPronouns
@@ -419,9 +429,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (_passwordController.text != _confirmPasswordController.text) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passwords do not match')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       }
       return;
     }
@@ -431,7 +441,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       pronounFieldState?.validate();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select at least one pronoun option')),
+          const SnackBar(
+            content: Text('Please select at least one pronoun option'),
+          ),
         );
       }
       return;
@@ -490,7 +502,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             content: Text(
               messages.isNotEmpty
                   ? messages.join('\n')
-                  : (e.message ?? 'Registration failed. Please review your details and try again.'),
+                  : (e.message ??
+                        'Registration failed. Please review your details and try again.'),
             ),
           ),
         );
@@ -547,13 +560,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/media/twc_primary_logo.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black45, BlendMode.darken),
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
           color: Colors.black.withOpacity(0.55),
           child: SingleChildScrollView(
@@ -586,8 +593,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _usernameController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration:
-                          themedInput(label: 'Username', icon: Icons.person).copyWith(errorText: _usernameError),
+                      decoration: themedInput(
+                        label: 'Username',
+                        icon: Icons.person,
+                      ).copyWith(errorText: _usernameError),
                       onChanged: (_) {
                         if (_usernameError != null) {
                           setState(() {
@@ -608,8 +617,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _emailController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration:
-                          themedInput(label: 'Email', icon: Icons.email).copyWith(errorText: _emailError),
+                      decoration: themedInput(
+                        label: 'Email',
+                        icon: Icons.email,
+                      ).copyWith(errorText: _emailError),
                       keyboardType: TextInputType.emailAddress,
                       onChanged: (_) {
                         if (_emailError != null) {
@@ -639,7 +650,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         icon: Icons.lock,
                         suffix: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                             color: Colors.white,
                           ),
                           onPressed: () {
@@ -671,12 +684,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         icon: Icons.lock_outline,
                         suffix: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+                            _obscureConfirmPassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                             color: Colors.white,
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -698,7 +714,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _zipCodeController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
-                      decoration: themedInput(label: 'ZIP Code', icon: Icons.location_on),
+                      decoration: themedInput(
+                        label: 'ZIP Code',
+                        icon: Icons.location_on,
+                      ),
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -756,9 +775,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   child: TextField(
                                     controller: _customPronounController,
                                     style: const TextStyle(color: Colors.white),
-                                    decoration: themedInput(label: 'Add custom pronouns').copyWith(
-                                      prefixIcon: const Icon(Icons.add, color: Colors.white),
-                                    ),
+                                    decoration:
+                                        themedInput(
+                                          label: 'Add custom pronouns',
+                                        ).copyWith(
+                                          prefixIcon: const Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                     onSubmitted: (_) => _addCustomPronoun(),
                                   ),
                                 ),
@@ -766,7 +791,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ElevatedButton(
                                   onPressed: _addCustomPronoun,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white.withOpacity(0.18),
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.18,
+                                    ),
                                     foregroundColor: Colors.white,
                                   ),
                                   child: const Text('Add'),
@@ -780,8 +807,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 runSpacing: 8,
                                 children: _customPronouns.map((pronoun) {
                                   final baseColors = _pronounColors(pronoun);
-                                  final colors = baseColors.map((c) => c.withOpacity(0.95)).toList();
-                                  final textColor = _contrastTextColor(baseColors);
+                                  final colors = baseColors
+                                      .map((c) => c.withOpacity(0.95))
+                                      .toList();
+                                  final textColor = _contrastTextColor(
+                                    baseColors,
+                                  );
                                   return InputChip(
                                     label: Text(
                                       pronoun,
@@ -792,7 +823,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                     backgroundColor: colors.first,
                                     deleteIconColor: textColor.withOpacity(0.8),
-                                    onDeleted: () => _removeCustomPronoun(pronoun),
+                                    onDeleted: () =>
+                                        _removeCustomPronoun(pronoun),
                                   );
                                 }).toList(),
                               ),
@@ -801,7 +833,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               const SizedBox(height: 8),
                               Text(
                                 field.errorText ?? '',
-                                style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                                style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 13,
+                                ),
                               ),
                             ],
                           ],
@@ -841,7 +876,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Text(
@@ -866,7 +903,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : () => context.go('/login'),
                           child: const Text(
                             'Sign In',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],

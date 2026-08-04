@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transconnect/features/onboarding_tour/models/onboarding_tour_models.dart';
+import 'package:npo_community/features/onboarding_tour/models/onboarding_tour_models.dart';
 
 class OnboardingTourController extends ChangeNotifier {
   static const String defaultAssetPath = 'assets/onboarding_tour.json';
