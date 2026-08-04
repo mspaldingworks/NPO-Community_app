@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:transconnect/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/chat_favorites_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/chat_message.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/widgets/loading_indicator.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/chat_favorites_service.dart';
+import 'package:npo_community/core/services/chat_service.dart';
+import 'package:npo_community/models/chat_message.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/theme/app_theme.dart';
+import 'package:npo_community/widgets/loading_indicator.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 class ChatMessageScreen extends StatefulWidget {
   final String conversationId;
@@ -43,7 +43,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   bool _isSending = false;
   bool _showEmojiPicker = false;
 
-  String _otherUsername = 'Chat'; 
+  String _otherUsername = 'Chat';
   late User _currentUser;
   bool _isFavoriteChat = false;
 
@@ -83,25 +83,24 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       _attachedImage = null;
     });
   }
-  
+
   // --- NEW HELPER METHOD ---
   // Extracted logic to fetch messages and update state
   Future<void> _fetchMessages({bool updateUsername = false}) async {
     try {
       final otherUserId = int.parse(widget.conversationId);
       final messages = await _chatService.getConversation(otherUserId);
-      
+
       if (!mounted) return;
 
-      // Only attempt to find and set username if explicitly requested 
+      // Only attempt to find and set username if explicitly requested
       // or if messages were previously empty
       if (updateUsername || _messages.isEmpty) {
         if (messages.isNotEmpty) {
           final otherParticipantMessage = messages.firstWhere(
             (m) => m.sender.id != _currentUser.id,
-            orElse: () => messages.firstWhere(
-              (m) => m.recipient.id != _currentUser.id,
-            ),
+            orElse: () =>
+                messages.firstWhere((m) => m.recipient.id != _currentUser.id),
           );
 
           final otherUser = otherParticipantMessage.sender.id != _currentUser.id
@@ -116,14 +115,15 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       setState(() {
         _messages
           ..clear()
-          ..addAll(messages.reversed.toList()); // API returns oldest first, reverse
+          ..addAll(
+            messages.reversed.toList(),
+          ); // API returns oldest first, reverse
         _isLoading = false;
       });
 
       // Mark as read after fetching new list
       await _markMessagesAsRead();
       _scrollToBottom();
-      
     } catch (e) {
       if (!mounted) return;
       // Only show a fatal error during initial load, not post-send
@@ -161,17 +161,15 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     });
   }
 
-
   Future<void> _initializeData() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       _currentUser = await authService.getCurrentUser();
-      
+
       // Pass the username finding responsibility to _fetchMessages
       await _fetchMessages(updateUsername: true);
 
       await _loadFavoriteStatus();
-
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -201,21 +199,22 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
 
       // Temporarily update UI optimistically
       setState(() {
-         for (var message in _messages.where((m) => unreadMessages.contains(m.id))) {
-           // Create a new message object with isRead set to true for UI update
-           final updatedMessage = ChatMessage(
-             id: message.id,
-             sender: message.sender,
-             recipient: message.recipient,
-             content: message.content,
-             timestamp: message.timestamp,
-             isRead: true, // Mark as read locally
-              imageUrl: message.imageUrl,
-           );
-           _messages[_messages.indexOf(message)] = updatedMessage;
-         }
+        for (var message in _messages.where(
+          (m) => unreadMessages.contains(m.id),
+        )) {
+          // Create a new message object with isRead set to true for UI update
+          final updatedMessage = ChatMessage(
+            id: message.id,
+            sender: message.sender,
+            recipient: message.recipient,
+            content: message.content,
+            timestamp: message.timestamp,
+            isRead: true, // Mark as read locally
+            imageUrl: message.imageUrl,
+          );
+          _messages[_messages.indexOf(message)] = updatedMessage;
+        }
       });
-      
     } catch (_) {
       // Silently ignore mark-as-read failures.
     }
@@ -230,27 +229,22 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   }
 
   // REMOVED: _getOtherParticipant is no longer necessary as we use _otherUsername
-  // User? _getOtherParticipant() { ... } 
+  // User? _getOtherParticipant() { ... }
 
   // REMOVED: All group-related message formatting logic is removed
 
   // Removed methods related to group chat features
   bool _shouldShowAvatar(ChatMessage message, int index) {
-     // In a 1-on-1 chat, we only show the other person's avatar if they sent the message
-     // and the *previous* message was sent by the current user.
-     if (message.sender.id == _currentUser.id) return false;
-     
-     // Always show the avatar on the first message from the sender
-     if (index == _messages.length - 1) return true;
-     
-     // Show if the sender of this message is different from the sender of the previous message
-     final previousMessage = _messages[index + 1];
-     return previousMessage.sender.id != message.sender.id;
-  }
+    // In a 1-on-1 chat, we only show the other person's avatar if they sent the message
+    // and the *previous* message was sent by the current user.
+    if (message.sender.id == _currentUser.id) return false;
 
-  bool _shouldShowUsername(ChatMessage message, int index) {
-    // In a 1-on-1 chat, we NEVER show the username above the message bubble.
-    return false; 
+    // Always show the avatar on the first message from the sender
+    if (index == _messages.length - 1) return true;
+
+    // Show if the sender of this message is different from the sender of the previous message
+    final previousMessage = _messages[index + 1];
+    return previousMessage.sender.id != message.sender.id;
   }
 
   Widget _buildMessageList() {
@@ -264,7 +258,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
         final message = _messages[index];
         final isCurrentUser = message.sender.id == _currentUser.id;
         // Reversed the index for logic checks as list is built in reverse
-        final listIndex = _messages.length - 1 - index; 
+        final listIndex = _messages.length - 1 - index;
         return _buildMessage(message, isCurrentUser, listIndex);
       },
     );
@@ -275,11 +269,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.chat_bubble_outline,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'No messages yet',
@@ -292,9 +282,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
           const SizedBox(height: 8),
           Text(
             'Send a message to start the conversation',
-            style: TextStyle(
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(color: Colors.grey[500]),
           ),
         ],
       ),
@@ -305,7 +293,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     // listIndex is now the true index (0=oldest, _messages.length-1=newest)
     final showAvatar = !isCurrentUser && _shouldShowAvatar(message, listIndex);
     // showUsername is now always false for 1-on-1 chat
-    // final showUsername = !isCurrentUser && _shouldShowUsername(message, listIndex); 
+    // final showUsername = !isCurrentUser && _shouldShowUsername(message, listIndex);
 
     // ... (rest of _buildMessage remains the same, except for the removed showUsername logic in the Column)
 
@@ -313,7 +301,9 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       onLongPress: () async {
         final otherUserId = int.tryParse(widget.conversationId);
         final targetUserId = isCurrentUser ? otherUserId : message.sender.id;
-        final targetUsername = isCurrentUser ? _otherUsername : message.sender.username;
+        final targetUsername = isCurrentUser
+            ? _otherUsername
+            : message.sender.username;
 
         await showReportDialog(
           context: context,
@@ -335,8 +325,9 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(
-          mainAxisAlignment:
-              isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment: isCurrentUser
+              ? MainAxisAlignment.end
+              : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Avatar logic remains, but simplified
@@ -345,8 +336,11 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                 padding: const EdgeInsets.only(right: 8.0),
                 child: CircleAvatar(
                   radius: 16,
-                  backgroundImage: null, // profilePic logic removed as it's not in MessageUser model
-                  child: Text(message.sender.username[0].toUpperCase()), // Use first letter
+                  backgroundImage:
+                      null, // profilePic logic removed as it's not in MessageUser model
+                  child: Text(
+                    message.sender.username[0].toUpperCase(),
+                  ), // Use first letter
                 ),
               ),
             Flexible(
@@ -370,7 +364,8 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (message.imageUrl != null && message.imageUrl!.isNotEmpty)
+                        if (message.imageUrl != null &&
+                            message.imageUrl!.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: ClipRRect(
@@ -387,8 +382,9 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                           Text(
                             message.content,
                             style: TextStyle(
-                              color:
-                                  isCurrentUser ? Colors.white : Colors.black,
+                              color: isCurrentUser
+                                  ? Colors.white
+                                  : Colors.black,
                             ),
                           ),
                         Padding(
@@ -410,8 +406,9 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
                     text: message.content,
                     showText: false,
                     previewMaxWidth: 320,
-                    previewAlignment:
-                        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+                    previewAlignment: isCurrentUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                   ),
                 ],
               ),
@@ -431,7 +428,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
       ),
     );
   }
-  
+
   String _formatMessageTime(DateTime? time) {
     if (time == null) return '';
     final now = DateTime.now();
@@ -446,10 +443,10 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     return '$hour:$minute';
   }
 
-Future<void> _sendMessage() async {
+  Future<void> _sendMessage() async {
     final content = _messageController.text.trim();
     if (content.isEmpty && _attachedImage == null) return;
-    
+
     // 1. Clear input and start loading
     final originalContent = _messageController.text;
     _messageController.clear();
@@ -469,14 +466,13 @@ Future<void> _sendMessage() async {
         );
       }
       // 2. SUCCESS: Reload messages from the API to display the new message
-      await _fetchMessages(); 
+      await _fetchMessages();
 
       if (!mounted) return;
-      
     } catch (e) {
       if (!mounted) return;
       // 3. FAILURE: Restore input content
-      _messageController.text = originalContent; 
+      _messageController.text = originalContent;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to send message. Please try again: $e')),
       );
@@ -491,6 +487,7 @@ Future<void> _sendMessage() async {
       }
     }
   }
+
   void _toggleEmojiPicker() {
     setState(() {
       _showEmojiPicker = !_showEmojiPicker;
@@ -509,7 +506,7 @@ Future<void> _sendMessage() async {
         color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -542,7 +539,8 @@ Future<void> _sendMessage() async {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.light
+                      fillColor:
+                          Theme.of(context).brightness == Brightness.light
                           ? Colors.grey[200]
                           : Colors.grey[800],
                       contentPadding: const EdgeInsets.symmetric(
@@ -592,7 +590,9 @@ Future<void> _sendMessage() async {
                             iconSize: 18,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: _isSending ? null : () => _removeAttachment(),
+                            onPressed: _isSending
+                                ? null
+                                : () => _removeAttachment(),
                             icon: const CircleAvatar(
                               radius: 10,
                               child: Icon(Icons.close, size: 14),
@@ -631,11 +631,7 @@ Future<void> _sendMessage() async {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: LoadingIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: LoadingIndicator()));
     }
 
     return Scaffold(
@@ -656,9 +652,7 @@ Future<void> _sendMessage() async {
       body: Column(
         children: [
           Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyState()
-                : _buildMessageList(),
+            child: _messages.isEmpty ? _buildEmptyState() : _buildMessageList(),
           ),
           if (_showEmojiPicker) _buildEmojiPicker(),
           _buildMessageInput(),

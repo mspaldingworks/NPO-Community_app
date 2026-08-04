@@ -34,8 +34,14 @@ class Comment {
     // The API sends 'user' as a string for the username.
     // The other author fields (id, profile_pic, is_staff) might be missing.
     // We will parse what's available and use defaults for the rest.
-    final authorUsername = json['user'] as String? ?? json['author_username'] as String? ?? 'Anonymous';
-    final authorId = json['author_id'] as int? ?? json['author'] as int? ?? 0; // Default to 0 if missing
+    final authorUsername =
+        json['user'] as String? ??
+        json['author_username'] as String? ??
+        'Anonymous';
+    final authorId =
+        json['author_id'] as int? ??
+        json['author'] as int? ??
+        0; // Default to 0 if missing
 
     // TODO(paige-working): Uncomment when backend provides unread metadata.
     // final bool isUnreadForOwner = json['is_unread_for_owner'] as bool? ?? false;
@@ -58,9 +64,10 @@ class Comment {
       authorProfilePic: json['author_profile_pic'] as String?,
       authorIsStaff: json['author_is_staff'] as bool? ?? false,
       pubDate: json['pub_date'] as String,
-      updatedAt: json['updated_at'] as String?
-          ?? json['modified_at'] as String?
-          ?? json['edited_at'] as String?,
+      updatedAt:
+          json['updated_at'] as String? ??
+          json['modified_at'] as String? ??
+          json['edited_at'] as String?,
       postId: json['post'] as int,
       // isUnreadForOwner: isUnreadForOwner,
       // mentionsOwner: mentionsOwner,

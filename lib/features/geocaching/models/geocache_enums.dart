@@ -1,4 +1,0 @@
-enum CacheStatus {
-  active,
-  hidden,
-}

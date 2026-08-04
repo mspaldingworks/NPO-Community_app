@@ -1,1 +1,1 @@
-rootProject.name = "TransConnect"
+rootProject.name = "NPOCommunity"

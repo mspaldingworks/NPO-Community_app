@@ -1,13 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:transconnect/core/services/api_client.dart';
-import 'package:transconnect/models/friend_request.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/api_client.dart';
+import 'package:npo_community/models/friend_request.dart';
+import 'package:npo_community/models/user.dart';
 
 /// A service class to manage all friend-related API requests.
 /// It inherits authentication and response processing from ApiClient.
 class FriendService extends ApiClient {
-
-  static const String _messages = '/api/messages/';
   static const String _friendsBasePath = '/api/friends';
   static const String _requestsPath = 'requests/';
   static const String _searchPath = 'search/';
@@ -68,9 +66,12 @@ class FriendService extends ApiClient {
       }
     }
 
-    final allUsersResult = await _safeRead('$_usersPath');
+    final allUsersResult = await _safeRead(_usersPath);
     if (allUsersResult != null) {
-      final filtered = _filterByPrefix(_parseFriendResults(allUsersResult), queryLower);
+      final filtered = _filterByPrefix(
+        _parseFriendResults(allUsersResult),
+        queryLower,
+      );
       if (filtered.isNotEmpty) {
         return filtered;
       }
@@ -82,10 +83,7 @@ class FriendService extends ApiClient {
 
   Future<dynamic> _safeRead(String urlPath) async {
     try {
-      return await read(
-        urlPath: urlPath,
-        jsonHeaders: authHeaders,
-      );
+      return await read(urlPath: urlPath, jsonHeaders: authHeaders);
     } catch (e, stackTrace) {
       debugPrint('Friend search request failed for $urlPath: $e\n$stackTrace');
       return null;
@@ -100,10 +98,7 @@ class FriendService extends ApiClient {
   Future<dynamic> _readWithFallback(List<String> urlPaths) async {
     for (final path in urlPaths) {
       try {
-        return await read(
-          urlPath: path,
-          jsonHeaders: authHeaders,
-        );
+        return await read(urlPath: path, jsonHeaders: authHeaders);
       } catch (e, stackTrace) {
         if (_is404Error(e)) {
           debugPrint('FriendService read fallback 404 for $path');
@@ -209,7 +204,7 @@ class FriendService extends ApiClient {
 
   /// Sends a friend request to a user by their username.
   Future<Map<String, dynamic>> sendFriendRequest(String username) async {
-    final urlPath = '$_friendsBasePath/$_requestsPath';
+    const urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username};
 
     try {
@@ -219,7 +214,8 @@ class FriendService extends ApiClient {
         jsonPayload: payload,
         expectedStatusCode: 201,
       );
-      return (result as Map<String, dynamic>?) ?? {'detail': 'Friend request sent.'};
+      return (result as Map<String, dynamic>?) ??
+          {'detail': 'Friend request sent.'};
     } on Exception catch (e) {
       final message = e.toString();
 
@@ -248,9 +244,7 @@ class FriendService extends ApiClient {
       ..._friendRequestIncomingCandidates,
     };
 
-    final outgoingCandidates = <String>{
-      ..._friendRequestOutgoingCandidates,
-    };
+    final outgoingCandidates = <String>{..._friendRequestOutgoingCandidates};
 
     try {
       final incoming = await _readWithFallback(incomingCandidates.toList());
@@ -262,7 +256,10 @@ class FriendService extends ApiClient {
         if (source is List) {
           requests.addAll(
             source
-                .map((json) => FriendRequest.fromJson(json as Map<String, dynamic>))
+                .map(
+                  (json) =>
+                      FriendRequest.fromJson(json as Map<String, dynamic>),
+                )
                 .map(
                   (req) => isOutgoing
                       ? FriendRequest(
@@ -276,7 +273,8 @@ class FriendService extends ApiClient {
                 ),
           );
         } else if (source is Map<String, dynamic>) {
-          final dynamic list = source['results'] ?? source['data'] ?? source['requests'];
+          final dynamic list =
+              source['results'] ?? source['data'] ?? source['requests'];
           if (list is List) {
             addRequests(list, isOutgoing: isOutgoing);
           }
@@ -304,6 +302,7 @@ class FriendService extends ApiClient {
       return [];
     }
   }
+
   /// Accepts a pending friend request from the provided username.
   Future<Map<String, dynamic>> acceptFriendRequest(String username) async {
     final payload = {'username': username, 'action': 'accept'};
@@ -326,15 +325,16 @@ class FriendService extends ApiClient {
       ..._friendRequestOutgoingCandidates,
     };
 
-    await _updateWithFallback(candidates.toList(), payload, expectedStatusCode: 204);
+    await _updateWithFallback(
+      candidates.toList(),
+      payload,
+      expectedStatusCode: 204,
+    );
   }
 
   /// Retrieves the current user's friends list.
   Future<List<Friend>> listFriends() async {
-    final candidates = <String>{
-      '$_friendsBasePath/',
-      ..._friendListCandidates,
-    };
+    final candidates = <String>{'$_friendsBasePath/', ..._friendListCandidates};
     try {
       final result = await _readWithFallback(candidates.toList());
       if (result == null) {

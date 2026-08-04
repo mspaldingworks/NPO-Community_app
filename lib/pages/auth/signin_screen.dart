@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -37,9 +37,9 @@ class _SignInScreenState extends State<SignInScreen> {
       // The router's refreshListenable will handle navigation on auth state change.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
 
@@ -58,17 +58,17 @@ class _SignInScreenState extends State<SignInScreen> {
     );
 
     InputDecoration themedInput(String label, IconData icon) => InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white, fontSize: 16),
-          prefixIcon: Icon(icon, color: Colors.white),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.08),
-          enabledBorder: inputBorder,
-          focusedBorder: inputBorder.copyWith(
-            borderSide: const BorderSide(color: Colors.white, width: 1.6),
-          ),
-          border: inputBorder,
-        );
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white, fontSize: 16),
+      prefixIcon: Icon(icon, color: Colors.white),
+      filled: true,
+      fillColor: Colors.white.withValues(alpha: 0.08),
+      enabledBorder: inputBorder,
+      focusedBorder: inputBorder.copyWith(
+        borderSide: const BorderSide(color: Colors.white, width: 1.6),
+      ),
+      border: inputBorder,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -80,15 +80,9 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/media/twc_primary_logo.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black45, BlendMode.darken),
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(alpha: 0.55),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
@@ -121,7 +115,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   decoration: themedInput('Password', Icons.lock).copyWith(
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.white,
                       ),
                       onPressed: () {
@@ -154,7 +150,11 @@ class _SignInScreenState extends State<SignInScreen> {
                   onPressed: () => context.go('/signup'),
                   child: const Text(
                     "Don't have an account? Register",
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],

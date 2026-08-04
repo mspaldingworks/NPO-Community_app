@@ -2,7 +2,7 @@ plugins {
     id("java")
 }
 
-group = "TransWellnessCoalition"
+group = "org.npocommunity"
 version = "1.0-SNAPSHOT"
 
 repositories {

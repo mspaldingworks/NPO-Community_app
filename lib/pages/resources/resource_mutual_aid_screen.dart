@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:transconnect/theme/app_theme.dart';
+import 'package:npo_community/theme/app_theme.dart';
 
 class ResourceMutualAidScreen extends StatelessWidget {
   const ResourceMutualAidScreen({super.key});
@@ -13,7 +12,7 @@ class ResourceMutualAidScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.handshake, size: 72, color: AppColors.tertiary),
+            const Icon(Icons.handshake, size: 72, color: AppColors.tertiary),
             const SizedBox(height: 16),
             Text(
               'Need help? Submit a Mutual Aid request to connect with the community.',
@@ -25,15 +24,8 @@ class ResourceMutualAidScreen extends StatelessWidget {
               width: 200,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.send),
-                label: const Text('Mutual Aid Form'),
-                onPressed: () async {
-                  final result = await context.push<bool>('/forms/lgl');
-                  if (result == true && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Thanks for submitting the form!')),
-                    );
-                  }
-                },
+                label: const Text('Requests unavailable'),
+                onPressed: null,
               ),
             ),
           ],

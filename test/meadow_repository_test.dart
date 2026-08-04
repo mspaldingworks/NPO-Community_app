@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:transconnect/features/meadow/data/meadow_repository.dart';
+import 'package:npo_community/features/meadow/data/meadow_repository.dart';
 
 void main() {
   group('InMemoryMeadowRepository Meadow lifecycle', () {

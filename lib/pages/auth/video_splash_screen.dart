@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:video_player/video_player.dart';
 
 class VideoSplashScreen extends StatefulWidget {
   const VideoSplashScreen({super.key});
@@ -10,81 +11,65 @@ class VideoSplashScreen extends StatefulWidget {
 }
 
 class _VideoSplashScreenState extends State<VideoSplashScreen> {
-  late final VideoPlayerController _controller;
-  bool _isInitialized = false;
-  bool _hasNavigated = false;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset('assets/animations/trans_connect_open_video.mp4')
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() => _isInitialized = true);
-        _controller
-          ..setVolume(1.0)
-          ..play();
-        _controller.addListener(_handleVideoProgress);
-      }).catchError((_) {
-        _navigateNext();
-      });
-  }
-
-  void _handleVideoProgress() {
-    if (_hasNavigated) return;
-    final value = _controller.value;
-    if (value.isInitialized && !value.isPlaying && value.position >= value.duration) {
-      _navigateNext();
-    }
+    _navigationTimer = Timer(const Duration(milliseconds: 900), _navigateNext);
   }
 
   void _navigateNext() {
-    if (_hasNavigated || !mounted) return;
-    _hasNavigated = true;
-    context.go('/onboarding');
+    if (mounted) {
+      context.go('/onboarding');
+    }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleVideoProgress);
-    _controller.dispose();
+    _navigationTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_isInitialized)
-            FittedBox(
-              fit: BoxFit.cover,
-              child: SizedBox(
-                width: _controller.value.size.width,
-                height: _controller.value.size.height,
-                child: VideoPlayer(_controller),
+      backgroundColor: const Color(0xFF17324D),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.groups_2_outlined, color: Colors.white, size: 72),
+                  SizedBox(height: 20),
+                  Text(
+                    'NPO Community',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
-            )
-          else
-            const Center(child: CircularProgressIndicator(color: Colors.white)),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(24),
                 child: TextButton(
                   onPressed: _navigateNext,
                   child: const Text(
-                    'Skip',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                    'Continue',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

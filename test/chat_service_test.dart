@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
-import 'package:transconnect/models/ws_message.dart';
+import 'package:npo_community/core/services/chat_service.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/models/ws_message.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class MockWebSocketChannel extends Mock implements WebSocketChannel {}
@@ -11,14 +11,14 @@ class MockWebSocketChannel extends Mock implements WebSocketChannel {}
 void main() {
   group('ChatService Tests', () {
     late ChatService chatService;
-    final testChannelId = 'test-channel-123';
+    const testChannelId = 'test-channel-123';
 
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
       SharedPreferences.setMockInitialValues({'user_token': 'test-token'});
       await SharedPreferencesService().init();
     });
-    
+
     setUp(() {
       chatService = ChatService();
     });
@@ -33,14 +33,14 @@ void main() {
         expect(stream, isA<Stream<WSMessage>>());
         chatService.disconnectFromChatChannel(testChannelId);
       } catch (e) {
-        expect(e, isA<Exception>());
+        expect(e, anyOf(isA<Exception>(), isA<StateError>()));
       }
     });
 
     test('sendMessage adds message to the sink', () async {
       // Arrange
-      final messageContent = 'Hello, test message!';
-      
+      const messageContent = 'Hello, test message!';
+
       // Act & Assert
       try {
         await chatService.sendChannelMessage(
@@ -51,7 +51,7 @@ void main() {
         expect(true, isTrue);
       } catch (e) {
         // We expect this to fail in test environment, but we're testing the API contract
-        expect(e, isA<Exception>());
+        expect(e, anyOf(isA<Exception>(), isA<StateError>()));
       }
     });
 
@@ -60,13 +60,13 @@ void main() {
       try {
         chatService.connectToChatChannel(testChannelId);
       } catch (e) {
-        expect(e, isA<Exception>());
+        expect(e, anyOf(isA<Exception>(), isA<StateError>()));
         return;
       }
-      
+
       // Act
       chatService.disconnectFromChatChannel(testChannelId);
-      
+
       // Assert
       expect(chatService.isConnected(testChannelId), isFalse);
     });

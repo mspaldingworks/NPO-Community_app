@@ -4,20 +4,20 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/features/meadow/controllers/meadow_controller.dart';
-import 'package:transconnect/features/meadow/data/meadow_repository.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
-import 'package:transconnect/features/meadow/models/online_user.dart';
-import 'package:transconnect/features/meadow/services/meadow_alert_service.dart';
-import 'package:transconnect/features/meadow/widgets/meadow_butterfly.dart';
-import 'package:transconnect/features/meadow/widgets/meadow_chat_overlay.dart';
-import 'package:transconnect/features/meadow/widgets/meadow_create_chat_sheet.dart';
-import 'package:transconnect/features/meadow/widgets/meadow_flower.dart';
-import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/pronoun_butterfly.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/meadow/controllers/meadow_controller.dart';
+import 'package:npo_community/features/meadow/data/meadow_repository.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/models/online_user.dart';
+import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
+import 'package:npo_community/features/meadow/widgets/meadow_butterfly.dart';
+import 'package:npo_community/features/meadow/widgets/meadow_chat_overlay.dart';
+import 'package:npo_community/features/meadow/widgets/meadow_create_chat_sheet.dart';
+import 'package:npo_community/features/meadow/widgets/meadow_flower.dart';
+import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/widgets/pronoun_butterfly.dart';
 
 class MeadowScreen extends StatefulWidget {
   const MeadowScreen({
@@ -70,10 +70,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
     });
   }
 
-  Offset _resolveUserPosition(
-    OnlineUser user,
-    Size viewportSize,
-  ) {
+  Offset _resolveUserPosition(OnlineUser user, Size viewportSize) {
     final pos = user.position;
     final minX = _padding.left + 15;
     final minY = _padding.top + 15;
@@ -154,7 +151,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
 
     final repo = InMemoryMeadowRepository.instance;
     if (!repo.hasSeededUsers) {
-      repo.seedUsers(_seedUsers(currentUserId, currentUserName, currentPronouns));
+      repo.seedUsers(
+        _seedUsers(currentUserId, currentUserName, currentPronouns),
+      );
       repo.seedFlowers(_seedFlowers());
     }
 
@@ -167,9 +166,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
     )..initialize();
 
     controller.addListener(_handlePresenceChanges);
-    _knownUsersById = {
-      for (final u in controller.onlineUsers) u.id: u,
-    };
+    _knownUsersById = {for (final u in controller.onlineUsers) u.id: u};
     _activeUserIds = _knownUsersById.keys.toSet();
 
     setState(() {
@@ -213,9 +210,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
     }
 
     Offset randomPos() => Offset(
-          150 + _random.nextDouble() * 200,
-          220 + _random.nextDouble() * 260,
-        );
+      150 + _random.nextDouble() * 200,
+      220 + _random.nextDouble() * 260,
+    );
 
     return [
       OnlineUser(
@@ -288,7 +285,8 @@ class _MeadowScreenState extends State<MeadowScreen> {
     var changed = false;
 
     final currentUserId = controller.currentUserId;
-    if (!current.containsKey(currentUserId) && _knownUsersById.containsKey(currentUserId)) {
+    if (!current.containsKey(currentUserId) &&
+        _knownUsersById.containsKey(currentUserId)) {
       current[currentUserId] = _knownUsersById[currentUserId]!;
       currentIds.add(currentUserId);
     }
@@ -340,7 +338,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
     final controller = _controller;
     if (controller == null) {
       return Scaffold(
-        appBar: AppBar(title: Text(_displayName.isEmpty ? widget.groupName : _displayName)),
+        appBar: AppBar(
+          title: Text(_displayName.isEmpty ? widget.groupName : _displayName),
+        ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -348,7 +348,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
     return ChangeNotifierProvider.value(
       value: controller,
       child: Scaffold(
-        appBar: AppBar(title: Text(_displayName.isEmpty ? widget.groupName : _displayName)),
+        appBar: AppBar(
+          title: Text(_displayName.isEmpty ? widget.groupName : _displayName),
+        ),
         body: LayoutBuilder(
           builder: (context, constraints) {
             final meadowSize = constraints.biggest;
@@ -363,13 +365,19 @@ class _MeadowScreenState extends State<MeadowScreen> {
                     _knownUsersById[currentUserId]!,
                 ];
                 final leavingUsers = _leavingUsers.values
-                    .where((u) => !effectiveOnlineUsers.any((o) => o.id == u.id))
+                    .where(
+                      (u) => !effectiveOnlineUsers.any((o) => o.id == u.id),
+                    )
                     .toList();
-                final displayedUsers = [...effectiveOnlineUsers, ...leavingUsers];
+                final displayedUsers = [
+                  ...effectiveOnlineUsers,
+                  ...leavingUsers,
+                ];
 
                 final sections = max(
                   1,
-                  (meadow.flowers.length / MeadowController.flowersPerSection).ceil(),
+                  (meadow.flowers.length / MeadowController.flowersPerSection)
+                      .ceil(),
                 );
                 final meadowHeight = meadowSize.height * sections;
                 final canvasSize = Size(meadowSize.width, meadowHeight);
@@ -377,7 +385,8 @@ class _MeadowScreenState extends State<MeadowScreen> {
                 final butterflyWidgets = <Widget>[];
                 for (var i = 0; i < displayedUsers.length; i++) {
                   final user = displayedUsers[i];
-                  final isLeaving = user.id != currentUserId &&
+                  final isLeaving =
+                      user.id != currentUserId &&
                       _leavingUsers.containsKey(user.id) &&
                       !effectiveOnlineUsers.any((o) => o.id == user.id);
 
@@ -416,8 +425,14 @@ class _MeadowScreenState extends State<MeadowScreen> {
                     onArrived: user.id == meadow.currentUserId
                         ? () => _handleArrived(meadow)
                         : null,
-                    onTap: isLeaving ? null : () => _showUserProfile(context, resolved),
-                    driftEnabled: widget.enableDrift && !_overlayOpen && !isLeaving && !inChat,
+                    onTap: isLeaving
+                        ? null
+                        : () => _showUserProfile(context, resolved),
+                    driftEnabled:
+                        widget.enableDrift &&
+                        !_overlayOpen &&
+                        !isLeaving &&
+                        !inChat,
                     flightDuration: widget.flightDuration,
                   );
 
@@ -437,7 +452,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
                             sections: sections,
                           ),
                         ),
-                        Positioned.fill(
+                        const Positioned.fill(
                           child: IgnorePointer(
                             child: TourAnchor(
                               name: 'Meadow butterflies',
@@ -451,12 +466,14 @@ class _MeadowScreenState extends State<MeadowScreen> {
                                   name: 'Meadow flowers',
                                   child: MeadowFlower(
                                     flower: meadow.flowers[i],
-                                    onTap: () => meadow.startFlyTo(meadow.flowers[i]),
+                                    onTap: () =>
+                                        meadow.startFlyTo(meadow.flowers[i]),
                                   ),
                                 )
                               : MeadowFlower(
                                   flower: meadow.flowers[i],
-                                  onTap: () => meadow.startFlyTo(meadow.flowers[i]),
+                                  onTap: () =>
+                                      meadow.startFlyTo(meadow.flowers[i]),
                                 ),
                         ...butterflyWidgets,
                         Positioned(
@@ -466,7 +483,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
                             name: 'Meadow scroll',
                             child: Icon(
                               Icons.unfold_more,
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -534,12 +551,14 @@ class _MeadowScreenState extends State<MeadowScreen> {
 
     final parsed = parseCreateChatResult(result);
     if (parsed == null) return;
+    if (!context.mounted) return;
 
     final controller = _controller!;
     final size = MediaQuery.of(context).size;
     final sections = max(
       1,
-      ((controller.flowers.length + 1) / MeadowController.flowersPerSection).ceil(),
+      ((controller.flowers.length + 1) / MeadowController.flowersPerSection)
+          .ceil(),
     );
 
     await controller.createChat(
@@ -603,19 +622,20 @@ class _MeadowScreenState extends State<MeadowScreen> {
                         children: [
                           Text(
                             user.name,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           Wrap(
                             spacing: 6,
                             runSpacing: -6,
                             children: user.pronounSlots
-                                .map((p) => Chip(
-                                      label: Text(p),
-                                      visualDensity: VisualDensity.compact,
-                                    ))
+                                .map(
+                                  (p) => Chip(
+                                    label: Text(p),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ],
@@ -629,8 +649,8 @@ class _MeadowScreenState extends State<MeadowScreen> {
                   child: Text(
                     'Shareable info',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -648,7 +668,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Message request sent.')),
+                            const SnackBar(
+                              content: Text('Message request sent.'),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.chat_bubble_outline),
@@ -660,7 +682,9 @@ class _MeadowScreenState extends State<MeadowScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Friend request sent.')),
+                            const SnackBar(
+                              content: Text('Friend request sent.'),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.person_add_alt_1),
@@ -679,10 +703,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
 }
 
 class _MeadowBackground extends StatelessWidget {
-  const _MeadowBackground({
-    required this.size,
-    required this.sections,
-  });
+  const _MeadowBackground({required this.size, required this.sections});
 
   final Size size;
   final int sections;
@@ -696,28 +717,22 @@ class _MeadowBackground extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Column(
-            children: List.generate(
-              sections,
-              (index) {
-                final assets = _MeadowScreenState._backgroundAssets;
-                final asset = assets[index % assets.length];
-                return SizedBox(
-                  height: size.height,
-                  width: size.width,
-                  child: Image.asset(
-                    asset,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
+            children: List.generate(sections, (index) {
+              const assets = _MeadowScreenState._backgroundAssets;
+              final asset = assets[index % assets.length];
+              return SizedBox(
+                height: size.height,
+                width: size.width,
+                child: Image.asset(asset, fit: BoxFit.cover),
+              );
+            }),
           ),
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withOpacity(0.10),
-                  Colors.black.withOpacity(0.22),
+                  Colors.black.withValues(alpha: 0.10),
+                  Colors.black.withValues(alpha: 0.22),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

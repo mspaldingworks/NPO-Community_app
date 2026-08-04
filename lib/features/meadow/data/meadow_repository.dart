@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_comment.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
-import 'package:transconnect/features/meadow/models/online_user.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_comment.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/models/online_user.dart';
 
 abstract class MeadowRepository {
   Stream<List<OnlineUser>> watchOnlineUsers();
@@ -45,12 +45,13 @@ class InMemoryMeadowRepository implements MeadowRepository {
   static final InMemoryMeadowRepository instance = InMemoryMeadowRepository._();
 
   final _usersController = StreamController<List<OnlineUser>>.broadcast();
-  final _flowersController = StreamController<List<MeadowChatFlower>>.broadcast();
+  final _flowersController =
+      StreamController<List<MeadowChatFlower>>.broadcast();
   final _chatCreatedController = StreamController<MeadowChatFlower>.broadcast();
 
   final Map<String, List<MeadowChatComment>> _commentsByChatId = {};
   final Map<String, StreamController<List<MeadowChatComment>>>
-      _commentsControllerByChatId = {};
+  _commentsControllerByChatId = {};
 
   Timer? _pruneTimer;
 
@@ -116,9 +117,11 @@ class InMemoryMeadowRepository implements MeadowRepository {
 
     // Clear any user pointers to expired chats.
     _users = _users
-        .map((u) => expiredIds.contains(u.activeChatId)
-            ? u.copyWith(activeChatId: null)
-            : u)
+        .map(
+          (u) => expiredIds.contains(u.activeChatId)
+              ? u.copyWith(activeChatId: null)
+              : u,
+        )
         .toList();
 
     _usersController.add(_users);
@@ -143,7 +146,9 @@ class InMemoryMeadowRepository implements MeadowRepository {
     yield* _chatCreatedController.stream;
   }
 
-  StreamController<List<MeadowChatComment>> _commentsControllerFor(String chatId) {
+  StreamController<List<MeadowChatComment>> _commentsControllerFor(
+    String chatId,
+  ) {
     return _commentsControllerByChatId.putIfAbsent(
       chatId,
       () => StreamController<List<MeadowChatComment>>.broadcast(),
@@ -151,7 +156,9 @@ class InMemoryMeadowRepository implements MeadowRepository {
   }
 
   @override
-  Stream<List<MeadowChatComment>> watchChatComments({required String chatId}) async* {
+  Stream<List<MeadowChatComment>> watchChatComments({
+    required String chatId,
+  }) async* {
     _pruneExpiredChats();
     yield List<MeadowChatComment>.of(_commentsByChatId[chatId] ?? const []);
     yield* _commentsControllerFor(chatId).stream;
@@ -180,15 +187,20 @@ class InMemoryMeadowRepository implements MeadowRepository {
       createdAt: now,
     );
 
-    final current = _commentsByChatId.putIfAbsent(chatId, () => <MeadowChatComment>[]);
+    final current = _commentsByChatId.putIfAbsent(
+      chatId,
+      () => <MeadowChatComment>[],
+    );
     current.add(c);
     _commentsControllerFor(chatId).add(List<MeadowChatComment>.of(current));
 
     // Extend expiry to 24h after last comment.
     _flowers = _flowers
-        .map((f) => f.id == chatId
-            ? f.copyWith(expiresAt: now.add(const Duration(hours: 24)))
-            : f)
+        .map(
+          (f) => f.id == chatId
+              ? f.copyWith(expiresAt: now.add(const Duration(hours: 24)))
+              : f,
+        )
         .toList();
     _flowersController.add(_flowers);
 
@@ -240,9 +252,15 @@ class InMemoryMeadowRepository implements MeadowRepository {
   }
 
   @override
-  Future<void> joinChat({required String chatId, required String userId}) async {
+  Future<void> joinChat({
+    required String chatId,
+    required String userId,
+  }) async {
     _pruneExpiredChats();
-    final participants = _participantsByChatId.putIfAbsent(chatId, () => <String>{});
+    final participants = _participantsByChatId.putIfAbsent(
+      chatId,
+      () => <String>{},
+    );
     final didAdd = participants.add(userId);
     if (!didAdd) return;
 
@@ -253,24 +271,31 @@ class InMemoryMeadowRepository implements MeadowRepository {
     _usersController.add(_users);
 
     _flowers = _flowers
-        .map((flower) => flower.id == chatId
-            ? flower.copyWith(participantCount: participants.length)
-            : flower)
+        .map(
+          (flower) => flower.id == chatId
+              ? flower.copyWith(participantCount: participants.length)
+              : flower,
+        )
         .toList();
     _flowersController.add(_flowers);
   }
 
   @override
-  Future<void> leaveChat({required String chatId, required String userId}) async {
+  Future<void> leaveChat({
+    required String chatId,
+    required String userId,
+  }) async {
     _pruneExpiredChats();
     final participants = _participantsByChatId[chatId];
     if (participants == null) return;
     participants.remove(userId);
 
     _users = _users
-        .map((u) => u.id == userId && u.activeChatId == chatId
-            ? u.copyWith(activeChatId: null)
-            : u)
+        .map(
+          (u) => u.id == userId && u.activeChatId == chatId
+              ? u.copyWith(activeChatId: null)
+              : u,
+        )
         .toList();
     _usersController.add(_users);
 
@@ -288,9 +313,11 @@ class InMemoryMeadowRepository implements MeadowRepository {
     }
 
     _flowers = _flowers
-        .map((flower) => flower.id == chatId
-            ? flower.copyWith(participantCount: participants.length)
-            : flower)
+        .map(
+          (flower) => flower.id == chatId
+              ? flower.copyWith(participantCount: participants.length)
+              : flower,
+        )
         .toList();
     _flowersController.add(_flowers);
   }

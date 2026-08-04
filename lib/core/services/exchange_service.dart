@@ -1,5 +1,5 @@
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/post.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/post.dart';
 
 enum ExchangeKind { request, offer }
 
@@ -24,7 +24,10 @@ class ExchangeMetadata {
     if (!raw.toLowerCase().startsWith('exchange:')) return null;
 
     final afterPrefix = raw.substring('exchange:'.length);
-    final parts = afterPrefix.split(';').map((p) => p.trim()).where((p) => p.isNotEmpty);
+    final parts = afterPrefix
+        .split(';')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty);
 
     final Map<String, String> kv = {};
     for (final part in parts) {
@@ -65,10 +68,10 @@ class ExchangeMetadata {
     final tags = tagsRaw == null
         ? <String>[]
         : tagsRaw
-            .split(',')
-            .map((t) => t.trim())
-            .where((t) => t.isNotEmpty)
-            .toList();
+              .split(',')
+              .map((t) => t.trim())
+              .where((t) => t.isNotEmpty)
+              .toList();
 
     final price = (kv['price'] ?? '').trim();
 
@@ -93,7 +96,10 @@ class ExchangeMetadata {
       ExchangeCompensation.paid => 'paid',
     };
 
-    final normalizedTags = tags.map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+    final normalizedTags = tags
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
 
     final buffer = StringBuffer('exchange:v1');
     buffer.write(';kind=$kindValue');
@@ -116,7 +122,7 @@ class ExchangeService {
   final CommunityService _communityService;
 
   ExchangeService({CommunityService? communityService})
-      : _communityService = communityService ?? CommunityService();
+    : _communityService = communityService ?? CommunityService();
 
   Future<List<Post>> fetchWorkAndServicesPosts() async {
     final posts = await _communityService.fetchAllPosts();

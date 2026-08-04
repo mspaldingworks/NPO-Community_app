@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:transconnect/pages/community/activity_feed_screen.dart';
+import 'package:npo_community/pages/community/activity_feed_screen.dart';
 
 class MutualAidContent extends StatelessWidget {
   const MutualAidContent({super.key});
@@ -21,15 +20,14 @@ class MutualAidContent extends StatelessWidget {
                   title: 'Request Help',
                   iconData: Icons.handshake_outlined,
                   color: color,
-                  onTap: () async {
-                    final result = await context.push<bool>('/forms/lgl');
-                    if (result == true && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Thanks for submitting the form!'),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Mutual aid requests are not configured.',
                         ),
-                      );
-                    }
+                      ),
+                    );
                   },
                 ),
               ),

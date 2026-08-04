@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/core/services/exchange_service.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/exchange_service.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 class WorkAndServicesScreen extends StatefulWidget {
   const WorkAndServicesScreen({super.key});
@@ -104,8 +104,14 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                   },
                   items: const [
                     DropdownMenuItem(value: null, child: Text('All')),
-                    DropdownMenuItem(value: ExchangeKind.offer, child: Text('Offers')),
-                    DropdownMenuItem(value: ExchangeKind.request, child: Text('Requests')),
+                    DropdownMenuItem(
+                      value: ExchangeKind.offer,
+                      child: Text('Offers'),
+                    ),
+                    DropdownMenuItem(
+                      value: ExchangeKind.request,
+                      child: Text('Requests'),
+                    ),
                   ],
                 ),
                 DropdownButton<ExchangeCompensation?>(
@@ -117,8 +123,14 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                   },
                   items: const [
                     DropdownMenuItem(value: null, child: Text('Any')),
-                    DropdownMenuItem(value: ExchangeCompensation.trade, child: Text('Trade')),
-                    DropdownMenuItem(value: ExchangeCompensation.paid, child: Text('Paid')),
+                    DropdownMenuItem(
+                      value: ExchangeCompensation.trade,
+                      child: Text('Trade'),
+                    ),
+                    DropdownMenuItem(
+                      value: ExchangeCompensation.paid,
+                      child: Text('Paid'),
+                    ),
                   ],
                 ),
                 if (_kindFilter != null || _compFilter != null)
@@ -143,7 +155,9 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Failed to load listings: ${snapshot.error}'));
+                  return Center(
+                    child: Text('Failed to load listings: ${snapshot.error}'),
+                  );
                 }
 
                 final posts = _applyFilters(snapshot.data ?? const []);
@@ -182,9 +196,16 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
 
                       final subtitleParts = <String>[];
                       if (meta != null) {
-                        subtitleParts.add(meta.kind == ExchangeKind.offer ? 'Offer' : 'Request');
-                        subtitleParts.add(meta.compensation == ExchangeCompensation.paid ? 'Paid' : 'Trade');
-                        if (meta.price != null && meta.price!.trim().isNotEmpty) {
+                        subtitleParts.add(
+                          meta.kind == ExchangeKind.offer ? 'Offer' : 'Request',
+                        );
+                        subtitleParts.add(
+                          meta.compensation == ExchangeCompensation.paid
+                              ? 'Paid'
+                              : 'Trade',
+                        );
+                        if (meta.price != null &&
+                            meta.price!.trim().isNotEmpty) {
                           subtitleParts.add(meta.price!.trim());
                         }
                       }
@@ -193,10 +214,18 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
 
                       final authorLabel = post.isAnonymous
                           ? 'Anonymous'
-                          : (post.authorUsername ?? (post.author != null ? 'User ${post.author}' : 'Unknown user'));
+                          : (post.authorUsername ??
+                                (post.author != null
+                                    ? 'User ${post.author}'
+                                    : 'Unknown user'));
 
                       return ListTile(
-                        leading: Text(post.emojis.isNotEmpty ? post.emojis.first : (post.emoji ?? '💼'), style: const TextStyle(fontSize: 28)),
+                        leading: Text(
+                          post.emojis.isNotEmpty
+                              ? post.emojis.first
+                              : (post.emoji ?? '💼'),
+                          style: const TextStyle(fontSize: 28),
+                        ),
                         title: Text(title.isEmpty ? '(Untitled)' : title),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +245,10 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                           ],
                         ),
                         onTap: () {
-                          context.push('/exchange/post/${post.id}', extra: post);
+                          context.push(
+                            '/exchange/post/${post.id}',
+                            extra: post,
+                          );
                         },
                         trailing: IconButton(
                           tooltip: 'Contact',
@@ -225,7 +257,11 @@ class _WorkAndServicesScreenState extends State<WorkAndServicesScreen> {
                             final userId = _resolveAuthorId(post);
                             if (userId == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Cannot message anonymous/unknown user.')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Cannot message anonymous/unknown user.',
+                                  ),
+                                ),
                               );
                               return;
                             }

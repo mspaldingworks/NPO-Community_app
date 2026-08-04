@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/meadow/controllers/meadow_controller.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_comment.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/controllers/meadow_controller.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_comment.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
 
 class MeadowChatOverlay extends StatefulWidget {
   const MeadowChatOverlay({
@@ -91,7 +91,7 @@ class _MeadowChatOverlayState extends State<MeadowChatOverlay> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${chat!.emoji} ${chat!.topic}',
+                            '${chat.emoji} ${chat.topic}',
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
@@ -244,7 +244,7 @@ class _ReportChatSheetState extends State<_ReportChatSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _reason,
+            initialValue: _reason,
             items: const [
               DropdownMenuItem(value: 'Spam', child: Text('Spam')),
               DropdownMenuItem(value: 'Harassment', child: Text('Harassment')),

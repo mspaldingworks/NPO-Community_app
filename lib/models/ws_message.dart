@@ -31,7 +31,7 @@ class WSMessage {
   }) : timestamp = timestamp ?? DateTime.now();
 
   /// Creates a WSMessage from a JSON map
-  factory WSMessage.fromJson(Map<String, dynamic> json) => 
+  factory WSMessage.fromJson(Map<String, dynamic> json) =>
       _$WSMessageFromJson(json);
 
   /// Converts this message to a JSON map

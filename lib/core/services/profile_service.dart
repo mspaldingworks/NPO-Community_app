@@ -1,6 +1,7 @@
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/config/app_config.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:http/http.dart' as http;
-import 'package:transconnect/core/services/auth_service.dart';
+import 'package:npo_community/core/services/auth_service.dart';
 
 class ProfileService {
   final SharedPreferencesService _prefsService = SharedPreferencesService();
@@ -15,20 +16,6 @@ class ProfileService {
     String? flair,
     List<String> statusImagePaths = const [],
   }) async {
-    /*
-    ### Update User Profile with Image
-      PATCH https://api.luxashome.com/api/profile/
-      Content-Type: multipart/form-data; boundary=MfnBoundry
-      Authorization: Token 79abeae18b216cb54c04b5032ca373d4ef509434
-
-      --MfnBoundry
-      Content-Disposition: form-data; name="profile_pic"; filename="LuxToken.png"
-      Content-Type: image/png
-
-      < /mnt/c/Users/bmaxw/Project/06-Freelance/TransConnectKy/transapp/LuxToken.png
-
-      --MfnBoundry
-    */
     // 1) If an image is provided, send a multipart PATCH with the image and status
     // 2) Otherwise, send a JSON PATCH for status only via AuthService
     // 3) Refresh the local user cache from the server
@@ -38,8 +25,9 @@ class ProfileService {
       throw Exception('User not authenticated');
     }
 
-    if ((imagePath != null && imagePath.isNotEmpty) || statusImagePaths.isNotEmpty) {
-      final uri = Uri.parse('https://api.luxashome.com/api/profile/');
+    if ((imagePath != null && imagePath.isNotEmpty) ||
+        statusImagePaths.isNotEmpty) {
+      final uri = AppConfig.current.apiUri('/api/profile/');
       final request = http.MultipartRequest('PATCH', uri)
         ..headers['Authorization'] = 'Token $token'
         ..fields['status_message'] = status;
@@ -49,16 +37,22 @@ class ProfileService {
       if (flair != null) request.fields['flair'] = flair;
 
       if (imagePath != null && imagePath.isNotEmpty) {
-        request.files.add(await http.MultipartFile.fromPath('profile_pic', imagePath));
+        request.files.add(
+          await http.MultipartFile.fromPath('profile_pic', imagePath),
+        );
       }
       for (final path in statusImagePaths) {
-        request.files.add(await http.MultipartFile.fromPath('status_images[]', path));
+        request.files.add(
+          await http.MultipartFile.fromPath('status_images[]', path),
+        );
       }
 
       final streamed = await request.send();
       final response = await http.Response.fromStream(streamed);
       if (response.statusCode != 200) {
-        throw Exception('Failed to update profile: ${response.statusCode} ${response.body}');
+        throw Exception(
+          'Failed to update profile: ${response.statusCode} ${response.body}',
+        );
       }
     } else {
       final Map<String, dynamic> updates = {'status_message': status};

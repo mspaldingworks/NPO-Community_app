@@ -1,55 +1,59 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFF3A2E7D);
-  static const Color secondary = Color(0xFFF2C14E); 
-  static const Color tertiary = Color(0xFFD95D79); 
-  static const Color alertBackground = Color(0xFFFFE5EC);
-  static const Color alertAccent = Color(0xFFD95D79);
-  static const Color textBlack = Color(0xFF000000);
+  static const Color primary = Color(0xFF173D33);
+  static const Color secondary = Color(0xFFD9B857);
+  static const Color tertiary = Color(0xFFC25432);
+  static const Color alertBackground = Color(0xFFF8E8E2);
+  static const Color alertAccent = Color(0xFFB33A2B);
+  static const Color textBlack = Color(0xFF1B211D);
   static const Color textWhite = Color(0xFFFFFFFF);
+  static const Color canvas = Color(0xFFF4F6F2);
+  static const Color border = Color(0xFFDDE2DC);
 }
 
 class AppTheme {
   static ThemeData get lightTheme {
-    return ThemeData(
-      primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: Colors.white,
-      fontFamily: 'Roboto', 
+    final colorScheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.light,
+        ).copyWith(
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          tertiary: AppColors.tertiary,
+          onPrimary: AppColors.textWhite,
+          onSecondary: AppColors.textBlack,
+          surface: Colors.white,
+          onSurface: AppColors.textBlack,
+        );
 
-      colorScheme: const ColorScheme.light(
-        primary: AppColors.primary,
-        secondary: AppColors.secondary,
-        tertiary: AppColors.tertiary,
-        onPrimary: AppColors.textWhite,
-        onSecondary: AppColors.textBlack, 
-        onTertiary: AppColors.textWhite, 
-        background: Colors.white,
-        onBackground: AppColors.textBlack,
-        surface: Colors.white,
-        onSurface: AppColors.textBlack,
-      ),
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppColors.canvas,
+      fontFamily: 'Avenir Next',
+      fontFamilyFallback: const ['Avenir', 'Helvetica Neue'],
 
       appBarTheme: const AppBarTheme(
-        color: AppColors.primary,
+        backgroundColor: AppColors.canvas,
+        foregroundColor: AppColors.textBlack,
         elevation: 0,
-        iconTheme: IconThemeData(color: AppColors.textWhite),
+        scrolledUnderElevation: 0,
+        centerTitle: false,
         titleTextStyle: TextStyle(
-          color: AppColors.textWhite,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+          color: AppColors.textBlack,
+          fontFamily: 'Avenir Next',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
         ),
-      ),
-
-      buttonTheme: const ButtonThemeData(
-        buttonColor: AppColors.primary,
-        textTheme: ButtonTextTheme.primary,
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textWhite,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
       ),
 
@@ -61,54 +65,63 @@ class AppTheme {
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: AppColors.textBlack),
         bodyMedium: TextStyle(color: AppColors.textBlack),
-        titleLarge: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-        headlineSmall: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-        titleMedium: TextStyle(color: AppColors.textBlack, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(
+          color: AppColors.textBlack,
+          fontSize: 27,
+          fontWeight: FontWeight.w700,
+        ),
+        headlineSmall: TextStyle(
+          color: AppColors.textBlack,
+          fontWeight: FontWeight.w700,
+        ),
+        titleLarge: TextStyle(
+          color: AppColors.textBlack,
+          fontWeight: FontWeight.w700,
+        ),
+        titleMedium: TextStyle(
+          color: AppColors.textBlack,
+          fontWeight: FontWeight.w700,
+        ),
       ),
 
       inputDecorationTheme: const InputDecorationTheme(
-        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.primary, width: 2.0),
         ),
       ),
 
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.primary,
-        indicatorColor: Colors.transparent, // Remove indicator highlight
-        iconTheme: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return const IconThemeData(
-              color: AppColors.textWhite,
-              size: 48, // 100% larger than default (24)
-              shadows: [
-                Shadow(color: Colors.black, blurRadius: 15.0, offset: Offset(0, 2)),
-              ],
+        height: 72,
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFFE1F0D5),
+        elevation: 3,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const IconThemeData(color: AppColors.primary, size: 24);
+          }
+          return const IconThemeData(color: Color(0xFF69716B), size: 22);
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return const TextStyle(
+              color: AppColors.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
             );
           }
-          return const IconThemeData(color: AppColors.textWhite, size: 24);
-        }),
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
-          if (states.contains(MaterialState.selected)) {
-            return const TextStyle(color: AppColors.textWhite, fontWeight: FontWeight.bold);
-          }
-          return const TextStyle(color: AppColors.textWhite);
+          return const TextStyle(color: Color(0xFF69716B), fontSize: 11);
         }),
       ),
-
-      tabBarTheme: TabBarThemeData(
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(color: AppColors.secondary, width: 3.0),
-        ),
-        labelColor: AppColors.textWhite,
-        unselectedLabelColor: Colors.white.withOpacity(0.7),
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.normal,
-          fontSize: 16,
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          ),
         ),
       ),
     );

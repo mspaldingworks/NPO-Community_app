@@ -3,16 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/calendar_service.dart';
-import 'package:transconnect/core/services/favorites_service.dart';
-import 'package:transconnect/core/services/profile_service.dart';
-import 'package:transconnect/models/event.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/profile_service.dart';
+import 'package:npo_community/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/widgets/pronoun_butterfly.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/widgets/pronoun_butterfly.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -33,7 +30,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _fullNameController = TextEditingController();
   final _cityController = TextEditingController();
   final _pronounsController = TextEditingController();
-  final TextEditingController _customPronounController = TextEditingController();
+  final TextEditingController _customPronounController =
+      TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final ProfileService _profileService = ProfileService();
   File? _profileImage;
@@ -114,7 +112,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Color _contrastTextColor(List<Color> colors) {
     if (colors.isEmpty) return Colors.white;
-    final avgLuminance = colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) / colors.length;
+    final avgLuminance =
+        colors.map((c) => c.computeLuminance()).reduce((a, b) => a + b) /
+        colors.length;
     return avgLuminance > 0.55 ? Colors.black : Colors.white;
   }
 
@@ -172,7 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (t == 'they' || t == 'them') return nbYellow;
 
       if (t == 'xe' || t == 'xem' || t == 'xyr') return xeGreen;
-      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') return zePurple;
+      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') {
+        return zePurple;
+      }
       if (t == 'fae' || t == 'faer') return faeLightGreen;
       if (t == 'ae' || t == 'aer') return aeSilver;
       if (t == 'ey' || t == 'em') return eyLightYellow;
@@ -185,14 +187,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return null;
     }
 
-    final hasShe = _startsOrContainsToken(pronoun, 'she') || _startsOrContainsToken(pronoun, 'her');
-    final hasHe = _startsOrContainsToken(pronoun, 'he') || _startsOrContainsToken(pronoun, 'him');
-    final hasThey = _startsOrContainsToken(pronoun, 'they') || _startsOrContainsToken(pronoun, 'them');
+    final hasShe =
+        _startsOrContainsToken(pronoun, 'she') ||
+        _startsOrContainsToken(pronoun, 'her');
+    final hasHe =
+        _startsOrContainsToken(pronoun, 'he') ||
+        _startsOrContainsToken(pronoun, 'him');
+    final hasThey =
+        _startsOrContainsToken(pronoun, 'they') ||
+        _startsOrContainsToken(pronoun, 'them');
     if (hasShe && hasHe && hasThey) {
       return const [femPink, mascBlue, nbYellow];
     }
 
-    final parts = pronoun.split('/').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final parts = pronoun
+        .split('/')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     final colors = <Color>[];
     for (final part in parts) {
       final c = colorForPart(part);
@@ -235,7 +247,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _applyPronounsFromText(String text) {
     final tokens = _parsePronounsText(text);
-    final canonical = tokens.where((p) => !_isBlockedPronoun(p)).map(_canonicalPronoun).toList();
+    final canonical = tokens
+        .where((p) => !_isBlockedPronoun(p))
+        .map(_canonicalPronoun)
+        .toList();
 
     var normalized = canonical;
     if (normalized.length > 1) {
@@ -246,16 +261,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final overflow = normalized.length > _maxPronounSelections;
-    final parsed = overflow ? normalized.take(_maxPronounSelections).toList() : normalized;
+    final parsed = overflow
+        ? normalized.take(_maxPronounSelections).toList()
+        : normalized;
     final hasDuplicates = parsed.toSet().length != parsed.length;
     final shouldResync =
-        overflow || canonical.length != tokens.length || normalized.length != canonical.length || hasDuplicates;
+        overflow ||
+        canonical.length != tokens.length ||
+        normalized.length != canonical.length ||
+        hasDuplicates;
 
     if (mounted) {
       if (overflow && !_pronounLimitSnackShown) {
         _pronounLimitSnackShown = true;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+          const SnackBar(
+            content: Text('You can select up to 5 pronoun options.'),
+          ),
         );
       } else if (!overflow && _pronounLimitSnackShown) {
         _pronounLimitSnackShown = false;
@@ -267,7 +289,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ..clear()
         ..addAll(parsed);
 
-      final custom = parsed.where((p) => !_availablePronouns.contains(p)).toList();
+      final custom = parsed
+          .where((p) => !_availablePronouns.contains(p))
+          .toList();
       _customPronouns
         ..clear()
         ..addAll(custom);
@@ -289,7 +313,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (_isDefaultPronoun(pronoun)) {
       setState(() {
-        if (_selectedPronouns.length == 1 && _selectedPronouns.contains(_defaultPronoun)) {
+        if (_selectedPronouns.length == 1 &&
+            _selectedPronouns.contains(_defaultPronoun)) {
           return;
         }
         _selectedPronouns
@@ -307,7 +332,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         if (_selectedPronouns.length >= _maxPronounSelections) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+            const SnackBar(
+              content: Text('You can select up to 5 pronoun options.'),
+            ),
           );
           return;
         }
@@ -348,9 +375,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    if (!_selectedPronouns.contains(custom) && _selectedPronouns.length >= _maxPronounSelections) {
+    if (!_selectedPronouns.contains(custom) &&
+        _selectedPronouns.length >= _maxPronounSelections) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You can select up to 5 pronoun options.')),
+        const SnackBar(
+          content: Text('You can select up to 5 pronoun options.'),
+        ),
       );
       return;
     }
@@ -383,7 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isSelected = _selectedPronouns.contains(pronoun);
     final baseColors = _pronounColors(pronoun);
     final opacity = isSelected ? 0.95 : 0.35;
-    final colors = baseColors.map((c) => c.withOpacity(opacity)).toList();
+    final colors = baseColors.map((c) => c.withValues(alpha: opacity)).toList();
     final textColor = _contrastTextColor(baseColors);
     final borderColor = isSelected ? Colors.white : Colors.white54;
 
@@ -407,15 +437,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 colors: colors,
               ),
               borderRadius: borderRadius,
-              border: Border.all(color: borderSide.color, width: borderSide.width),
+              border: Border.all(
+                color: borderSide.color,
+                width: borderSide.width,
+              ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Text(
               pronoun,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
             ),
           ),
         ),
@@ -430,10 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: FilterChip(
         label: Text(
           pronoun,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(color: textColor, fontWeight: FontWeight.w700),
         ),
         selected: isSelected,
         onSelected: (_) => _togglePronounSelection(pronoun),
@@ -441,9 +468,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         selectedColor: colors.first,
         showCheckmark: false,
         side: borderSide,
-        shape: RoundedRectangleBorder(
-          borderRadius: borderRadius,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: borderRadius),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       ),
     );
@@ -471,11 +496,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfileData() async {
     final status = await _profileService.getStatus();
     final imagePath = await _profileService.getImagePath();
+    if (!mounted) return;
     User? user;
     try {
       final auth = Provider.of<AuthService>(context, listen: false);
       user = auth.currentUser ?? await auth.getCurrentUser();
     } catch (_) {}
+    if (!mounted) return;
 
     final flair = user?.flair;
     final pronouns = FlairUtils.extractPronouns(flair) ?? '';
@@ -504,7 +531,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .toList();
 
         if (parsedPronouns.length > 1) {
-          parsedPronouns = parsedPronouns.where((p) => !_isDefaultPronoun(p)).toList();
+          parsedPronouns = parsedPronouns
+              .where((p) => !_isDefaultPronoun(p))
+              .toList();
         }
 
         if (parsedPronouns.isEmpty) {
@@ -516,7 +545,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ..addAll(parsedPronouns);
         _customPronouns
           ..clear()
-          ..addAll(_selectedPronouns.where((p) => !_availablePronouns.contains(p)));
+          ..addAll(
+            _selectedPronouns.where((p) => !_availablePronouns.contains(p)),
+          );
 
         _updatingPronounsText = true;
         _pronounsController.text = _selectedPronouns.join(', ');
@@ -586,9 +617,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
     if (mounted) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile saved!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile saved!')));
     }
   }
 
@@ -610,9 +641,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final imageUrl = currentUser?.fullProfilePicUrl;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-      ),
+      appBar: AppBar(title: const Text('Edit Profile')),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -622,7 +651,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Private profile'),
-                subtitle: const Text('Hide your profile details from other users.'),
+                subtitle: const Text(
+                  'Hide your profile details from other users.',
+                ),
                 value: _isProfilePrivate,
                 onChanged: _saving
                     ? null
@@ -666,9 +697,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   OutlinedButton.icon(
-                    onPressed: _saving || _statusImages.length >= _maxStatusImages ? null : _addStatusImage,
+                    onPressed:
+                        _saving || _statusImages.length >= _maxStatusImages
+                        ? null
+                        : _addStatusImage,
                     icon: const Icon(Icons.photo_library_outlined),
-                    label: Text('Add status photos (${_statusImages.length}/$_maxStatusImages)'),
+                    label: Text(
+                      'Add status photos (${_statusImages.length}/$_maxStatusImages)',
+                    ),
                   ),
                 ],
               ),
@@ -697,13 +733,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             iconSize: 18,
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                            onPressed: _saving ? null : () => _removeStatusImage(i),
+                            onPressed: _saving
+                                ? null
+                                : () => _removeStatusImage(i),
                             icon: const CircleAvatar(
                               radius: 10,
                               child: Icon(Icons.close, size: 14),
                             ),
                           ),
-                        )
+                        ),
                       ],
                     );
                   }),
@@ -796,7 +834,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   runSpacing: 8,
                   children: _customPronouns.map((pronoun) {
                     final baseColors = _pronounColors(pronoun);
-                    final colors = baseColors.map((c) => c.withOpacity(0.95)).toList();
+                    final colors = baseColors
+                        .map((c) => c.withValues(alpha: 0.95))
+                        .toList();
                     final textColor = _contrastTextColor(baseColors);
                     return InputChip(
                       label: Text(
@@ -807,7 +847,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       backgroundColor: colors.first,
-                      deleteIconColor: textColor.withOpacity(0.8),
+                      deleteIconColor: textColor.withValues(alpha: 0.8),
                       onDeleted: () => _removeCustomPronoun(pronoun),
                     );
                   }).toList(),
@@ -824,7 +864,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Column(
                     children: _mutualAidOptions.map((o) {
-                      final selected = _selectedMutualAidEmojis.contains(o.emoji);
+                      final selected = _selectedMutualAidEmojis.contains(
+                        o.emoji,
+                      );
                       return CheckboxListTile(
                         value: selected,
                         dense: true,
@@ -850,14 +892,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ElevatedButton(
                 onPressed: () {
                   _saveProfile();
-                  if (imageUrl != null){
+                  if (imageUrl != null) {
                     CachedNetworkImage.evictFromCache(imageUrl);
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Save'),
+                child: _saving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save'),
               ),
             ],
           ),

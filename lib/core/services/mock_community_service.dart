@@ -1,8 +1,8 @@
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/core/services/mock_api_client.dart';
-import 'package:transconnect/models/comment.dart';
-import 'package:transconnect/models/group.dart';
-import 'package:transconnect/models/post.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/mock_api_client.dart';
+import 'package:npo_community/models/comment.dart';
+import 'package:npo_community/models/group.dart';
+import 'package:npo_community/models/post.dart';
 
 class MockCommunityService extends CommunityService {
   final MockApiClient _client = MockApiClient();
@@ -15,7 +15,9 @@ class MockCommunityService extends CommunityService {
     );
 
     final List<dynamic> data = (result as List?) ?? const [];
-    return data.map((json) => Group.fromJson(json as Map<String, dynamic>)).toList();
+    return data
+        .map((json) => Group.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -26,7 +28,9 @@ class MockCommunityService extends CommunityService {
     );
 
     final List<dynamic> data = (result as List?) ?? const [];
-    return data.map((json) => Post.fromJson(json as Map<String, dynamic>)).toList();
+    return data
+        .map((json) => Post.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   @override
@@ -37,7 +41,9 @@ class MockCommunityService extends CommunityService {
     );
 
     final List<dynamic> data = (result as List?) ?? const [];
-    return data.map((json) => Comment.fromJson(json as Map<String, dynamic>)).toList();
+    return data
+        .map((json) => Comment.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   @override

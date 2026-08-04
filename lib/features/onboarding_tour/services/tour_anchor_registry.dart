@@ -44,7 +44,7 @@ class TourAnchorRegistry {
     if (!targetElementName.contains('X')) return null;
 
     final escaped = RegExp.escape(targetElementName);
-    final pattern = '^' + escaped.replaceAll('X', r'\d+') + r'$';
+    final pattern = '^${escaped.replaceAll('X', r'\d+')}\$';
     final re = RegExp(pattern);
 
     for (final entry in _keysByName.entries) {

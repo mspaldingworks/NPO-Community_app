@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,27 +14,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/media/twc_primary_logo.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.55),
+            color: Colors.black.withValues(alpha: 0.55),
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(),
                   const TourAnchor(
-                    name: 'Welcome to TransConnect',
+                    name: 'Welcome to NPO Community',
                     child: Text(
-                      'Welcome to TransConnect',
+                      'Welcome to NPO Community',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -45,14 +43,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   const SizedBox(height: 12),
                   const TourAnchor(
-                    name: 'Connect, share, and grow with a supportive community.',
+                    name:
+                        'Connect, share, and grow with a supportive community.',
                     child: Text(
                       'Connect, share, and grow with a supportive community.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                   ),
                   const SizedBox(height: 40),

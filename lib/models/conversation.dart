@@ -1,5 +1,5 @@
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/models/chat_message.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/models/chat_message.dart';
 
 class Conversation {
   final String id;
@@ -26,25 +26,24 @@ class Conversation {
     this.createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
-    int unreadCount = 0,
-    bool isMuted = false,
-  })  : createdAt = createdAt ?? DateTime.now(),
-        updatedAt = updatedAt ?? DateTime.now(),
-        unreadCount = unreadCount,
-        isMuted = isMuted;
+    this.unreadCount = 0,
+    this.isMuted = false,
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(
       id: json['id'] as String,
       name: json['name'] as String?,
-      participants: (json['participants'] as List<dynamic>?)
-              ?.map((userJson) => User.fromJson(userJson as Map<String, dynamic>))
+      participants:
+          (json['participants'] as List<dynamic>?)
+              ?.map(
+                (userJson) => User.fromJson(userJson as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       lastMessage: json['last_message'] != null
-          ? ChatMessage.fromJson(
-              json['last_message'] as Map<String, dynamic>,
-            )
+          ? ChatMessage.fromJson(json['last_message'] as Map<String, dynamic>)
           : null,
       lastMessageAt: json['last_message_at'] != null
           ? DateTime.parse(json['last_message_at'] as String)
@@ -69,11 +68,13 @@ class Conversation {
 
   Map<String, dynamic> toJson() {
     List<Map<String, dynamic>> participantMaps = participants
-        .map((user) => {
-              'id': user.id,
-              'username': user.username,
-              'email': user.email,
-            })
+        .map(
+          (user) => {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+          },
+        )
         .toList();
 
     return {
@@ -81,7 +82,8 @@ class Conversation {
       if (name != null) 'name': name,
       'participants': participantMaps,
       if (lastMessage != null) 'last_message': lastMessage!,
-      if (lastMessageAt != null) 'last_message_at': lastMessageAt!.toIso8601String(),
+      if (lastMessageAt != null)
+        'last_message_at': lastMessageAt!.toIso8601String(),
       'is_group': isGroup,
       if (groupImage != null) 'group_image': groupImage,
       if (createdBy != null)

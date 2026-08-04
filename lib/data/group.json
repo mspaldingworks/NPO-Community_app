@@ -2,157 +2,43 @@
   {
     "id": 1,
     "name": "General",
-    "description": "Posts without a specific category",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Transgender_pride_flag_colors_codes.png/640px-Transgender_pride_flag_colors_codes.png"
+    "description": "Organization-wide updates and discussion",
+    "avatarUrl": null
   },
   {
     "id": 2,
-    "name": "Trans Femmes",
-    "description": "For the femme-inclined",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Queer_Femme_flag.jpg/640px-Queer_Femme_flag.jpg"
+    "name": "Volunteer Coordination",
+    "description": "Coordinate volunteer opportunities and teams",
+    "avatarUrl": null
   },
   {
     "id": 3,
-    "name": "Trans Mascs",
-    "description": "Masc-inclined discussion",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/MOREmoji_transmasculine.svg/640px-MOREmoji_transmasculine.svg.png"
+    "name": "Events",
+    "description": "Plan and support organization events",
+    "avatarUrl": null
   },
   {
     "id": 4,
-    "name": "Nonbinary/ Gender-Expansive",
-    "description": "A discussion for folks who don't locate their identities or otherwise identify outside of the binary ends of the gender-spectrum of trans youth",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Nonbinary_flag_square_avatar.svg/640px-Nonbinary_flag_square_avatar.svg.png"
+    "name": "Fundraising",
+    "description": "Stewardship and fundraising collaboration",
+    "avatarUrl": null
   },
   {
     "id": 5,
-    "name": "Partners/ Families",
-    "description": "People who love trans people",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Prismatic_holding_hands.svg/640px-Prismatic_holding_hands.svg.png"
+    "name": "Partner Network",
+    "description": "Coordinate with approved organization partners",
+    "avatarUrl": null
   },
   {
     "id": 6,
-    "name": "Legal",
-    "description": "A place to ask about the legal situation, including legislation and documents",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Justice_scale_silhouette%2C_medium.svg/640px-Justice_scale_silhouette%2C_medium.svg.png"
+    "name": "Chapter Region",
+    "description": "Local chapter coordination",
+    "avatarUrl": null
   },
   {
     "id": 7,
-    "name": "Hobbies",
-    "description": "Trans people doing stuff",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Painter%27s_colors_pallet_%2846422320134%29.jpg/640px-Painter%27s_colors_pallet_%2846422320134%29.jpg"
-  },
-  {
-    "id": 8,
-    "name": "Kentuckiana Regional",
-    "description": "Louisville and surrounding counties",
-    "avatarUrl": "https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/Kentuckiana-Regions-Map-2048x1046-1.jpg"
-  },
-  {
-    "id": 10,
-    "name": "Central KY",
-    "description": "The middle of KY",
-    "avatarUrl": "https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/CentalKY-Regions-Map-2048x1046-1.jpg"
-  },
-  {
-    "id": 11,
-    "name": "Eastern KY",
-    "description": "Kentucky East of the central line",
-    "avatarUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/MN-_Eastern_Kentucky_University_%286263419581%29.jpg/640px-MN-_Eastern_Kentucky_University_%286263419581%29.jpg"
-  },
-  {
-    "id": 12,
-    "name": "Western KY",
-    "description": "Kentucky West of the central line",
-    "avatarUrl": "https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/WKY-Regions-Map-2048x1046-1.jpg"
-  },
-  {
-    "id": 13,
-    "name": "South-Central KY",
-    "description": null,
-    "avatarUrl": "https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/SouthCentralKY-Regions-Map-2048x1046-1.jpg"
-  },
-  {
-    "id": 14,
-    "name": "Northern KY",
-    "description": null,
-    "avatarUrl": "https://louisvilleyouthgroup.org/wp-content/uploads/2025/12/CentalKY-Regions-Map-2048x1046-1.jpg"
-  },
-  {
-    "id": 15,
-    "name": "Kink",
-    "description": "Kink general",
-    "avatarUrl": null
-  },
-  {
-    "id": 16,
-    "name": "Hugbox",
-    "description": "A place to share your pictures and get loved on.  You may post anonymously in this chat",
-    "avatarUrl": null
-  },
-  {
-    "id": 17,
-    "name": "BIPOC",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 18,
-    "name": "Neurospicy",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 19,
-    "name": "Under 30 chat",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 20,
-    "name": "60+ chat",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 21,
-    "name": "Honest Improvement",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 22,
-    "name": "Support Chat",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 23,
-    "name": "Politics",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 24,
-    "name": "Organizing/ Advocacy",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 25,
-    "name": "Beauty",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 26,
-    "name": "Physical Health",
-    "description": null,
-    "avatarUrl": null
-  },
-  {
-    "id": 27,
-    "name": "Sexual Wellness",
-    "description": null,
+    "name": "Board and Committees",
+    "description": "Governance and committee collaboration",
     "avatarUrl": null
   }
 ]

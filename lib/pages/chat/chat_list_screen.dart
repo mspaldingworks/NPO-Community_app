@@ -1,29 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/chat_favorites_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/widgets/friends/friends_tab_view.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/chat_favorites_service.dart';
+import 'package:npo_community/core/services/chat_service.dart';
+import 'package:npo_community/widgets/friends/friends_tab_view.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/theme/app_theme.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
 
 class ChatListScreen extends StatefulWidget {
-  ChatListScreen({super.key});
+  const ChatListScreen({super.key});
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
-
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Connect'),
+          title: const Text('Connect'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Requests'),
@@ -36,8 +35,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
           name: 'Add Friend',
           child: FloatingActionButton(
             onPressed: () => GoRouter.of(context).push('/user-search'),
-            child: const Icon(Icons.person_add),
             tooltip: 'Add Friend',
+            child: const Icon(Icons.person_add),
           ),
         ),
       ),
@@ -157,16 +156,19 @@ class _ConversationListState extends State<ConversationList> {
                 final String? pronounsDisplay = isPrivate
                     ? null
                     : (FlairUtils.extractPronouns(flair) ?? '')
-                        .split(RegExp(r'[\n,]'))
-                        .map((p) => p.trim())
-                        .where((p) => p.isNotEmpty)
-                        .join(' • ');
+                          .split(RegExp(r'[\n,]'))
+                          .map((p) => p.trim())
+                          .where((p) => p.isNotEmpty)
+                          .join(' • ');
 
                 // All previous logic for lastMessage, unreadCount, isGroup,
                 // and multi-participants has been REMOVED.
 
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   elevation: 1,
                   child: ListTile(
                     leading: GestureDetector(
@@ -195,7 +197,8 @@ class _ConversationListState extends State<ConversationList> {
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                          if (pronounsDisplay != null &&
+                              pronounsDisplay.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
@@ -223,9 +226,9 @@ class _ConversationListState extends State<ConversationList> {
                     ),
                     onTap: () {
                       // Navigate using the other user's ID
-                      GoRouter.of(context).push('/chat/${otherUser.id}'); 
-                      
-                      // NOTE: We no longer pass `extra: conversation` as it 
+                      GoRouter.of(context).push('/chat/${otherUser.id}');
+
+                      // NOTE: We no longer pass `extra: conversation` as it
                       // is now minimal and likely unnecessary for the chat detail screen.
                     },
                     // Long press is removed since there are no options now

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/resource_service.dart';
-import 'package:transconnect/models/resource.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/resource_service.dart';
+import 'package:npo_community/models/resource.dart';
+import 'package:npo_community/models/user.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 Color _getColorFromTag(String tag) {
   final hash = tag.hashCode;
@@ -25,7 +25,8 @@ class ResourceGuideScreen extends StatefulWidget {
   ResourceGuideScreenState createState() => ResourceGuideScreenState();
 }
 
-class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTickerProviderStateMixin {
+class ResourceGuideScreenState extends State<ResourceGuideScreen>
+    with SingleTickerProviderStateMixin {
   final ResourceService _resourceService = ResourceService();
   late Future<List<Resource>> _resourcesFuture;
   List<Resource> _allResources = [];
@@ -105,12 +106,16 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
 
   void _filterResources() {
     final query = _searchController.text.toLowerCase();
-    final selectedTag = _tabController != null && _tabController!.index != 0 ? _tags[_tabController!.index] : null;
+    final selectedTag = _tabController != null && _tabController!.index != 0
+        ? _tags[_tabController!.index]
+        : null;
 
     final next = _allResources.where((resource) {
       final nameMatches = resource.name?.toLowerCase().contains(query) ?? false;
-      final descriptionMatches = resource.description?.toLowerCase().contains(query) ?? false;
-      final tagMatches = selectedTag == null || resource.tags.contains(selectedTag);
+      final descriptionMatches =
+          resource.description?.toLowerCase().contains(query) ?? false;
+      final tagMatches =
+          selectedTag == null || resource.tags.contains(selectedTag);
       return (nameMatches || descriptionMatches) && tagMatches;
     }).toList();
 
@@ -138,7 +143,10 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
 
   Future<void> _toggleFavorite(Resource resource) async {
     final isFavorite = _favoriteResourceIds.contains(resource.id);
-    await _resourceService.setResourceFavorite(resourceId: resource.id, isFavorite: !isFavorite);
+    await _resourceService.setResourceFavorite(
+      resourceId: resource.id,
+      isFavorite: !isFavorite,
+    );
     await _loadFavorites();
   }
 
@@ -147,9 +155,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch $urlString')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not launch $urlString')));
     }
   }
 
@@ -165,9 +173,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete resource: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to delete resource: $e')));
     }
   }
 
@@ -177,7 +185,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirm Delete'),
-          content: const Text('Are you sure you want to delete this resource? This action cannot be undone.'),
+          content: const Text(
+            'Are you sure you want to delete this resource? This action cannot be undone.',
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
@@ -212,7 +222,6 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
         } else {
           return Column(
             children: [
-              _buildMigrationPlannerCard(context),
               _buildSearchAndFilter(),
               Expanded(
                 child: ListView.builder(
@@ -247,7 +256,10 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(resource.name ?? '[No Name]', style: Theme.of(context).textTheme.titleLarge),
+                  child: Text(
+                    resource.name ?? '[No Name]',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                 ),
                 IconButton(
                   tooltip: isFavorite ? 'Unstar' : 'Star',
@@ -274,7 +286,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                       const SizedBox(width: 6),
                       Text(
                         'Verified link',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.green),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: Colors.green),
                       ),
                     ],
                   ),
@@ -284,10 +298,16 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
             if (isAdmin)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
-                child: Text('Added by: ${resource.user ?? 'Unknown'}', style: Theme.of(context).textTheme.bodySmall),
+                child: Text(
+                  'Added by: ${resource.user ?? 'Unknown'}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             const SizedBox(height: 8.0),
-            Text(resource.description ?? '[No Description]', style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              resource.description ?? '[No Description]',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 12.0),
             Wrap(
               spacing: 8.0,
@@ -312,15 +332,17 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                   if (isAdmin)
                     TextButton(
                       onPressed: () => _showDeleteConfirmation(resource.id),
-                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ),
                   if (isAdmin)
                     TextButton(
                       onPressed: () async {
-                        final result = await GoRouter.of(context).push<bool>(
-                          '/resources/edit',
-                          extra: resource,
-                        );
+                        final result = await GoRouter.of(
+                          context,
+                        ).push<bool>('/resources/edit', extra: resource);
                         if (result == true) {
                           setState(() {
                             _resourcesFuture = _fetchAndSetResources();
@@ -340,7 +362,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                           targetId: resource.id,
                           targetUsername: resource.user,
                           targetUrl: resource.url,
-                          details: '${resource.name ?? ''}\n\n${resource.description ?? ''}'.trim(),
+                          details:
+                              '${resource.name ?? ''}\n\n${resource.description ?? ''}'
+                                  .trim(),
                         ),
                       );
                     },
@@ -373,7 +397,10 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
           children: [
             TourAnchor(
               name: 'Search Resources',
-              child: Text('Search Resources', style: Theme.of(context).textTheme.titleLarge),
+              child: Text(
+                'Search Resources',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
             const SizedBox(height: 16.0),
             TourAnchor(
@@ -396,7 +423,9 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                   controller: _tabController,
                   isScrollable: true,
                   labelColor: Colors.white,
-                  unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black,
+                  unselectedLabelColor:
+                      Theme.of(context).textTheme.bodyLarge?.color ??
+                      Colors.black,
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     color: Colors.deepPurple,
@@ -405,39 +434,6 @@ class ResourceGuideScreenState extends State<ResourceGuideScreen> with SingleTic
                   tabs: _tags.map((tag) => Tab(text: tag)).toList(),
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMigrationPlannerCard(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            const Icon(Icons.route_outlined, size: 32),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Plan your migration', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Plan routes from Kentucky with restrooms, camera overlays, and border presets.',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            FilledButton(
-              onPressed: () => context.push('/resources/migration'),
-              child: const Text('Open'),
-            ),
           ],
         ),
       ),

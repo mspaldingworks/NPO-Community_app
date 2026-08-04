@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/group.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/group.dart';
 
 class GenderChatsScreen extends StatefulWidget {
   const GenderChatsScreen({super.key});
@@ -58,10 +58,12 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final groups = snapshot.data ?? [];
-          final generalGroup = _findByNames(
-            groups,
-            ['the meadow', 'meadow', 'general chat', 'general'],
-          );
+          final generalGroup = _findByNames(groups, [
+            'the meadow',
+            'meadow',
+            'general chat',
+            'general',
+          ]);
           final hobbiesGroup = _findByNames(groups, ['hobbies', 'hobby']);
           final items = <_CardItem>[
             _CardItem(
@@ -70,7 +72,11 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
               group: generalGroup,
               imageUrl: generalGroup?.fullImageUrl,
             ),
-            _CardItem(title: 'Hobbies', icon: Icons.interests, group: hobbiesGroup),
+            _CardItem(
+              title: 'Hobbies',
+              icon: Icons.interests,
+              group: hobbiesGroup,
+            ),
           ];
 
           return GridView.builder(
@@ -90,7 +96,10 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
                 imageUrl: item.imageUrl,
                 onTap: () {
                   if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                    GoRouter.of(context).push(
+                      '/community/group/${item.group!.id}',
+                      extra: item.group!.name,
+                    );
                   }
                 },
               );
@@ -149,22 +158,40 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
             _CardItem(
               title: 'Trans Femmes',
               icon: Icons.female,
-              group: _findByNames(groups, ['trans femmes', 'trans femme', 'femmes']),
+              group: _findByNames(groups, [
+                'trans femmes',
+                'trans femme',
+                'femmes',
+              ]),
             ),
             _CardItem(
               title: 'Trans Mascs',
               icon: Icons.male,
-              group: _findByNames(groups, ['trans mascs', 'trans masc', 'mascs']),
+              group: _findByNames(groups, [
+                'trans mascs',
+                'trans masc',
+                'mascs',
+              ]),
             ),
             _CardItem(
               title: 'Nonbinary / Gender-Expansive',
               icon: Icons.transgender,
-              group: _findByNames(groups, ['nonbinary', 'non-binary', 'gender-expansive', 'nonbinary/ gender-expansive']),
+              group: _findByNames(groups, [
+                'nonbinary',
+                'non-binary',
+                'gender-expansive',
+                'nonbinary/ gender-expansive',
+              ]),
             ),
             _CardItem(
               title: 'Partners / Families',
               icon: Icons.family_restroom,
-              group: _findByNames(groups, ['partners/ families', 'partners & families', 'partners and families', 'families']),
+              group: _findByNames(groups, [
+                'partners/ families',
+                'partners & families',
+                'partners and families',
+                'families',
+              ]),
             ),
             _CardItem(
               title: 'BIPOC',
@@ -174,7 +201,11 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
             _CardItem(
               title: 'Neurospicy',
               icon: Icons.psychology,
-              group: _findByNames(groups, ['neurospicy', 'neurodivergent', 'neurodivergence']),
+              group: _findByNames(groups, [
+                'neurospicy',
+                'neurodivergent',
+                'neurodivergence',
+              ]),
             ),
             _CardItem(
               title: 'Under 30 chat',
@@ -184,7 +215,12 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
             _CardItem(
               title: '60+ chat',
               icon: Icons.elderly,
-              group: _findByNames(groups, ['60+', '60 plus', 'senior', 'older']),
+              group: _findByNames(groups, [
+                '60+',
+                '60 plus',
+                'senior',
+                'older',
+              ]),
             ),
             _CardItem(
               title: 'General',
@@ -211,7 +247,10 @@ class _GenderChatsScreenState extends State<GenderChatsScreen> {
                   if (item.route != null) {
                     GoRouter.of(context).push(item.route!);
                   } else if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                    GoRouter.of(context).push(
+                      '/community/group/${item.group!.id}',
+                      extra: item.group!.name,
+                    );
                   }
                 },
               );
@@ -271,7 +310,11 @@ class _LegalChatsScreenState extends State<LegalChatsScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final groups = snapshot.data ?? [];
-          final legalGroup = _findByNames(groups, ['legal', 'legal help', 'legal topics']);
+          final legalGroup = _findByNames(groups, [
+            'legal',
+            'legal help',
+            'legal topics',
+          ]);
           final items = <_CardItem>[
             _CardItem(title: 'Legal', icon: Icons.gavel, group: legalGroup),
           ];
@@ -294,7 +337,10 @@ class _LegalChatsScreenState extends State<LegalChatsScreen> {
                   if (item.route != null) {
                     GoRouter.of(context).push(item.route!);
                   } else if (item.group != null) {
-                    GoRouter.of(context).push('/community/group/${item.group!.id}', extra: item.group!.name);
+                    GoRouter.of(context).push(
+                      '/community/group/${item.group!.id}',
+                      extra: item.group!.name,
+                    );
                   }
                 },
               );
@@ -346,15 +392,15 @@ class _IconCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (imageUrl != null)
-              Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-              )
+              Image.network(imageUrl!, fit: BoxFit.cover)
             else
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.35),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -362,7 +408,11 @@ class _IconCard extends StatelessWidget {
               ),
             if (imageUrl == null)
               Center(
-                child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+                child: Icon(
+                  iconData,
+                  size: 64,
+                  color: color.withValues(alpha: 0.7),
+                ),
               ),
             Align(
               alignment: Alignment.bottomLeft,

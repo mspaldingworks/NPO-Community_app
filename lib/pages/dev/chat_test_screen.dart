@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/ws_message.dart';
+import 'package:npo_community/core/services/chat_service.dart';
 
 class ChatTestScreen extends StatefulWidget {
   const ChatTestScreen({super.key});
@@ -46,10 +45,10 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
 
     try {
       _addLog('Connecting to channel: $channelId...');
-      
+
       // Connect to the channel
       final messageStream = _chatService.connectToChatChannel(channelId);
-      
+
       // Listen for messages
       messageStream.listen(
         (message) {
@@ -105,11 +104,11 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
 
   Future<void> _toggleTyping() async {
     if (_currentChannelId == null) return;
-    
+
     setState(() {
       _isTyping = !_isTyping;
     });
-    
+
     try {
       await _chatService.sendTypingIndicator(_currentChannelId!, _isTyping);
       _addLog('Typing indicator: ${_isTyping ? 'typing...' : 'not typing'}');
@@ -121,9 +120,7 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat Service Test'),
-      ),
+      appBar: AppBar(title: const Text('Chat Service Test')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -154,7 +151,9 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
                 ElevatedButton(
                   onPressed: _isConnected
                       ? () {
-                          _chatService.disconnectFromChatChannel(_currentChannelId!);
+                          _chatService.disconnectFromChatChannel(
+                            _currentChannelId!,
+                          );
                           setState(() {
                             _isConnected = false;
                             _currentChannelId = null;
@@ -171,7 +170,7 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Message Input
             Row(
               children: [
@@ -204,7 +203,7 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Logs
             const Text('Logs:', style: TextStyle(fontWeight: FontWeight.bold)),
             const Divider(),
@@ -216,7 +215,10 @@ class _ChatTestScreenState extends State<ChatTestScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 2.0),
                     child: Text(
                       _logs.reversed.toList()[index],
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
                     ),
                   );
                 },

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/meadow/models/online_user.dart';
-import 'package:transconnect/widgets/pronoun_butterfly.dart';
+import 'package:npo_community/features/meadow/models/online_user.dart';
+import 'package:npo_community/widgets/pronoun_butterfly.dart';
 
 class MeadowButterfly extends StatefulWidget {
   const MeadowButterfly({
@@ -80,7 +80,9 @@ class _MeadowButterflyState extends State<MeadowButterfly>
       (jitterRandom.nextDouble() - 0.5) * 120,
       (jitterRandom.nextDouble() - 0.5) * 120,
     );
-    final baseHome = widget.user.position == Offset.zero ? _randomPoint() : widget.user.position;
+    final baseHome = widget.user.position == Offset.zero
+        ? _randomPoint()
+        : widget.user.position;
     _homePosition = _clampToBounds(baseHome + jitter);
     _movementController = AnimationController(vsync: this);
     _fadeController = AnimationController(
@@ -113,7 +115,8 @@ class _MeadowButterflyState extends State<MeadowButterfly>
       _fadeController.forward();
     }
 
-    if (widget.flyToTarget != null && widget.flyToTarget != _activeFlightTarget) {
+    if (widget.flyToTarget != null &&
+        widget.flyToTarget != _activeFlightTarget) {
       _flyTo(widget.flyToTarget!);
     } else if (widget.flyToTarget == null && _activeFlightTarget != null) {
       _activeFlightTarget = null;
@@ -154,11 +157,10 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   void _startDrift() {
     if (!widget.driftEnabled || widget.isLeaving) return;
     _pauseTimer?.cancel();
-    final target = _random.nextDouble() < 0.08 ? _randomPoint() : _randomNearbyPoint();
-    _animateTo(
-      target,
-      duration: Duration.zero,
-    );
+    final target = _random.nextDouble() < 0.08
+        ? _randomPoint()
+        : _randomNearbyPoint();
+    _animateTo(target, duration: Duration.zero);
   }
 
   void _stopDrift() {
@@ -210,8 +212,12 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     final wobble1 = wobbleBase * (0.70 + _random.nextDouble() * 0.70);
     final wobble2 = wobbleBase * (0.50 + _random.nextDouble() * 0.90);
     final sign1 = _random.nextBool() ? 1.0 : -1.0;
-    final sign2 = (_random.nextBool() ? 1.0 : -1.0) * (_random.nextDouble() < 0.65 ? -sign1 : 1.0);
-    final loopAmount = min(length * 0.28, widget.size * 3.0) * (0.25 + _random.nextDouble() * 0.85);
+    final sign2 =
+        (_random.nextBool() ? 1.0 : -1.0) *
+        (_random.nextDouble() < 0.65 ? -sign1 : 1.0);
+    final loopAmount =
+        min(length * 0.28, widget.size * 3.0) *
+        (0.25 + _random.nextDouble() * 0.85);
 
     _control1 = _clampToBounds(
       Offset(
@@ -229,16 +235,12 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     );
 
     _buildPathLookup();
-    final estimatedDuration = _durationForPathLength(
-      minimum: duration,
-    );
+    final estimatedDuration = _durationForPathLength(minimum: duration);
     final estimatedSeconds = estimatedDuration.inMilliseconds / 1000.0;
     _wiggleCycles = (estimatedSeconds * 0.7).ceil().clamp(2, 5);
 
     _buildPathLookup();
-    final adjustedDuration = _durationForPathLength(
-      minimum: duration,
-    );
+    final adjustedDuration = _durationForPathLength(minimum: duration);
     _movementController.duration = adjustedDuration;
 
     _movementController.forward().whenComplete(() {
@@ -270,8 +272,10 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     if (!mounted) return;
     final minX = widget.padding.left + widget.size / 2;
     final minY = widget.padding.top + widget.size / 2;
-    final maxX = widget.meadowSize.width - widget.padding.right - widget.size / 2;
-    final maxY = widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
+    final maxX =
+        widget.meadowSize.width - widget.padding.right - widget.size / 2;
+    final maxY =
+        widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
     setState(() {
       _currentPosition = Offset(
         next.dx.clamp(minX, maxX).toDouble(),
@@ -292,9 +296,18 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     final envelope = sin(pi * t);
     final wiggleAmplitude = min(widget.size * 1.35, length * 0.18);
     final loopAmplitude = min(widget.size * 0.85, length * 0.12);
-    final wiggle = sin((t * pi * 2 * _wiggleCycles) + _wigglePhase) * wiggleAmplitude * envelope;
-    final loop = sin((t * pi * 2 * _wiggleCycles) + _bobPhase) * loopAmplitude * envelope;
-    final windingPoint = point.translate(nx * wiggle + tx * loop, ny * wiggle + ty * loop);
+    final wiggle =
+        sin((t * pi * 2 * _wiggleCycles) + _wigglePhase) *
+        wiggleAmplitude *
+        envelope;
+    final loop =
+        sin((t * pi * 2 * _wiggleCycles) + _bobPhase) *
+        loopAmplitude *
+        envelope;
+    final windingPoint = point.translate(
+      nx * wiggle + tx * loop,
+      ny * wiggle + ty * loop,
+    );
     final wistfulBob = sin((t * pi * 2) + _bobPhase) * _bobAmplitude * envelope;
     return windingPoint.translate(0, wistfulBob);
   }
@@ -316,7 +329,9 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     }
 
     _pathTotalLength = max(1.0, total);
-    _pathProgressFractions = cumulative.map((v) => v / _pathTotalLength).toList();
+    _pathProgressFractions = cumulative
+        .map((v) => v / _pathTotalLength)
+        .toList();
     _pathProgressT = ts;
   }
 
@@ -361,8 +376,10 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   Offset _randomPoint() {
     final minX = widget.padding.left + widget.size / 2;
     final minY = widget.padding.top + widget.size / 2;
-    final maxX = widget.meadowSize.width - widget.padding.right - widget.size / 2;
-    final maxY = widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
+    final maxX =
+        widget.meadowSize.width - widget.padding.right - widget.size / 2;
+    final maxY =
+        widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
     final dx = minX + _random.nextDouble() * max(0, maxX - minX);
     final dy = minY + _random.nextDouble() * max(0, maxY - minY);
     return Offset(dx, dy);
@@ -389,8 +406,10 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   Offset _randomNearbyPoint() {
     final minX = widget.padding.left + widget.size / 2;
     final minY = widget.padding.top + widget.size / 2;
-    final maxX = widget.meadowSize.width - widget.padding.right - widget.size / 2;
-    final maxY = widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
+    final maxX =
+        widget.meadowSize.width - widget.padding.right - widget.size / 2;
+    final maxY =
+        widget.meadowSize.height - widget.padding.bottom - widget.size / 2;
 
     final radius = 110 + _random.nextDouble() * 90;
     final angle = _random.nextDouble() * pi * 2;
@@ -418,8 +437,16 @@ class _MeadowButterflyState extends State<MeadowButterfly>
   Offset _clampToBounds(Offset point, {double extra = 0}) {
     final minX = widget.padding.left + widget.size / 2 - extra;
     final minY = widget.padding.top + widget.size / 2 - extra;
-    final maxX = widget.meadowSize.width - widget.padding.right - widget.size / 2 + extra;
-    final maxY = widget.meadowSize.height - widget.padding.bottom - widget.size / 2 + extra;
+    final maxX =
+        widget.meadowSize.width -
+        widget.padding.right -
+        widget.size / 2 +
+        extra;
+    final maxY =
+        widget.meadowSize.height -
+        widget.padding.bottom -
+        widget.size / 2 +
+        extra;
     return Offset(
       point.dx.clamp(minX, maxX).toDouble(),
       point.dy.clamp(minY, maxY).toDouble(),
@@ -438,11 +465,7 @@ class _MeadowButterflyState extends State<MeadowButterfly>
     );
   }
 
-  Duration _durationForDistance(
-    Offset start,
-    Offset end, {
-    Duration? minimum,
-  }) {
+  Duration _durationForDistance(Offset start, Offset end, {Duration? minimum}) {
     final distance = (end - start).distance;
     final ms = (distance / _pixelsPerSecond * 1000).round();
     final computed = Duration(
@@ -459,7 +482,10 @@ class _MeadowButterflyState extends State<MeadowButterfly>
       left: _currentPosition.dx - widget.size / 2,
       top: _currentPosition.dy - widget.size / 2,
       child: FadeTransition(
-        opacity: CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+        opacity: CurvedAnimation(
+          parent: _fadeController,
+          curve: Curves.easeOut,
+        ),
         child: GestureDetector(
           onTap: widget.onTap,
           child: Column(
@@ -476,16 +502,16 @@ class _MeadowButterflyState extends State<MeadowButterfly>
               Text(
                 widget.user.name,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.55),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        )
-                      ],
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
               ),
             ],
           ),

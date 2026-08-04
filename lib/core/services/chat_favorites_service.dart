@@ -1,4 +1,4 @@
-import 'package:transconnect/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 
 class ChatFavoritesService {
   static const String _favoritesKey = 'favorite_chat_ids_v1';

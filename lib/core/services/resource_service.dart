@@ -1,11 +1,11 @@
 // Removed: import 'dart:convert';
-// Removed: import 'package:transconnect/core/services/shared_preferences_service.dart';
+// Removed: import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
-import 'package:transconnect/core/services/api_client.dart';
-import 'package:transconnect/core/services/shared_preferences_service.dart';
-import 'package:transconnect/models/resource.dart';
+import 'package:npo_community/core/services/api_client.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/models/resource.dart';
 
 class _CachedLinkStatus {
   final bool? reachable;
@@ -20,15 +20,16 @@ class ResourceService extends ApiClient {
   static const Duration _linkStatusMaxAge = Duration(hours: 12);
 
   final SharedPreferencesService _prefsService = SharedPreferencesService();
-  static final Map<String, _CachedLinkStatus> _linkStatusCache = <String, _CachedLinkStatus>{};
+  static final Map<String, _CachedLinkStatus> _linkStatusCache =
+      <String, _CachedLinkStatus>{};
 
   ResourceService();
 
-  // Helper function remains, though it will now work with the output 
+  // Helper function remains, though it will now work with the output
   // of the ApiClient's response processing.
   List<Resource> createResourceListFromJson(dynamic jsonList) {
-  final List<dynamic> decodedList = jsonList as List<dynamic>;
-  return decodedList.map((json) => Resource.fromJson(json)).toList();
+    final List<dynamic> decodedList = jsonList as List<dynamic>;
+    return decodedList.map((json) => Resource.fromJson(json)).toList();
   }
 
   Future<Set<int>> getFavoriteResourceIds() async {
@@ -44,7 +45,10 @@ class ResourceService extends ApiClient {
     return ids;
   }
 
-  Future<void> setResourceFavorite({required int resourceId, required bool isFavorite}) async {
+  Future<void> setResourceFavorite({
+    required int resourceId,
+    required bool isFavorite,
+  }) async {
     final current = await getFavoriteResourceIds();
     final next = <int>{...current};
     if (isFavorite) {
@@ -65,7 +69,9 @@ class ResourceService extends ApiClient {
     if (cached != null) {
       final checkedAt = cached.checkedAt;
       final reachable = cached.reachable;
-      if (reachable != null && checkedAt != null && now.difference(checkedAt) <= _linkStatusMaxAge) {
+      if (reachable != null &&
+          checkedAt != null &&
+          now.difference(checkedAt) <= _linkStatusMaxAge) {
         return reachable;
       }
       final inFlight = cached.inFlight;
@@ -78,7 +84,10 @@ class ResourceService extends ApiClient {
     _linkStatusCache[normalized] = _CachedLinkStatus(inFlight: future);
 
     final reachable = await future;
-    _linkStatusCache[normalized] = _CachedLinkStatus(reachable: reachable, checkedAt: DateTime.now());
+    _linkStatusCache[normalized] = _CachedLinkStatus(
+      reachable: reachable,
+      checkedAt: DateTime.now(),
+    );
     return reachable;
   }
 

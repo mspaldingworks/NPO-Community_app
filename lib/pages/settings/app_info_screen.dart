@@ -14,11 +14,11 @@ class AppInfoScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Welcome to TransConnect', style: textTheme.headlineSmall),
+            Text('Welcome to NPO Community', style: textTheme.headlineSmall),
             const SizedBox(height: 12),
             Text(
-              'TransConnect is a community hub built to help trans people connect, share resources, and support one another. '
-              'It blends social spaces, mutual aid, and local discovery into one place so you can stay informed and connected.',
+              'NPO Community is a private workspace for nonprofit volunteers, donors, alumni, partners, committee members, board members, and staff. '
+              'It brings coordination, events, resources, and stewardship into one place.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),

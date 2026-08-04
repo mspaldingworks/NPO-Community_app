@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/constants/api_endpoints.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/core/services/exchange_service.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/exchange_service.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 
 class ExchangePostDetailScreen extends StatefulWidget {
   final int postId;
@@ -21,7 +21,8 @@ class ExchangePostDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ExchangePostDetailScreen> createState() => _ExchangePostDetailScreenState();
+  State<ExchangePostDetailScreen> createState() =>
+      _ExchangePostDetailScreenState();
 }
 
 class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
@@ -83,7 +84,8 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
   Future<void> _report(Post post) async {
     final authorLabel = post.isAnonymous
         ? 'Anonymous'
-        : (post.authorUsername ?? (post.author != null ? 'User ${post.author}' : 'Unknown user'));
+        : (post.authorUsername ??
+              (post.author != null ? 'User ${post.author}' : 'Unknown user'));
 
     await showReportDialog(
       context: context,
@@ -101,9 +103,7 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Listing'),
-      ),
+      appBar: AppBar(title: const Text('Listing')),
       body: FutureBuilder<Post>(
         future: _postFuture,
         builder: (context, snapshot) {
@@ -111,7 +111,9 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Failed to load listing: ${snapshot.error}'));
+            return Center(
+              child: Text('Failed to load listing: ${snapshot.error}'),
+            );
           }
 
           final post = snapshot.data;
@@ -125,18 +127,21 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
 
           final authorLabel = post.isAnonymous
               ? 'Anonymous'
-              : (post.authorUsername ?? (post.author != null ? 'User ${post.author}' : 'Unknown user'));
+              : (post.authorUsername ??
+                    (post.author != null
+                        ? 'User ${post.author}'
+                        : 'Unknown user'));
 
           final subtitleParts = <String>[];
           if (meta != null) {
-            subtitleParts.add(meta.kind == ExchangeKind.offer ? 'Offer' : 'Request');
             subtitleParts.add(
-              switch (meta.compensation) {
-                ExchangeCompensation.free => 'Free',
-                ExchangeCompensation.trade => 'Trade',
-                ExchangeCompensation.paid => 'Paid',
-              },
+              meta.kind == ExchangeKind.offer ? 'Offer' : 'Request',
             );
+            subtitleParts.add(switch (meta.compensation) {
+              ExchangeCompensation.free => 'Free',
+              ExchangeCompensation.trade => 'Trade',
+              ExchangeCompensation.paid => 'Paid',
+            });
             if (meta.price != null && meta.price!.trim().isNotEmpty) {
               subtitleParts.add(meta.price!.trim());
             }
@@ -151,7 +156,9 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    post.emojis.isNotEmpty ? post.emojis.first : (post.emoji ?? '💼'),
+                    post.emojis.isNotEmpty
+                        ? post.emojis.first
+                        : (post.emoji ?? '💼'),
                     style: const TextStyle(fontSize: 44),
                   ),
                   const SizedBox(width: 12),
@@ -165,10 +172,16 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
                         ),
                         if (subtitleParts.isNotEmpty) ...[
                           const SizedBox(height: 6),
-                          Text(subtitleParts.join(' · '), style: Theme.of(context).textTheme.bodyMedium),
+                          Text(
+                            subtitleParts.join(' · '),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ],
                         const SizedBox(height: 6),
-                        Text('By $authorLabel', style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          'By $authorLabel',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -196,7 +209,8 @@ class _ExchangePostDetailScreenState extends State<ExchangePostDetailScreen> {
                   runSpacing: 8,
                   children: meta.tags.map((t) => Chip(label: Text(t))).toList(),
                 ),
-              if (meta != null && meta.tags.isNotEmpty) const SizedBox(height: 16),
+              if (meta != null && meta.tags.isNotEmpty)
+                const SizedBox(height: 16),
               SmartLinkBody(text: body),
               if (post.images.isNotEmpty) ...[
                 const SizedBox(height: 12),

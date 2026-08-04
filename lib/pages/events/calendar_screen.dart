@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:transconnect/core/services/calendar_service.dart';
-import 'package:transconnect/core/services/favorites_service.dart';
-import 'package:transconnect/models/event.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:npo_community/core/services/calendar_service.dart';
+import 'package:npo_community/core/services/favorites_service.dart';
+import 'package:npo_community/models/event.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -22,11 +21,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   bool _isLoading = true;
-
-  Future<void> _openPublicCalendar() async {
-    final url = Uri.parse('https://calendar.google.com/calendar/embed?src=louisvilleyouthgroup.org_dsuqb6s982mabolcjioivdu5pk%40group.calendar.google.com&ctz=America%2FNew_York');
-    await launchUrl(url, mode: LaunchMode.externalApplication);
-  }
 
   @override
   void initState() {
@@ -82,16 +76,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           name: 'Events Calendar',
           child: Text('Events Calendar'),
         ),
-        actions: [
-          TourAnchor(
-            name: 'Open public calendar',
-            child: IconButton(
-              tooltip: 'Open public calendar',
-              icon: const Icon(Icons.public),
-              onPressed: _openPublicCalendar,
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -100,9 +84,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: CalendarFormat.month,
-            availableCalendarFormats: const {
-              CalendarFormat.month: 'Month',
-            },
+            availableCalendarFormats: const {CalendarFormat.month: 'Month'},
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             onDaySelected: _onDaySelected,
             eventLoader: _getEventsForDay,
@@ -122,28 +104,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _selectedEvents.isEmpty
-                    ? const Center(child: Text('No events for this day.'))
-                    : ListView.builder(
-                        itemCount: _selectedEvents.length,
-                        itemBuilder: (context, index) {
-                          final event = _selectedEvents[index];
-                          final isFavorite = _favoriteEventIds.contains(event.uid);
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                            child: ListTile(
-                              title: Text(event.summary),
-                              subtitle: Text('${event.start.toLocal()}'),
-                              trailing: IconButton(
-                                icon: Icon(
-                                  isFavorite ? Icons.favorite : Icons.favorite_border,
-                                  color: isFavorite ? Colors.red : null,
-                                ),
-                                onPressed: () => _toggleFavorite(event.uid),
-                              ),
+                ? const Center(child: Text('No events for this day.'))
+                : ListView.builder(
+                    itemCount: _selectedEvents.length,
+                    itemBuilder: (context, index) {
+                      final event = _selectedEvents[index];
+                      final isFavorite = _favoriteEventIds.contains(event.uid);
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        child: ListTile(
+                          title: Text(event.summary),
+                          subtitle: Text('${event.start.toLocal()}'),
+                          trailing: IconButton(
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : null,
                             ),
-                          );
-                        },
-                      ),
+                            onPressed: () => _toggleFavorite(event.uid),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

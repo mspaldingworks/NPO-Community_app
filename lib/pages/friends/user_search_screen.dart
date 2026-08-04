@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/core/services/friend_service.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class UserSearchScreen extends StatefulWidget {
   const UserSearchScreen({super.key});
@@ -70,9 +70,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to perform search: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to perform search: $e')));
       }
     } finally {
       if (mounted) {
@@ -84,7 +84,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   void _sendFriendRequest(String username) async {
-    final friend = _searchResults.firstWhere((f) => f.username == username, orElse: () => Friend(id: -1, username: username, email: ''));
+    final friend = _searchResults.firstWhere(
+      (f) => f.username == username,
+      orElse: () => Friend(id: -1, username: username, email: ''),
+    );
     if (friend.id == -1) {
       return;
     }
@@ -96,18 +99,18 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     try {
       await _friendService.sendFriendRequest(username);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Friend request sent!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Friend request sent!')));
         setState(() {
           _requestStates[friend.id] = _FriendRequestStatus.sent;
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send request: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send request: $e')));
         setState(() {
           _requestStates[friend.id] = _FriendRequestStatus.failed;
         });
@@ -124,7 +127,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white24),
           ),
@@ -165,74 +168,81 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _searchResults.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: Text('Search for users by username to send friend requests.'),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: _searchResults.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final friend = _searchResults[index];
-                    final status = _requestStates[friend.id] ?? _FriendRequestStatus.idle;
-                    final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-                    final String? pronounsDisplay = isPrivate
-                        ? null
-                        : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                            .split(RegExp(r'[\n,]'))
-                            .map((p) => p.trim())
-                            .where((p) => p.isNotEmpty)
-                            .join(' • ');
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Text(
+                  'Search for users by username to send friend requests.',
+                ),
+              ),
+            )
+          : ListView.separated(
+              itemCount: _searchResults.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final friend = _searchResults[index];
+                final status =
+                    _requestStates[friend.id] ?? _FriendRequestStatus.idle;
+                final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
+                final String? pronounsDisplay = isPrivate
+                    ? null
+                    : (FlairUtils.extractPronouns(friend.flair) ?? '')
+                          .split(RegExp(r'[\n,]'))
+                          .map((p) => p.trim())
+                          .where((p) => p.isNotEmpty)
+                          .join(' • ');
 
-                    return ListTile(
-                      leading: GestureDetector(
-                        onTap: () {
-                          GoRouter.of(context).push('/users/${friend.id}');
-                        },
-                        child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
-                      ),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(friend.username),
-                          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                pronounsDisplay,
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                        ],
-                      ),
-                      subtitle: isPrivate
-                          ? const Text('Private profile')
-                          : (friend.statusMessage != null && friend.statusMessage!.isNotEmpty
-                              ? Text(friend.statusMessage!)
-                              : (friend.city != null && friend.city!.isNotEmpty
+                return ListTile(
+                  leading: GestureDetector(
+                    onTap: () {
+                      GoRouter.of(context).push('/users/${friend.id}');
+                    },
+                    child: DisplayProfilePic(
+                      radius: 20,
+                      imageUrl: friend.fullProfilePicUrl,
+                    ),
+                  ),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(friend.username),
+                      if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            pronounsDisplay,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                    ],
+                  ),
+                  subtitle: isPrivate
+                      ? const Text('Private profile')
+                      : (friend.statusMessage != null &&
+                                friend.statusMessage!.isNotEmpty
+                            ? Text(friend.statusMessage!)
+                            : (friend.city != null && friend.city!.isNotEmpty
                                   ? Text(friend.city!)
                                   : null)),
-                      trailing: _buildActionButton(friend, status),
-                      onTap: () {
-                        GoRouter.of(context).push('/users/${friend.id}');
-                      },
-                      onLongPress: () async {
-                        await showReportDialog(
-                          context: context,
-                          baseRequest: ReportRequest(
-                            type: ReportTargetType.user,
-                            reason: '',
-                            targetUserId: friend.id,
-                            targetUsername: friend.username,
-                            details: friend.statusMessage,
-                          ),
-                        );
-                      },
+                  trailing: _buildActionButton(friend, status),
+                  onTap: () {
+                    GoRouter.of(context).push('/users/${friend.id}');
+                  },
+                  onLongPress: () async {
+                    await showReportDialog(
+                      context: context,
+                      baseRequest: ReportRequest(
+                        type: ReportTargetType.user,
+                        reason: '',
+                        targetUserId: friend.id,
+                        targetUsername: friend.username,
+                        details: friend.statusMessage,
+                      ),
                     );
                   },
-                ),
+                );
+              },
+            ),
     );
   }
 
@@ -256,7 +266,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           label: const Text('Retry'),
         );
       case _FriendRequestStatus.idle:
-      default:
         return ElevatedButton.icon(
           onPressed: () => _sendFriendRequest(friend.username),
           icon: const Icon(Icons.person_add_alt),

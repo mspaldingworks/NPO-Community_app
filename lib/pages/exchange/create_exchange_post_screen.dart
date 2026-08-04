@@ -5,16 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/core/services/exchange_service.dart';
-import 'package:transconnect/models/group.dart';
-import 'package:transconnect/widgets/marketplace/firearm_policy_dialog.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/exchange_service.dart';
+import 'package:npo_community/models/group.dart';
+import 'package:npo_community/widgets/marketplace/firearm_policy_dialog.dart';
 
 class CreateExchangePostScreen extends StatefulWidget {
   const CreateExchangePostScreen({super.key});
 
   @override
-  State<CreateExchangePostScreen> createState() => _CreateExchangePostScreenState();
+  State<CreateExchangePostScreen> createState() =>
+      _CreateExchangePostScreenState();
 }
 
 class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
@@ -194,16 +195,16 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Listing created!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Listing created!')));
         context.pop(true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create listing: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create listing: $e')));
       }
     } finally {
       if (mounted) {
@@ -218,7 +219,9 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
   Widget build(BuildContext context) {
     final showPrice = _compensation == ExchangeCompensation.paid;
 
-    final safeGroupId = _groups.any((g) => g.id == _groupId) ? _groupId : (_groups.isNotEmpty ? _groups.first.id : 1);
+    final safeGroupId = _groups.any((g) => g.id == _groupId)
+        ? _groupId
+        : (_groups.isNotEmpty ? _groups.first.id : 1);
 
     return Scaffold(
       appBar: AppBar(
@@ -229,7 +232,9 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
             child: Text(
               'Post',
               style: TextStyle(
-                color: _isLoading ? Colors.grey : Theme.of(context).colorScheme.primary,
+                color: _isLoading
+                    ? Colors.grey
+                    : Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -249,7 +254,9 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                     DropdownButtonFormField<int>(
                       key: ValueKey<int>(safeGroupId),
                       initialValue: safeGroupId,
-                      decoration: const InputDecoration(labelText: 'Category / Region'),
+                      decoration: const InputDecoration(
+                        labelText: 'Category / Region',
+                      ),
                       items: _groupsLoading
                           ? const [
                               DropdownMenuItem<int>(
@@ -258,18 +265,20 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                               ),
                             ]
                           : (_groups.isEmpty
-                              ? const [
-                                  DropdownMenuItem<int>(
-                                    value: 1,
-                                    child: Text('General'),
-                                  ),
-                                ]
-                              : _groups
-                                  .map((g) => DropdownMenuItem<int>(
-                                        value: g.id,
-                                        child: Text(g.name),
-                                      ))
-                                  .toList()),
+                                ? const [
+                                    DropdownMenuItem<int>(
+                                      value: 1,
+                                      child: Text('General'),
+                                    ),
+                                  ]
+                                : _groups
+                                      .map(
+                                        (g) => DropdownMenuItem<int>(
+                                          value: g.id,
+                                          child: Text(g.name),
+                                        ),
+                                      )
+                                      .toList()),
                       onChanged: _groupsLoading
                           ? null
                           : (value) {
@@ -284,8 +293,14 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                       initialValue: _kind,
                       decoration: const InputDecoration(labelText: 'Type'),
                       items: const [
-                        DropdownMenuItem(value: ExchangeKind.offer, child: Text('Offer')),
-                        DropdownMenuItem(value: ExchangeKind.request, child: Text('Request')),
+                        DropdownMenuItem(
+                          value: ExchangeKind.offer,
+                          child: Text('Offer'),
+                        ),
+                        DropdownMenuItem(
+                          value: ExchangeKind.request,
+                          child: Text('Request'),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value == null) return;
@@ -297,11 +312,22 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                     const SizedBox(height: 16),
                     DropdownButtonFormField<ExchangeCompensation>(
                       initialValue: _compensation,
-                      decoration: const InputDecoration(labelText: 'Compensation'),
+                      decoration: const InputDecoration(
+                        labelText: 'Compensation',
+                      ),
                       items: const [
-                        DropdownMenuItem(value: ExchangeCompensation.paid, child: Text('Paid (off-app)')),
-                        DropdownMenuItem(value: ExchangeCompensation.trade, child: Text('Trade')),
-                        DropdownMenuItem(value: ExchangeCompensation.free, child: Text('Free / Mutual Aid')),
+                        DropdownMenuItem(
+                          value: ExchangeCompensation.paid,
+                          child: Text('Paid (off-app)'),
+                        ),
+                        DropdownMenuItem(
+                          value: ExchangeCompensation.trade,
+                          child: Text('Trade'),
+                        ),
+                        DropdownMenuItem(
+                          value: ExchangeCompensation.free,
+                          child: Text('Free / Mutual Aid'),
+                        ),
                       ],
                       onChanged: (value) {
                         if (value == null) return;
@@ -337,7 +363,9 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                     if (showPrice) ...[
                       TextFormField(
                         controller: _priceController,
-                        decoration: const InputDecoration(labelText: 'Price (optional)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Price (optional)',
+                        ),
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -349,7 +377,9 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                         });
                       },
                       title: const Text('Post anonymously'),
-                      subtitle: const Text('When enabled, your username will not be shown to others.'),
+                      subtitle: const Text(
+                        'When enabled, your username will not be shown to others.',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     GestureDetector(
@@ -372,20 +402,24 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                                   ),
                                 ]
                               : _tags
-                                  .map(
-                                    (t) => Chip(
-                                      label: Text(t, style: const TextStyle(fontSize: 20)),
-                                      onDeleted: () {
-                                        setState(() {
-                                          _tags.remove(t);
-                                          if (_tags.isEmpty) {
-                                            _emojiError = 'Please add at least one emoji tag.';
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  )
-                                  .toList(),
+                                    .map(
+                                      (t) => Chip(
+                                        label: Text(
+                                          t,
+                                          style: const TextStyle(fontSize: 20),
+                                        ),
+                                        onDeleted: () {
+                                          setState(() {
+                                            _tags.remove(t);
+                                            if (_tags.isEmpty) {
+                                              _emojiError =
+                                                  'Please add at least one emoji tag.';
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
                         ),
                       ),
                     ),
@@ -393,9 +427,13 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                     Row(
                       children: [
                         OutlinedButton.icon(
-                          onPressed: _images.length >= _maxImages || _isLoading ? null : _addImage,
+                          onPressed: _images.length >= _maxImages || _isLoading
+                              ? null
+                              : _addImage,
                           icon: const Icon(Icons.photo_library_outlined),
-                          label: Text('Add photos (${_images.length}/$_maxImages)'),
+                          label: Text(
+                            'Add photos (${_images.length}/$_maxImages)',
+                          ),
                         ),
                       ],
                     ),
@@ -411,7 +449,12 @@ class _CreateExchangePostScreenState extends State<CreateExchangePostScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.file(file, width: 90, height: 90, fit: BoxFit.cover),
+                                child: Image.file(
+                                  file,
+                                  width: 90,
+                                  height: 90,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                               Positioned(
                                 right: 0,

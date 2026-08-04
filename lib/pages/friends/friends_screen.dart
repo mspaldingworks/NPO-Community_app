@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/models/user.dart';
 
 class FriendsList extends StatefulWidget {
   const FriendsList({super.key});
@@ -68,7 +65,11 @@ class _FriendsListState extends State<FriendsList> {
               ),
               Expanded(
                 child: _filteredFriends.isEmpty
-                    ? const Center(child: Text('You have no friends yet, or the list is empty.'))
+                    ? const Center(
+                        child: Text(
+                          'You have no friends yet, or the list is empty.',
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: _filteredFriends.length,
                         itemBuilder: (context, index) {

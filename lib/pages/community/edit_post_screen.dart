@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:transconnect/core/services/community_service.dart';
-import 'package:transconnect/models/post.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/models/post.dart';
 
 class EditPostScreen extends StatefulWidget {
   final Post post;
@@ -40,13 +40,10 @@ class _EditPostScreenState extends State<EditPostScreen> {
       });
 
       try {
-        await _communityService.updatePost(
-          widget.post.id,
-          {
-            'title': _titleController.text,
-            'body': _bodyController.text,
-          },
-        );
+        await _communityService.updatePost(widget.post.id, {
+          'title': _titleController.text,
+          'body': _bodyController.text,
+        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -56,9 +53,9 @@ class _EditPostScreenState extends State<EditPostScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update post: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to update post: $e')));
         }
       } finally {
         if (mounted) {
@@ -73,9 +70,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Post'),
-      ),
+      appBar: AppBar(title: const Text('Edit Post')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -96,7 +91,9 @@ class _EditPostScreenState extends State<EditPostScreen> {
               const SizedBox(height: 16.0),
               TextFormField(
                 controller: _bodyController,
-                decoration: const InputDecoration(labelText: 'What\'s on your mind?'),
+                decoration: const InputDecoration(
+                  labelText: 'What\'s on your mind?',
+                ),
                 maxLines: 8,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -109,7 +106,9 @@ class _EditPostScreenState extends State<EditPostScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitForm,
                 child: _isLoading
-                    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
                     : const Text('Update Post'),
               ),
             ],

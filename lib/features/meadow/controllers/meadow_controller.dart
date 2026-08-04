@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/meadow/data/meadow_repository.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_comment.dart';
-import 'package:transconnect/features/meadow/models/meadow_chat_flower.dart';
-import 'package:transconnect/features/meadow/models/online_user.dart';
+import 'package:npo_community/features/meadow/data/meadow_repository.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_comment.dart';
+import 'package:npo_community/features/meadow/models/meadow_chat_flower.dart';
+import 'package:npo_community/features/meadow/models/online_user.dart';
 
 class MeadowController extends ChangeNotifier {
   static const int flowersPerSection = 10;
@@ -15,10 +15,10 @@ class MeadowController extends ChangeNotifier {
     required String currentUserId,
     required String currentUserName,
     required List<String> currentUserPronouns,
-  })  : _repository = repository,
-        _currentUserId = currentUserId,
-        _currentUserName = currentUserName,
-        _currentUserPronouns = currentUserPronouns;
+  }) : _repository = repository,
+       _currentUserId = currentUserId,
+       _currentUserName = currentUserName,
+       _currentUserPronouns = currentUserPronouns;
 
   final MeadowRepository _repository;
   final String _currentUserId;
@@ -64,18 +64,23 @@ class MeadowController extends ChangeNotifier {
     }
 
     _subscriptions
-      ..add(_repository.watchOnlineUsers().listen((users) {
-        _onlineUsers = users;
-        notifyListeners();
-      }))
-      ..add(_repository.watchChatFlowers().listen((flowers) {
-        _flowers = flowers;
-        if (_selectedFlower != null && !_flowers.any((f) => f.id == _selectedFlower!.id)) {
-          clearFlight();
-        } else {
+      ..add(
+        _repository.watchOnlineUsers().listen((users) {
+          _onlineUsers = users;
           notifyListeners();
-        }
-      }));
+        }),
+      )
+      ..add(
+        _repository.watchChatFlowers().listen((flowers) {
+          _flowers = flowers;
+          if (_selectedFlower != null &&
+              !_flowers.any((f) => f.id == _selectedFlower!.id)) {
+            clearFlight();
+          } else {
+            notifyListeners();
+          }
+        }),
+      );
   }
 
   void startFlyTo(MeadowChatFlower flower) {
@@ -112,7 +117,10 @@ class MeadowController extends ChangeNotifier {
     return _repository.watchChatComments(chatId: chatId);
   }
 
-  Future<void> sendChatComment({required String chatId, required String content}) {
+  Future<void> sendChatComment({
+    required String chatId,
+    required String content,
+  }) {
     return _repository.addChatComment(
       chatId: chatId,
       authorId: _currentUserId,
@@ -138,13 +146,18 @@ class MeadowController extends ChangeNotifier {
   }
 
   Offset _randomPosition(Size meadowSize, EdgeInsets padding) {
-    final totalSections = max(1, ((_flowers.length + 1) / flowersPerSection).ceil());
+    final totalSections = max(
+      1,
+      ((_flowers.length + 1) / flowersPerSection).ceil(),
+    );
     final sectionHeight = meadowSize.height / totalSections;
     final sectionIndex = _flowers.length ~/ flowersPerSection;
 
-    final dx = padding.left +
+    final dx =
+        padding.left +
         _random.nextDouble() * (meadowSize.width - padding.horizontal);
-    final dy = padding.top +
+    final dy =
+        padding.top +
         _random.nextDouble() * (sectionHeight - padding.vertical) +
         (sectionIndex * sectionHeight);
     return Offset(dx, dy);

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/widgets/link_preview_card.dart';
+import 'package:npo_community/widgets/link_preview_card.dart';
 
 class SmartLinkBody extends StatelessWidget {
   final String? text;
@@ -38,10 +38,7 @@ class SmartLinkBody extends StatelessWidget {
       );
     }
 
-    preview = Align(
-      alignment: previewAlignment,
-      child: preview,
-    );
+    preview = Align(alignment: previewAlignment, child: preview);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

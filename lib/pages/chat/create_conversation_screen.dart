@@ -3,31 +3,30 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/widgets/loading_indicator.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/friend_service.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/widgets/loading_indicator.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
 
 class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({super.key});
 
   @override
-  State<CreateConversationScreen> createState() => _CreateConversationScreenState();
+  State<CreateConversationScreen> createState() =>
+      _CreateConversationScreenState();
 }
 
-class _CreateConversationScreenState extends State<CreateConversationScreen> with SingleTickerProviderStateMixin {
+class _CreateConversationScreenState extends State<CreateConversationScreen>
+    with SingleTickerProviderStateMixin {
   final FriendService _friendService = FriendService();
-  final ChatService _chatService = ChatService();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _groupNameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   List<Friend> _searchResults = [];
-  List<Friend> _selectedUsers = [];
+  final List<Friend> _selectedUsers = [];
   List<Friend> _friends = [];
   bool _isLoading = false;
   bool _isFriendsLoading = true;
@@ -35,7 +34,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
   bool _isCreatingGroup = false;
   Timer? _debounce;
   late TabController _tabController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -85,21 +84,26 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
         }
         return;
       }
-      
+
       if (mounted) {
         setState(() {
           _isLoading = true;
         });
       }
-      
+
       try {
         final results = await _friendService.searchFriends(query);
         if (mounted) {
           setState(() {
             // Filter out already selected users and current user
-            final currentUserId = Provider.of<AuthService>(context, listen: false).currentUser?.id;
+            final currentUserId = Provider.of<AuthService>(
+              context,
+              listen: false,
+            ).currentUser?.id;
             _searchResults = results.where((user) {
-              return !_selectedUsers.any((selected) => selected.id == user.id) &&
+              return !_selectedUsers.any(
+                    (selected) => selected.id == user.id,
+                  ) &&
                   user.id != currentUserId;
             }).toList();
           });
@@ -135,9 +139,9 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
 
   Future<void> _createDirectChat(Friend user) async {
     if (_isLoading) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // COMMENTED OUT
       // final conversations = await _chatService.getAllConversations();
@@ -189,19 +193,19 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       }
     }
   }
-  
+
   Future<void> _createGroupChat() async {
     if (_isLoading || _selectedUsers.length < 2) return;
     if (_isCreatingGroup && !_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // final participantIds = _selectedUsers.map((u) => u.id.toString()).toList();
-      // final groupName = _groupNameController.text.trim().isNotEmpty 
+      // final groupName = _groupNameController.text.trim().isNotEmpty
       //     ? _groupNameController.text.trim()
       //     : '${_selectedUsers.take(2).map((u) => u.username.split(' ').first).join(', ')}${_selectedUsers.length > 2 ? ' +${_selectedUsers.length - 2}' : ''}';
-      
+
       // final conversation = await _chatService.createGroupChat(
       //   name: groupName,
       //   participantIds: participantIds,
@@ -214,12 +218,11 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       //     extra: conversation,
       //   );
       // }
-      
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create group: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create group: $e')));
       }
     } finally {
       if (mounted) {
@@ -227,21 +230,12 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       }
     }
   }
-  
-  void _toggleGroupMode() {
-    setState(() {
-      _isCreatingGroup = !_isCreatingGroup;
-      if (!_isCreatingGroup) {
-        _selectedUsers.clear();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _isCreatingGroup 
+        title: _isCreatingGroup
             ? Text('New Group (${_selectedUsers.length})')
             : const Text('New Chat'),
         actions: [
@@ -251,8 +245,8 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
               child: Text(
                 'Create',
                 style: TextStyle(
-                  color: _selectedUsers.length < 2 
-                      ? Colors.grey 
+                  color: _selectedUsers.length < 2
+                      ? Colors.grey
                       : Theme.of(context).primaryColor,
                   fontWeight: FontWeight.bold,
                 ),
@@ -284,7 +278,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
               controller: _searchController,
               autofocus: true,
               decoration: InputDecoration(
-                hintText: _isCreatingGroup 
+                hintText: _isCreatingGroup
                     ? 'Search for people to add...'
                     : 'Search for a user...',
                 prefixIcon: const Icon(Icons.search),
@@ -294,37 +288,42 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                 ),
                 filled: true,
                 fillColor: Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 0,
+                ),
               ),
               onChanged: _searchUsers,
             ),
           ),
-          
+
           // Selected users (for group chat)
-          if (_isCreatingGroup && _selectedUsers.isNotEmpty) ..._buildSelectedUsers(),
-          
+          if (_isCreatingGroup && _selectedUsers.isNotEmpty)
+            ..._buildSelectedUsers(),
+
           // Group name input (for group chat)
-          if (_isCreatingGroup && _selectedUsers.isNotEmpty) ..._buildGroupNameInput(),
-          
+          if (_isCreatingGroup && _selectedUsers.isNotEmpty)
+            ..._buildGroupNameInput(),
+
           // Search results or friend list
           Expanded(
             child: _isLoading
                 ? const Center(child: LoadingIndicator())
                 : _isFriendsLoading
-                    ? const Center(child: LoadingIndicator())
-                    : _friendsError != null
-                        ? _buildFriendsError()
+                ? const Center(child: LoadingIndicator())
+                : _friendsError != null
+                ? _buildFriendsError()
                 : _searchController.text.isNotEmpty
-                    ? _buildSearchResults()
-                    : _isCreatingGroup
-                        ? _buildGroupCreationGuide()
-                        : _buildContactsList(),
+                ? _buildSearchResults()
+                : _isCreatingGroup
+                ? _buildGroupCreationGuide()
+                : _buildContactsList(),
           ),
         ],
       ),
     );
   }
-  
+
   List<Widget> _buildSelectedUsers() {
     return [
       SizedBox(
@@ -345,7 +344,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                         onTap: () {
                           context.push('/users/${user.id}');
                         },
-                        child: DisplayProfilePic(radius: 32, imageUrl: user.fullProfilePicUrl),
+                        child: DisplayProfilePic(
+                          radius: 32,
+                          imageUrl: user.fullProfilePicUrl,
+                        ),
                       ),
                       Positioned(
                         right: 0,
@@ -358,7 +360,11 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                               color: Colors.white,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close, size: 16, color: Colors.red),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.red,
+                            ),
                           ),
                         ),
                       ),
@@ -389,7 +395,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       const Divider(height: 1),
     ];
   }
-  
+
   List<Widget> _buildGroupNameInput() {
     return [
       Padding(
@@ -403,7 +409,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
             validator: (value) {
               if (value != null && value.length > 30) {
@@ -417,12 +426,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       const Divider(height: 1),
     ];
   }
-  
+
   Widget _buildSearchResults() {
     if (_searchResults.isEmpty) {
-      return const Center(
-        child: Text('No users found'),
-      );
+      return const Center(child: Text('No users found'));
     }
 
     return ListView.builder(
@@ -433,16 +440,19 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
         final String? pronounsDisplay = isPrivate
             ? null
             : (FlairUtils.extractPronouns(user.flair) ?? '')
-                .split(RegExp(r'[\n,]'))
-                .map((p) => p.trim())
-                .where((p) => p.isNotEmpty)
-                .join(' • ');
+                  .split(RegExp(r'[\n,]'))
+                  .map((p) => p.trim())
+                  .where((p) => p.isNotEmpty)
+                  .join(' • ');
         return ListTile(
           leading: GestureDetector(
             onTap: () {
               context.push('/users/${user.id}');
             },
-            child: DisplayProfilePic(radius: 20, imageUrl: user.fullProfilePicUrl),
+            child: DisplayProfilePic(
+              radius: 20,
+              imageUrl: user.fullProfilePicUrl,
+            ),
           ),
           title: GestureDetector(
             onTap: () {
@@ -481,9 +491,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
   Widget _buildContactsList() {
     Widget buildNewGroupTile() {
       return ListTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.group_add),
-        ),
+        leading: const CircleAvatar(child: Icon(Icons.group_add)),
         title: const Text('New Group'),
         onTap: () {
           setState(() {
@@ -543,16 +551,19 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
           final String? pronounsDisplay = isPrivate
               ? null
               : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                  .split(RegExp(r'[\n,]'))
-                  .map((p) => p.trim())
-                  .where((p) => p.isNotEmpty)
-                  .join(' • ');
+                    .split(RegExp(r'[\n,]'))
+                    .map((p) => p.trim())
+                    .where((p) => p.isNotEmpty)
+                    .join(' • ');
           return ListTile(
             leading: GestureDetector(
               onTap: () {
                 context.push('/users/${friend.id}');
               },
-              child: DisplayProfilePic(radius: 20, imageUrl: friend.fullProfilePicUrl),
+              child: DisplayProfilePic(
+                radius: 20,
+                imageUrl: friend.fullProfilePicUrl,
+              ),
             ),
             title: GestureDetector(
               onTap: () {
@@ -574,11 +585,16 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
                 ],
               ),
             ),
-            subtitle: friend.statusMessage != null && friend.statusMessage!.isNotEmpty
-                ? Text(friend.statusMessage!, maxLines: 1, overflow: TextOverflow.ellipsis)
+            subtitle:
+                friend.statusMessage != null && friend.statusMessage!.isNotEmpty
+                ? Text(
+                    friend.statusMessage!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
                 : (friend.city != null && friend.city!.isNotEmpty
-                    ? Text(friend.city!)
-                    : null),
+                      ? Text(friend.city!)
+                      : null),
             onTap: () => _createDirectChat(friend),
           );
         },
@@ -591,11 +607,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.group_add,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.group_add, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Create a new group',
@@ -611,20 +623,14 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
             child: Text(
               'Search for people to add to your group',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           const SizedBox(height: 24),
           if (_selectedUsers.isNotEmpty) ...[
             const Text(
               'Selected participants:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -642,7 +648,10 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
               ElevatedButton(
                 onPressed: _createGroupChat,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -662,10 +671,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen> wit
         children: [
           Text(_friendsError ?? 'Something went wrong'),
           const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: _loadFriends,
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: _loadFriends, child: const Text('Retry')),
         ],
       ),
     );

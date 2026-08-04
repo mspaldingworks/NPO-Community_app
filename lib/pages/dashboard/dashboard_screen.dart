@@ -4,35 +4,34 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/calendar_service.dart';
-import 'package:transconnect/data/affirmation_quotes.dart';
-import 'package:transconnect/core/services/profile_service.dart';
-import 'package:transconnect/theme/app_theme.dart';
-import 'package:transconnect/models/comment.dart';
-import 'package:transconnect/models/post.dart';
-import 'package:transconnect/models/user.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/widgets/display_profile_pic.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/core/utils/time_ago.dart';
-import 'package:transconnect/core/services/community_service.dart';
+import 'package:npo_community/core/services/calendar_service.dart';
+import 'package:npo_community/data/affirmation_quotes.dart';
+import 'package:npo_community/core/services/profile_service.dart';
+import 'package:npo_community/theme/app_theme.dart';
+import 'package:npo_community/models/comment.dart';
+import 'package:npo_community/models/post.dart';
+import 'package:npo_community/models/user.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
+import 'package:npo_community/core/services/friend_service.dart';
+import 'package:npo_community/core/utils/time_ago.dart';
+import 'package:npo_community/core/services/community_service.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
-import 'package:transconnect/widgets/emergency_alert_banner.dart';
+import 'package:npo_community/widgets/emergency_alert_banner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart';
-import 'package:transconnect/core/services/chat_service.dart';
-import 'package:transconnect/core/services/chat_favorites_service.dart';
-import 'package:transconnect/core/services/home_alert_service.dart';
-import 'package:transconnect/models/chat_message.dart';
-import 'package:transconnect/core/services/report_service.dart';
-import 'package:transconnect/features/meadow/services/meadow_alert_service.dart';
-import 'package:transconnect/widgets/report_dialog.dart';
-import 'package:transconnect/core/utils/flair_utils.dart';
-import 'package:transconnect/features/geocaching/utils/cache_collections.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:transconnect/widgets/smart_link_body.dart';
+import 'package:npo_community/core/services/chat_service.dart';
+import 'package:npo_community/core/services/chat_favorites_service.dart';
+import 'package:npo_community/core/services/home_alert_service.dart';
+import 'package:npo_community/models/chat_message.dart';
+import 'package:npo_community/core/services/report_service.dart';
+import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
+import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/widgets/smart_link_body.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _PathPoint {
@@ -123,17 +122,15 @@ class _FavoriteChatFeedItem {
 }
 
 class _HomeFeedItem {
-  _HomeFeedItem.friendStatus({
-    required this.friend,
-    required this.timestamp,
-  })  : type = _HomeFeedItemType.friendStatus,
-        favoriteChat = null;
+  _HomeFeedItem.friendStatus({required this.friend, required this.timestamp})
+    : type = _HomeFeedItemType.friendStatus,
+      favoriteChat = null;
 
   _HomeFeedItem.favoriteChat({
     required this.favoriteChat,
     required this.timestamp,
-  })  : type = _HomeFeedItemType.favoriteChat,
-        friend = null;
+  }) : type = _HomeFeedItemType.favoriteChat,
+       friend = null;
 
   final _HomeFeedItemType type;
   final Friend? friend;
@@ -158,29 +155,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<int, String?> _userFlairById = {};
   Map<int, String?> _userPicById = {};
 
-  bool _hasUnreadCacheCollections = false;
-
   static const String _lastSeenRepliesAtPrefKey =
       'dashboard_last_seen_replies_at_v1';
   DateTime _lastSeenRepliesAt = DateTime.fromMillisecondsSinceEpoch(0);
   int _unreadReplyCount = 0;
 
-  Future<void> _loadUnreadCacheCollections() async {
-    final hasUnread = await CacheCollections.hasUnread();
-    if (!mounted) return;
-    setState(() {
-      _hasUnreadCacheCollections = hasUnread;
-    });
-
-    _updateDashboardAlerts();
-  }
-
   void _updateDashboardAlerts() {
-    Provider.of<HomeAlertService>(context, listen: false).setDashboardAlerts(
-      _todaysEventsCount > 0 ||
-          _hasUnreadCacheCollections ||
-          _unreadReplyCount > 0,
-    );
+    Provider.of<HomeAlertService>(
+      context,
+      listen: false,
+    ).setDashboardAlerts(_todaysEventsCount > 0 || _unreadReplyCount > 0);
   }
 
   File? _profileImage;
@@ -204,9 +188,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _quoteTimer;
 
   double get _hotspotCycleSeconds {
-    if (_loadedButterflyAsset == 'assets/animations/Green_TWC_butterfly.mp4') {
-      return 13.5;
-    }
     return 10.0;
   }
 
@@ -230,8 +211,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   static const List<String> _butterflyVideoAssets = <String>[
     'assets/animations/blue_butterfly.mp4',
-    'assets/animations/Pink_TWC_butterfly.mp4',
-    'assets/animations/Green_TWC_butterfly.mp4',
   ];
   static const String _butterflyVideoIndexPrefKey =
       'dashboard_butterfly_video_index';
@@ -519,7 +498,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _initVideo();
     _loadUserFlairMap();
     _loadDashboardData();
-    _loadUnreadCacheCollections();
   }
 
   Future<void> _loadLastSeenRepliesAt() async {
@@ -871,7 +849,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     await _loadLastSeenRepliesAt();
-    await _loadUnreadCacheCollections();
     await _loadUserFlairMap();
     final allEvents = await _calendarService.fetchEvents();
     final imagePath = await _profileService.getImagePath();
@@ -982,10 +959,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     for (final chatId in favoriteChatIds) {
       try {
         final messages = await _chatService.getConversation(chatId);
-        final filtered = messages
-            .where((m) => !m.content.startsWith(_statusDmPrefix))
-            .toList()
-          ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+        final filtered =
+            messages
+                .where((m) => !m.content.startsWith(_statusDmPrefix))
+                .toList()
+              ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
         if (filtered.isEmpty) continue;
         final latest = filtered.last;
         final username = _resolveOtherUsername(latest, chatId);
@@ -1019,8 +997,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ...statuses.map(
         (friend) => _HomeFeedItem.friendStatus(
           friend: friend,
-          timestamp: friend.statusUpdatedAt ??
-              DateTime.fromMillisecondsSinceEpoch(0),
+          timestamp:
+              friend.statusUpdatedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
         ),
       ),
       ...favoriteChats.map(
@@ -1339,12 +1317,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final me = Provider.of<AuthService>(context, listen: true).currentUser;
-    final isAdmin =
-        me?.username == 'Mad.E' ||
-        me?.username == 'Mad.E.Made' ||
-        me?.username == 'pmaxwell';
-
     final meadowAlerts = Provider.of<MeadowAlertService>(context, listen: true);
     final int meadowUnreadCount = meadowAlerts.unreadChats;
     final bool hasMeadowMessages = meadowAlerts.hasUnread;
@@ -1352,8 +1324,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final String messageCardText = totalNewMessages <= 0
         ? 'No new messages'
         : (totalNewMessages > 99
-            ? '99+ new messages'
-            : '$totalNewMessages new ${totalNewMessages == 1 ? 'message' : 'messages'}');
+              ? '99+ new messages'
+              : '$totalNewMessages new ${totalNewMessages == 1 ? 'message' : 'messages'}');
     final bool hasAnyMessages = totalNewMessages > 0;
 
     return Scaffold(
@@ -1425,7 +1397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
                       if (_unreadReplyCount > 0) {
                         await _markRepliesRead();
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         context.push('/community');
                         return;
                       }
@@ -1447,76 +1419,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ],
-            ),
-            if (isAdmin) ...[
-              const SizedBox(height: 16),
-              TourAnchor(
-                name: 'Admin Portal',
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.admin_panel_settings_outlined),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Text(
-                            'Admin Portal',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        OutlinedButton(
-                          onPressed: () {
-                            context.push('/admin/moderation');
-                          },
-                          child: const Text('Open'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 16),
-            TourAnchor(
-              name: 'Caches',
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.map_outlined),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Caches',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                      if (isAdmin)
-                        IconButton(
-                          tooltip: 'Cache Admin',
-                          icon: Icon(
-                            Icons.admin_panel_settings_outlined,
-                            color: _hasUnreadCacheCollections
-                                ? Colors.pinkAccent
-                                : null,
-                          ),
-                          onPressed: () async {
-                            await context.push('/geocaching/admin');
-                            await _loadUnreadCacheCollections();
-                          },
-                        ),
-                      OutlinedButton(
-                        onPressed: () {
-                          context.push('/geocaching');
-                        },
-                        child: const Text('Open'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
             const SizedBox(height: 24),
             _buildButterflyPerchSection(),
@@ -1999,10 +1901,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isHighlighted = false,
     Color highlightColor = AppColors.tertiary,
   }) {
-    final Color backgroundColor =
-        isHighlighted ? highlightColor : Colors.grey[200]!;
-    final Color contentColor =
-        isHighlighted ? Colors.white : Colors.grey[700]!;
+    final Color backgroundColor = isHighlighted
+        ? highlightColor
+        : Colors.grey[200]!;
+    final Color contentColor = isHighlighted ? Colors.white : Colors.grey[700]!;
 
     return GestureDetector(
       onTap: onTap,
@@ -2016,7 +1918,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           boxShadow: isHighlighted
               ? [
                   BoxShadow(
-                    color: highlightColor.withOpacity(0.6),
+                    color: highlightColor.withValues(alpha: 0.6),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
@@ -2387,10 +2289,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final String? pronounsDisplay = isPrivate
         ? null
         : (FlairUtils.extractPronouns(friend.flair) ?? '')
-            .split(RegExp(r'[\n,]'))
-            .map((p) => p.trim())
-            .where((p) => p.isNotEmpty)
-            .join(' • ');
+              .split(RegExp(r'[\n,]'))
+              .map((p) => p.trim())
+              .where((p) => p.isNotEmpty)
+              .join(' • ');
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8.0),
@@ -2454,8 +2356,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onPressed: () async {
                         if (p != null) {
                           try {
-                            final refreshed =
-                                await _communityService.fetchPostById(p.id);
+                            final refreshed = await _communityService
+                                .fetchPostById(p.id);
                             if (!mounted) return;
                             setState(() {
                               _statusPostByFriendId[friend.id] = refreshed;
@@ -2548,8 +2450,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               postId: post.id,
                               content: text,
                             );
-                            final refreshed =
-                                await _communityService.fetchPostById(post.id);
+                            final refreshed = await _communityService
+                                .fetchPostById(post.id);
                             if (!mounted) return;
                             messenger.showSnackBar(
                               SnackBar(
@@ -2565,9 +2467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           } catch (e) {
                             if (!mounted) return;
                             messenger.showSnackBar(
-                              SnackBar(
-                                content: Text('Failed to comment: $e'),
-                              ),
+                              SnackBar(content: Text('Failed to comment: $e')),
                             );
                           }
                         },

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
-import 'package:transconnect/features/onboarding_tour/services/onboarding_tour_storage.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/onboarding_tour_overlay.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/onboarding_tour_overlay.dart';
 
 class OnboardingTourHost extends StatefulWidget {
   final Widget child;

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/core/services/auth_service.dart';
-import 'package:transconnect/models/friend_request.dart';
-import 'package:transconnect/models/user.dart';
+import 'package:npo_community/core/services/friend_service.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/models/friend_request.dart';
+import 'package:npo_community/models/user.dart';
 
 class FriendsController with ChangeNotifier {
   final FriendService _friendService = FriendService();
@@ -57,18 +57,25 @@ class FriendsController with ChangeNotifier {
         me = (await AuthService().getCurrentUser()).username;
       } catch (_) {}
 
-      final isPending = (FriendRequest req) => req.status == null || req.status == 'pending';
-      final isIncoming = (FriendRequest req) {
-        if (me == null) return true; // If we can't resolve current user, show all pending entries
+      bool isPending(FriendRequest req) =>
+          req.status == null || req.status == 'pending';
+      bool isIncoming(FriendRequest req) {
+        if (me == null) {
+          return true; // If we can't resolve current user, show all pending entries
+        }
         // Prefer entries explicitly addressed to me
         if (req.toUser?.username == me) return true;
         // Some backends omit to_user; treat as incoming if the sender isn't me
         if (req.fromUser.username != me) return true;
         return false;
-      };
+      }
 
-      _pendingRequests = requests.where((r) => isPending(r) && isIncoming(r)).toList();
-      _pendingSentRequests = requests.where((r) => isPending(r) && me != null && r.fromUser.username == me).toList();
+      _pendingRequests = requests
+          .where((r) => isPending(r) && isIncoming(r))
+          .toList();
+      _pendingSentRequests = requests
+          .where((r) => isPending(r) && me != null && r.fromUser.username == me)
+          .toList();
     } catch (e) {
       _pendingError = 'Failed to load pending requests. Please try again.';
     } finally {
@@ -94,7 +101,8 @@ class FriendsController with ChangeNotifier {
 
     _requestActionsInProgress.add(username);
     _pendingRequests.removeWhere((req) => req.fromUser.username == username);
-    if (request != null && !_friends.any((f) => f.username == request.fromUser.username)) {
+    if (request != null &&
+        !_friends.any((f) => f.username == request.fromUser.username)) {
       _friends = [request.fromUser, ..._friends];
     }
     notifyListeners();

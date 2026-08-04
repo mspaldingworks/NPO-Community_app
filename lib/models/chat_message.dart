@@ -3,10 +3,7 @@ class MessageUser {
   final int id;
   final String username;
 
-  MessageUser({
-    required this.id,
-    required this.username,
-  });
+  MessageUser({required this.id, required this.username});
 
   factory MessageUser.fromJson(Map<String, dynamic> json) {
     return MessageUser(
@@ -42,7 +39,9 @@ class ChatMessage {
       id: json['id'] as int,
       // Parse the nested user objects using the MessageUser model
       sender: MessageUser.fromJson(json['sender'] as Map<String, dynamic>),
-      recipient: MessageUser.fromJson(json['recipient'] as Map<String, dynamic>),
+      recipient: MessageUser.fromJson(
+        json['recipient'] as Map<String, dynamic>,
+      ),
       content: json['content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
       isRead: json['is_read'] as bool,

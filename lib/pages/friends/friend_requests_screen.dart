@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/friend_service.dart';
-import 'package:transconnect/models/friend_request.dart';
+import 'package:npo_community/core/services/friend_service.dart';
+import 'package:npo_community/models/friend_request.dart';
 
 class FriendRequestsScreen extends StatefulWidget {
   const FriendRequestsScreen({super.key});
@@ -31,9 +31,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
         _requestsFuture = _friendService.listPendingRequests();
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request ${action}ed!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Request ${action}ed!')));
       }
     } catch (e) {
       if (mounted) {
@@ -47,9 +47,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Friend Requests'),
-      ),
+      appBar: AppBar(title: const Text('Friend Requests')),
       body: FutureBuilder<List<FriendRequest>>(
         future: _requestsFuture,
         builder: (context, snapshot) {
@@ -67,12 +65,9 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
           return ListView.builder(
             itemCount: requests.length,
             itemBuilder: (context, index) {
-              final request = requests[index];
               return ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person_add),
-                ),
-                title: Text('FROM USER DATA wants to be your friend'),
+                leading: const CircleAvatar(child: Icon(Icons.person_add)),
+                title: const Text('FROM USER DATA wants to be your friend'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

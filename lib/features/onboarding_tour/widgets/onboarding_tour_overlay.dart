@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:transconnect/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
-import 'package:transconnect/features/onboarding_tour/models/onboarding_tour_models.dart';
-import 'package:transconnect/features/onboarding_tour/services/tour_anchor_registry.dart';
-import 'package:transconnect/features/onboarding_tour/widgets/spotlight_shroud_painter.dart';
+import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
+import 'package:npo_community/features/onboarding_tour/models/onboarding_tour_models.dart';
+import 'package:npo_community/features/onboarding_tour/services/tour_anchor_registry.dart';
+import 'package:npo_community/features/onboarding_tour/widgets/spotlight_shroud_painter.dart';
 
 class OnboardingTourOverlay extends StatefulWidget {
   final OnboardingTourController controller;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:transconnect/core/services/resource_service.dart';
-import 'package:transconnect/models/resource.dart';
+import 'package:npo_community/core/services/resource_service.dart';
+import 'package:npo_community/models/resource.dart';
 
 class EditResourceScreen extends StatefulWidget {
   final Resource resource;
@@ -8,7 +8,7 @@ class EditResourceScreen extends StatefulWidget {
   const EditResourceScreen({super.key, required this.resource});
 
   @override
-  _EditResourceScreenState createState() => _EditResourceScreenState();
+  State<EditResourceScreen> createState() => _EditResourceScreenState();
 }
 
 class _EditResourceScreenState extends State<EditResourceScreen> {
@@ -55,7 +55,10 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
   }
 
   void _syncTagsController() {
-    final combined = <String>{..._parseControllerTags(), ..._selectedSuggestedTags};
+    final combined = <String>{
+      ..._parseControllerTags(),
+      ..._selectedSuggestedTags,
+    };
     _tagsController.text = combined.join(', ');
   }
 
@@ -63,11 +66,15 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.resource.name);
-    _descriptionController = TextEditingController(text: widget.resource.description);
+    _descriptionController = TextEditingController(
+      text: widget.resource.description,
+    );
     _typeController = TextEditingController(text: widget.resource.type);
     _urlController = TextEditingController(text: widget.resource.url);
     _providerController = TextEditingController(text: widget.resource.provider);
-    _tagsController = TextEditingController(text: widget.resource.tags.join(', '));
+    _tagsController = TextEditingController(
+      text: widget.resource.tags.join(', '),
+    );
     _isPublic = widget.resource.public ?? false;
     final existing = widget.resource.tags.toSet();
     for (final t in _suggestedTags) {
@@ -103,7 +110,10 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
           url: _urlController.text,
           provider: _providerController.text,
           public: _isPublic,
-          tags: <String>{..._parseControllerTags(), ..._selectedSuggestedTags}.toList(),
+          tags: <String>{
+            ..._parseControllerTags(),
+            ..._selectedSuggestedTags,
+          }.toList(),
         );
 
         await _resourceService.updateResource(updatedResource);
@@ -133,9 +143,7 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Resource'),
-      ),
+      appBar: AppBar(title: const Text('Edit Resource')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -182,7 +190,9 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
               ),
               TextFormField(
                 controller: _tagsController,
-                decoration: const InputDecoration(labelText: 'Tags (comma-separated)'),
+                decoration: const InputDecoration(
+                  labelText: 'Tags (comma-separated)',
+                ),
               ),
               const SizedBox(height: 12.0),
               const Text('Suggested Tags'),
@@ -221,7 +231,9 @@ class _EditResourceScreenState extends State<EditResourceScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _updateResource,
                 child: _isLoading
-                    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
                     : const Text('Save Changes'),
               ),
             ],

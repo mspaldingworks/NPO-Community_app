@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:logger/logger.dart';
-import 'package:transconnect/core/services/api_client_interface.dart';
+import 'package:npo_community/core/services/api_client_interface.dart';
 
 class MockApiClient implements ApiClientInterface {
   final Logger _logger = Logger();
@@ -85,9 +85,13 @@ class MockApiClient implements ApiClientInterface {
     int expectedStatusCode = 201,
   }) async {
     final normalized = _normalizePath(urlPath);
-    final resource = normalized.contains('/') ? normalized.split('/').first : normalized;
+    final resource = normalized.contains('/')
+        ? normalized.split('/').first
+        : normalized;
     final data = await _readJsonFile(resource);
-    final newId = data.isNotEmpty ? data.map((e) => e['id'] as int).reduce((a, b) => a > b ? a : b) + 1 : 1;
+    final newId = data.isNotEmpty
+        ? data.map((e) => e['id'] as int).reduce((a, b) => a > b ? a : b) + 1
+        : 1;
     jsonPayload['id'] = newId;
     data.add(jsonPayload);
     await _writeJsonFile(resource, data);
@@ -107,7 +111,10 @@ class MockApiClient implements ApiClientInterface {
       final id = parts.length > 1 ? int.tryParse(parts[1]) : null;
       if (id != null) {
         final data = await _readJsonFile(resource);
-        return data.firstWhere((element) => element['id'] == id, orElse: () => null);
+        return data.firstWhere(
+          (element) => element['id'] == id,
+          orElse: () => null,
+        );
       }
       return await _readJsonFile(resource);
     }
