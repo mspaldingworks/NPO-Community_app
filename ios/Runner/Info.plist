@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Transconnect</string>
+	<string>NPO Community Demo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>transconnect</string>
+	<string>NPO Community</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -46,12 +46,12 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Allow TransConnect to access your location to help you find nearby caches and place new caches.</string>
+	<string>Allow NPO Community to access your location to help you find nearby activities.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Allow TransConnect to access your location to help you find nearby caches and place new caches.</string>
+	<string>Allow NPO Community to access your location to help you find nearby activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow TransConnect to access your photo library to update your profile picture.</string>
+	<string>Allow NPO Community to access your photo library to update your profile picture.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow TransConnect to access your camera to take a profile picture.</string>
+	<string>Allow NPO Community to access your camera to take a profile picture.</string>
 </dict>
 </plist>

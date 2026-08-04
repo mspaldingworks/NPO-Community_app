@@ -17,12 +17,17 @@ import 'package:transconnect/navigation/app_router.dart';
 import 'package:transconnect/theme/app_theme.dart';
 import 'package:transconnect/widgets/dev/dev_menu.dart';
 
+const bool demoMode = bool.fromEnvironment('DEMO_MODE');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferencesService().init();
   final sharedPreferences = await SharedPreferences.getInstance();
   final authService = AuthService();
   await authService.init();
+  if (demoMode) {
+    authService.enableDemoSession();
+  }
   runApp(MyApp(sharedPreferences: sharedPreferences));
 }
 
@@ -61,7 +66,9 @@ class _MyAppState extends State<MyApp> {
           },
         ),
         Provider<CommunityService>(
-          create: (context) => kDebugMode ? MockCommunityService() : CommunityService(),
+          create: (context) => demoMode || kDebugMode
+              ? MockCommunityService()
+              : CommunityService(),
         ),
         Provider<GeocacheRepository>(
           create: (context) => LocalGeocacheRepository(),
@@ -78,7 +85,7 @@ class _MyAppState extends State<MyApp> {
           final appRouter = AppRouter(authService: authService);
 
           final app = MaterialApp.router(
-            title: 'TransConnect',
+            title: demoMode ? 'NPO Community Demo' : 'NPO Community',
             theme: AppTheme.lightTheme,
             routerConfig: appRouter.router,
             scaffoldMessengerKey: _scaffoldMessengerKey,
