@@ -506,7 +506,7 @@ class _MeadowButterflyState extends State<MeadowButterfly>
                   fontWeight: FontWeight.w600,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.55),
+                      color: Colors.black.withValues(alpha: 0.55),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

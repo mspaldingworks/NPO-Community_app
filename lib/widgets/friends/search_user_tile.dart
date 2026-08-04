@@ -9,7 +9,7 @@ import 'package:npo_community/core/utils/flair_utils.dart';
 class SearchUserTile extends StatelessWidget {
   final Friend user;
 
-  const SearchUserTile({Key? key, required this.user}) : super(key: key);
+  const SearchUserTile({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

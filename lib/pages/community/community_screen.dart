@@ -36,14 +36,21 @@ class _IconCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                  colors: [
+                    color.withValues(alpha: 0.15),
+                    color.withValues(alpha: 0.35),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
             ),
             Center(
-              child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+              child: Icon(
+                iconData,
+                size: 64,
+                color: color.withValues(alpha: 0.7),
+              ),
             ),
             Align(
               alignment: Alignment.bottomLeft,
@@ -93,16 +100,19 @@ class _CommunityScreenState extends State<CommunityScreen> {
         n.contains('hug box') ||
         n.contains('photo') ||
         n.contains('image') ||
-        n.contains('pic'))
+        n.contains('pic')) {
       return Icons.photo_library;
+    }
     if (n.contains('hug')) return Icons.volunteer_activism;
     if (n.contains('gaming') || n.contains('game')) return Icons.sports_esports;
     if (n.contains('art') || n.contains('creative')) return Icons.palette;
     if (n.contains('music')) return Icons.music_note;
-    if (n.contains('fitness') || n.contains('sports'))
+    if (n.contains('fitness') || n.contains('sports')) {
       return Icons.fitness_center;
-    if (n.contains('study') || n.contains('book') || n.contains('edu'))
+    }
+    if (n.contains('study') || n.contains('book') || n.contains('edu')) {
       return Icons.menu_book;
+    }
     if (n.contains('support')) return Icons.support_agent;
     return Icons.groups; // sensible default
   }
@@ -171,33 +181,42 @@ class _CommunityScreenState extends State<CommunityScreen> {
               if (n.contains('beauty') ||
                   n.contains('self care') ||
                   n.contains('self-care') ||
-                  n.contains('selfcare'))
+                  n.contains('selfcare')) {
                 return true;
+              }
               if (n.contains('physical wellness') ||
-                  n.contains('physical health'))
+                  n.contains('physical health')) {
                 return true;
+              }
               if (n.contains('fitness') ||
                   n.contains('exercise') ||
-                  n.contains('workout'))
+                  n.contains('workout')) {
                 return true;
+              }
               if (n.contains('kink') ||
                   n.contains('bdsm') ||
-                  n.contains('fetish'))
+                  n.contains('fetish')) {
                 return true;
+              }
               if (n.contains('prep') || n.contains('pep')) return true;
               if (n.contains('sti') ||
                   n.contains('std') ||
                   n.contains('testing') ||
-                  n.contains('clinic'))
+                  n.contains('clinic')) {
                 return true;
+              }
               if (n.contains('safer sex') ||
                   n.contains('sex ed') ||
-                  n.contains('sex education'))
+                  n.contains('sex education')) {
                 return true;
-              if (n.contains('consent') || n.contains('boundaries'))
+              }
+              if (n.contains('consent') || n.contains('boundaries')) {
                 return true;
-              if (n.contains('sexual health') || n.contains('sexual wellness'))
+              }
+              if (n.contains('sexual health') ||
+                  n.contains('sexual wellness')) {
                 return true;
+              }
               return false;
             }
 
@@ -206,17 +225,20 @@ class _CommunityScreenState extends State<CommunityScreen> {
               if (n.contains('bipoc')) return true;
               if (n.contains('neurospicy') ||
                   n.contains('neurodivergent') ||
-                  n.contains('neurodivergence'))
+                  n.contains('neurodivergence')) {
                 return true;
+              }
               if (n.contains('under 30') ||
                   n.contains('u30') ||
-                  n.contains('under30'))
+                  n.contains('under30')) {
                 return true;
+              }
               if (n.contains('60+') ||
                   n.contains('60 plus') ||
                   n.contains('senior') ||
-                  n.contains('older'))
+                  n.contains('older')) {
                 return true;
+              }
               return false;
             }
 
@@ -304,7 +326,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -313,8 +335,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        SizedBox(height: 6),
-                        Divider(),
+                        const SizedBox(height: 6),
+                        const Divider(),
                       ],
                     ),
                   ),
@@ -358,12 +380,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.primary.withOpacity(0.15),
-                                        Theme.of(
-                                          context,
-                                        ).colorScheme.primary.withOpacity(0.35),
+                                        Theme.of(context).colorScheme.primary
+                                            .withValues(alpha: 0.15),
+                                        Theme.of(context).colorScheme.primary
+                                            .withValues(alpha: 0.35),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
@@ -375,9 +395,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
                                   child: Icon(
                                     _iconForGroupName(group.name),
                                     size: 64,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary.withOpacity(0.7),
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.7),
                                   ),
                                 ),
                               Align(

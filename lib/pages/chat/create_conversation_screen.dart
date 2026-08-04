@@ -26,7 +26,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
   final _formKey = GlobalKey<FormState>();
 
   List<Friend> _searchResults = [];
-  List<Friend> _selectedUsers = [];
+  final List<Friend> _selectedUsers = [];
   List<Friend> _friends = [];
   bool _isLoading = false;
   bool _isFriendsLoading = true;

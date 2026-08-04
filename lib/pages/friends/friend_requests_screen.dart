@@ -67,7 +67,7 @@ class _FriendRequestsScreenState extends State<FriendRequestsScreen> {
             itemBuilder: (context, index) {
               return ListTile(
                 leading: const CircleAvatar(child: Icon(Icons.person_add)),
-                title: Text('FROM USER DATA wants to be your friend'),
+                title: const Text('FROM USER DATA wants to be your friend'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

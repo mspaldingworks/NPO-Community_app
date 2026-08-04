@@ -34,7 +34,7 @@ class PostDetailScreen extends StatefulWidget {
 String _fullUrl(String path) {
   if (path.startsWith('http')) return path;
   if (path.startsWith('/')) return ApiEndpoints.host + path;
-  return ApiEndpoints.host + '/media/' + path;
+  return '${ApiEndpoints.host}/media/$path';
 }
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
@@ -159,8 +159,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 _deletePost();
               }
             },
-            child: const Text('Delete'),
             style: TextButton.styleFrom(foregroundColor: AppColors.tertiary),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -210,8 +210,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               Navigator.of(context).pop();
               _deleteComment(commentId);
             },
-            child: const Text('Delete'),
             style: TextButton.styleFrom(foregroundColor: AppColors.tertiary),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -293,14 +293,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       if (picked == null) return;
                       final file = File(picked.path);
                       final bytes = await file.length();
+                      if (!context.mounted) return;
+                      if (!mounted) return;
                       if (bytes > _maxCommentImageBytes) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image too large. Max 10MB.'),
-                            ),
-                          );
-                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Image too large. Max 10MB.'),
+                          ),
+                        );
                         return;
                       }
                       setState(() {
@@ -377,8 +377,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           FutureBuilder<Post>(
             future: _postFuture,
             builder: (context, snapshot) {
-              if (!snapshot.hasData || currentUserId == null)
+              if (!snapshot.hasData || currentUserId == null) {
                 return const SizedBox.shrink();
+              }
               final post = snapshot.data!;
               if (post.author == currentUserId) {
                 return Row(
@@ -442,8 +443,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddCommentDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Add Comment',
+        child: const Icon(Icons.add),
       ),
       body: FutureBuilder<Post>(
         future: _postFuture,
@@ -654,17 +655,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       ),
                                     ),
                                     if (comment.authorIsStaff)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 8.0,
-                                        ),
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 8.0),
                                         child: Chip(
-                                          avatar: const Icon(
+                                          avatar: Icon(
                                             Icons.shield,
                                             size: 12,
                                             color: Colors.white,
                                           ),
-                                          label: const Text(
+                                          label: Text(
                                             'Admin',
                                             style: TextStyle(
                                               fontSize: 10,
@@ -672,7 +671,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                             ),
                                           ),
                                           backgroundColor: AppColors.primary,
-                                          padding: const EdgeInsets.symmetric(
+                                          padding: EdgeInsets.symmetric(
                                             horizontal: 4.0,
                                           ),
                                           materialTapTargetSize:

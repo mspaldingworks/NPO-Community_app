@@ -244,7 +244,7 @@ class _ReportChatSheetState extends State<_ReportChatSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _reason,
+            initialValue: _reason,
             items: const [
               DropdownMenuItem(value: 'Spam', child: Text('Spam')),
               DropdownMenuItem(value: 'Harassment', child: Text('Harassment')),

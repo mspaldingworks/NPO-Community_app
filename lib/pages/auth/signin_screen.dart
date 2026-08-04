@@ -62,7 +62,7 @@ class _SignInScreenState extends State<SignInScreen> {
       labelStyle: const TextStyle(color: Colors.white, fontSize: 16),
       prefixIcon: Icon(icon, color: Colors.white),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.08),
+      fillColor: Colors.white.withValues(alpha: 0.08),
       enabledBorder: inputBorder,
       focusedBorder: inputBorder.copyWith(
         borderSide: const BorderSide(color: Colors.white, width: 1.6),
@@ -82,7 +82,7 @@ class _SignInScreenState extends State<SignInScreen> {
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(alpha: 0.55),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(

@@ -9,7 +9,7 @@ import 'package:npo_community/theme/app_theme.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
 
 class ChatListScreen extends StatefulWidget {
-  ChatListScreen({super.key});
+  const ChatListScreen({super.key});
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -22,7 +22,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Connect'),
+          title: const Text('Connect'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Requests'),
@@ -35,8 +35,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
           name: 'Add Friend',
           child: FloatingActionButton(
             onPressed: () => GoRouter.of(context).push('/user-search'),
-            child: const Icon(Icons.person_add),
             tooltip: 'Add Friend',
+            child: const Icon(Icons.person_add),
           ),
         ),
       ),

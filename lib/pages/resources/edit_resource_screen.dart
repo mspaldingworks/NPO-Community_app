@@ -8,7 +8,7 @@ class EditResourceScreen extends StatefulWidget {
   const EditResourceScreen({super.key, required this.resource});
 
   @override
-  _EditResourceScreenState createState() => _EditResourceScreenState();
+  State<EditResourceScreen> createState() => _EditResourceScreenState();
 }
 
 class _EditResourceScreenState extends State<EditResourceScreen> {

@@ -11,7 +11,7 @@ class MockWebSocketChannel extends Mock implements WebSocketChannel {}
 void main() {
   group('ChatService Tests', () {
     late ChatService chatService;
-    final testChannelId = 'test-channel-123';
+    const testChannelId = 'test-channel-123';
 
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +39,7 @@ void main() {
 
     test('sendMessage adds message to the sink', () async {
       // Arrange
-      final messageContent = 'Hello, test message!';
+      const messageContent = 'Hello, test message!';
 
       // Act & Assert
       try {

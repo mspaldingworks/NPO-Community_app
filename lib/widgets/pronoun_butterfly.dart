@@ -218,12 +218,12 @@ class ButterflyViewerWindow extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: bg.withOpacity(0.92),
+        color: bg.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(color: border.withOpacity(0.6), width: 1),
+        border: Border.all(color: border.withValues(alpha: 0.6), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 18,
             offset: const Offset(0, 10),
           ),
@@ -264,12 +264,14 @@ String _assetKeyForPronoun(String? pronoun) {
   final firstToken = p.split('/').first.trim().toLowerCase();
 
   if (firstToken == 'she' || firstToken == 'her') return 'She.Her';
-  if (firstToken == 'he' || firstToken == 'him' || firstToken == 'hw')
+  if (firstToken == 'he' || firstToken == 'him' || firstToken == 'hw') {
     return 'He.Him';
+  }
   if (firstToken == 'they' || firstToken == 'them') return 'They.Them';
 
-  if (firstToken == 'xe' || firstToken == 'xem' || firstToken == 'xyr')
+  if (firstToken == 'xe' || firstToken == 'xem' || firstToken == 'xyr') {
     return 'Xe.Xem';
+  }
 
   if (firstToken == 'ze' ||
       firstToken == 'zir' ||

@@ -66,7 +66,7 @@ class FriendService extends ApiClient {
       }
     }
 
-    final allUsersResult = await _safeRead('$_usersPath');
+    final allUsersResult = await _safeRead(_usersPath);
     if (allUsersResult != null) {
       final filtered = _filterByPrefix(
         _parseFriendResults(allUsersResult),
@@ -204,7 +204,7 @@ class FriendService extends ApiClient {
 
   /// Sends a friend request to a user by their username.
   Future<Map<String, dynamic>> sendFriendRequest(String username) async {
-    final urlPath = '$_friendsBasePath/$_requestsPath';
+    const urlPath = '$_friendsBasePath/$_requestsPath';
     final payload = {'username': username};
 
     try {

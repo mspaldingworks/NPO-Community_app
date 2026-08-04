@@ -452,7 +452,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
                             sections: sections,
                           ),
                         ),
-                        Positioned.fill(
+                        const Positioned.fill(
                           child: IgnorePointer(
                             child: TourAnchor(
                               name: 'Meadow butterflies',
@@ -483,7 +483,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
                             name: 'Meadow scroll',
                             child: Icon(
                               Icons.unfold_more,
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -551,6 +551,7 @@ class _MeadowScreenState extends State<MeadowScreen> {
 
     final parsed = parseCreateChatResult(result);
     if (parsed == null) return;
+    if (!context.mounted) return;
 
     final controller = _controller!;
     final size = MediaQuery.of(context).size;
@@ -717,7 +718,7 @@ class _MeadowBackground extends StatelessWidget {
         children: [
           Column(
             children: List.generate(sections, (index) {
-              final assets = _MeadowScreenState._backgroundAssets;
+              const assets = _MeadowScreenState._backgroundAssets;
               final asset = assets[index % assets.length];
               return SizedBox(
                 height: size.height,
@@ -730,8 +731,8 @@ class _MeadowBackground extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withOpacity(0.10),
-                  Colors.black.withOpacity(0.22),
+                  Colors.black.withValues(alpha: 0.10),
+                  Colors.black.withValues(alpha: 0.22),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

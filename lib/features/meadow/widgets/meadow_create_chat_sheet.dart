@@ -81,7 +81,7 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
                     final topic = _topicController.text.trim();
                     if (topic.isEmpty) return;
                     Navigator.of(context).pop(
-                      _CreateChatResult(
+                      CreateChatResult(
                         emoji: emoji,
                         topic: topic,
                         initialComment: _commentController.text.trim().isEmpty
@@ -101,8 +101,8 @@ class _MeadowCreateChatSheetState extends State<MeadowCreateChatSheet> {
   }
 }
 
-class _CreateChatResult {
-  const _CreateChatResult({
+class CreateChatResult {
+  const CreateChatResult({
     required this.emoji,
     required this.topic,
     this.initialComment,
@@ -113,8 +113,8 @@ class _CreateChatResult {
   final String? initialComment;
 }
 
-_CreateChatResult? parseCreateChatResult(Object? result) {
-  if (result is _CreateChatResult) {
+CreateChatResult? parseCreateChatResult(Object? result) {
+  if (result is CreateChatResult) {
     return result;
   }
   return null;

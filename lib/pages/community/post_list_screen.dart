@@ -84,11 +84,13 @@ class _PostListScreenState extends State<PostListScreen> {
   void _deletePost(int postId) async {
     try {
       await _communityService.deletePost(postId);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Post deleted successfully')),
       );
       _refreshPosts();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to delete post: $e')));
@@ -113,8 +115,8 @@ class _PostListScreenState extends State<PostListScreen> {
               Navigator.of(context).pop();
               _deletePost(postId);
             },
-            child: const Text('Delete'),
             style: TextButton.styleFrom(foregroundColor: AppColors.tertiary),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -140,10 +142,10 @@ class _PostListScreenState extends State<PostListScreen> {
             } else if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
+              return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text('No posts found in this group.'),
                     SizedBox(height: 16),
                     Text('Be the first to post!'),
@@ -153,8 +155,8 @@ class _PostListScreenState extends State<PostListScreen> {
             } else {
               // Sort posts in descending order by publication date (most recent first)
               final posts = [...snapshot.data!];
-              int _cmp(Post a, Post b) {
-                DateTime _parse(Post p) {
+              int cmp(Post a, Post b) {
+                DateTime parse(Post p) {
                   final s = p.pubDate ?? p.updatedAt;
                   if (s != null && s.isNotEmpty) {
                     try {
@@ -164,12 +166,12 @@ class _PostListScreenState extends State<PostListScreen> {
                   return DateTime.fromMillisecondsSinceEpoch(0);
                 }
 
-                final da = _parse(a);
-                final db = _parse(b);
+                final da = parse(a);
+                final db = parse(b);
                 return db.compareTo(da);
               }
 
-              posts.sort(_cmp);
+              posts.sort(cmp);
 
               return ListView.builder(
                 itemCount: posts.length + 1,
@@ -318,17 +320,17 @@ class _PostListScreenState extends State<PostListScreen> {
                                             ),
                                           ),
                                           if (post.authorIsStaff)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
+                                            const Padding(
+                                              padding: EdgeInsets.only(
                                                 left: 8.0,
                                               ),
                                               child: Chip(
-                                                avatar: const Icon(
+                                                avatar: Icon(
                                                   Icons.shield,
                                                   size: 12,
                                                   color: Colors.white,
                                                 ),
-                                                label: const Text(
+                                                label: Text(
                                                   'Admin',
                                                   style: TextStyle(
                                                     fontSize: 10,

@@ -16,7 +16,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.55)),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.55),
+          ),
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(

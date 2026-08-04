@@ -63,6 +63,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   /// Makes a POST request and processes the response.
+  @override
   Future<dynamic> post({
     required String urlPath,
     required Map<String, String> jsonHeaders,
@@ -86,6 +87,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   /// Makes a PUT request and processes the response.
+  @override
   Future<dynamic> put({
     required String urlPath,
     Map<String, String>? jsonHeaders,
@@ -108,6 +110,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   /// Makes a GET request and processes the response.
+  @override
   Future<dynamic> read({
     required String urlPath,
     Map<String, String>? jsonHeaders,
@@ -125,6 +128,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   /// Makes a PATCH request and processes the response.
+  @override
   Future<dynamic> update({
     required String urlPath,
     required Map<String, String> jsonHeaders,
@@ -147,6 +151,7 @@ class ApiClient implements ApiClientInterface {
   }
 
   /// Makes a DELETE request and processes the response.
+  @override
   Future<dynamic> delete({
     required String urlPath,
     required Map<String, String> jsonHeaders,

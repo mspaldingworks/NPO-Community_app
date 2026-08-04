@@ -45,7 +45,7 @@ class MeadowFlower extends StatelessWidget {
                 borderRadius: BorderRadius.circular(scaledSize / 2),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.16),
+                    color: Colors.black.withValues(alpha: 0.16),
                     blurRadius: 10,
                     offset: const Offset(0, 6),
                   ),
@@ -60,7 +60,7 @@ class MeadowFlower extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.82),
+                color: Colors.white.withValues(alpha: 0.82),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(

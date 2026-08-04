@@ -11,7 +11,7 @@ import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/core/services/chat_favorites_service.dart';
 
 class FriendsTabView extends StatefulWidget {
-  const FriendsTabView({Key? key}) : super(key: key);
+  const FriendsTabView({super.key});
 
   @override
   State<FriendsTabView> createState() => _FriendsTabViewState();
@@ -221,10 +221,10 @@ class _FriendsTabViewState extends State<FriendsTabView> {
     );
   }
 
-  void _showFriendOptions(BuildContext context, Friend friend) {
+  void _showFriendOptions(BuildContext parentContext, Friend friend) {
     showModalBottomSheet(
-      context: context,
-      builder: (context) {
+      context: parentContext,
+      builder: (sheetContext) {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -232,8 +232,8 @@ class _FriendsTabViewState extends State<FriendsTabView> {
               leading: const Icon(Icons.chat),
               title: const Text('Message'),
               onTap: () {
-                Navigator.pop(context);
-                GoRouter.of(context).push('/chat/${friend.id}');
+                Navigator.pop(sheetContext);
+                GoRouter.of(parentContext).push('/chat/${friend.id}');
               },
             ),
             ListTile(
@@ -243,21 +243,21 @@ class _FriendsTabViewState extends State<FriendsTabView> {
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () async {
-                Navigator.pop(context);
+                Navigator.pop(sheetContext);
                 final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
+                  context: parentContext,
+                  builder: (dialogContext) => AlertDialog(
                     title: const Text('Remove Friend'),
                     content: Text(
                       'Are you sure you want to remove ${friend.username} from your friends?',
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context, false),
+                        onPressed: () => Navigator.pop(dialogContext, false),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.pop(context, true),
+                        onPressed: () => Navigator.pop(dialogContext, true),
                         child: const Text(
                           'Remove',
                           style: TextStyle(color: Colors.red),
@@ -271,16 +271,17 @@ class _FriendsTabViewState extends State<FriendsTabView> {
                   final success = await _friendsController.removeFriend(
                     friend.username,
                   );
-                  if (success && mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  if (!parentContext.mounted) return;
+                  if (success) {
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
                       SnackBar(
                         content: Text(
                           '${friend.username} removed from friends',
                         ),
                       ),
                     );
-                  } else if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                  } else {
+                    ScaffoldMessenger.of(parentContext).showSnackBar(
                       const SnackBar(content: Text('Failed to remove friend')),
                     );
                   }

@@ -10,7 +10,7 @@ import 'package:npo_community/core/utils/flair_utils.dart';
 class PendingRequestTile extends StatelessWidget {
   final FriendRequest request;
 
-  const PendingRequestTile({Key? key, required this.request}) : super(key: key);
+  const PendingRequestTile({super.key, required this.request});
 
   @override
   Widget build(BuildContext context) {

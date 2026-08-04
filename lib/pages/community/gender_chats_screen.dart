@@ -397,7 +397,10 @@ class _IconCard extends StatelessWidget {
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color.withOpacity(0.15), color.withOpacity(0.35)],
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.35),
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -405,7 +408,11 @@ class _IconCard extends StatelessWidget {
               ),
             if (imageUrl == null)
               Center(
-                child: Icon(iconData, size: 64, color: color.withOpacity(0.7)),
+                child: Icon(
+                  iconData,
+                  size: 64,
+                  color: color.withValues(alpha: 0.7),
+                ),
               ),
             Align(
               alignment: Alignment.bottomLeft,

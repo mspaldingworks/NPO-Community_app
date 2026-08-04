@@ -295,7 +295,7 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
               ),
               const SizedBox(height: 16.0),
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 hint: const Text('Select Resource Type'),
                 isExpanded: true,
                 items: ['Blog', 'Website', 'Video', 'Article', 'Other'].map((
@@ -324,8 +324,9 @@ class _CreateResourceScreenState extends State<CreateResourceScreen> {
                   final probe = Uri.tryParse(
                     v.startsWith('http') ? v : 'https://$v',
                   );
-                  if (probe == null || probe.host.isEmpty)
+                  if (probe == null || probe.host.isEmpty) {
                     return 'Please enter a valid URL';
+                  }
                   return null;
                 },
               ),

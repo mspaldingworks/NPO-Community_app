@@ -26,12 +26,10 @@ class Conversation {
     this.createdBy,
     DateTime? createdAt,
     DateTime? updatedAt,
-    int unreadCount = 0,
-    bool isMuted = false,
+    this.unreadCount = 0,
+    this.isMuted = false,
   }) : createdAt = createdAt ?? DateTime.now(),
-       updatedAt = updatedAt ?? DateTime.now(),
-       unreadCount = unreadCount,
-       isMuted = isMuted;
+       updatedAt = updatedAt ?? DateTime.now();
 
   factory Conversation.fromJson(Map<String, dynamic> json) {
     return Conversation(

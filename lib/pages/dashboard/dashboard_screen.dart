@@ -1397,7 +1397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       }
                       if (_unreadReplyCount > 0) {
                         await _markRepliesRead();
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         context.push('/community');
                         return;
                       }
@@ -1918,7 +1918,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           boxShadow: isHighlighted
               ? [
                   BoxShadow(
-                    color: highlightColor.withOpacity(0.6),
+                    color: highlightColor.withValues(alpha: 0.6),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

@@ -37,8 +37,8 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
         onPressed: () {
           GoRouter.of(context).push('/user-search');
         },
-        child: const Icon(Icons.search),
         tooltip: 'Search for Users',
+        child: const Icon(Icons.search),
       ),
       body: FutureBuilder<List<Friend>>(
         future: _friendsFuture,

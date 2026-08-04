@@ -12,7 +12,7 @@ class ResourceMutualAidScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.handshake, size: 72, color: AppColors.tertiary),
+            const Icon(Icons.handshake, size: 72, color: AppColors.tertiary),
             const SizedBox(height: 16),
             Text(
               'Need help? Submit a Mutual Aid request to connect with the community.',

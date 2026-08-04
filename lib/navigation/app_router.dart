@@ -75,7 +75,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/chat',
-        builder: (context, state) => ChatListScreen(),
+        builder: (context, state) => const ChatListScreen(),
         routes: [
           GoRoute(
             path: 'create',

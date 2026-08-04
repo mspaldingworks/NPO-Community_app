@@ -161,6 +161,6 @@ class Friend {
     // If backend returns a path that already begins with '/media', just prefix host
     if (profilePic!.startsWith('/')) return ApiEndpoints.host + profilePic!;
     // Otherwise assume it's a relative path under /media
-    return ApiEndpoints.host + '/media/' + profilePic!;
+    return '${ApiEndpoints.host}/media/${profilePic!}';
   }
 }

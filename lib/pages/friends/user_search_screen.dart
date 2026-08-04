@@ -127,7 +127,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white24),
           ),

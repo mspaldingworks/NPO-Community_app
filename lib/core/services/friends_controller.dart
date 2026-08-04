@@ -57,17 +57,18 @@ class FriendsController with ChangeNotifier {
         me = (await AuthService().getCurrentUser()).username;
       } catch (_) {}
 
-      final isPending = (FriendRequest req) =>
+      bool isPending(FriendRequest req) =>
           req.status == null || req.status == 'pending';
-      final isIncoming = (FriendRequest req) {
-        if (me == null)
+      bool isIncoming(FriendRequest req) {
+        if (me == null) {
           return true; // If we can't resolve current user, show all pending entries
+        }
         // Prefer entries explicitly addressed to me
         if (req.toUser?.username == me) return true;
         // Some backends omit to_user; treat as incoming if the sender isn't me
         if (req.fromUser.username != me) return true;
         return false;
-      };
+      }
 
       _pendingRequests = requests
           .where((r) => isPending(r) && isIncoming(r))

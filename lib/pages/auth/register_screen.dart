@@ -37,7 +37,7 @@ class _ProfileImagePicker extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor: Colors.white.withOpacity(0.18),
+                  backgroundColor: Colors.white.withValues(alpha: 0.18),
                   backgroundImage: profileImage != null
                       ? FileImage(profileImage!)
                       : null,
@@ -54,7 +54,7 @@ class _ProfileImagePicker extends StatelessWidget {
                   right: 4,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.55),
+                      color: Colors.black.withValues(alpha: 0.55),
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white70, width: 1.2),
                     ),
@@ -73,7 +73,10 @@ class _ProfileImagePicker extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Add Profile Picture',
-          style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 16),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 16,
+          ),
         ),
       ],
     );
@@ -207,8 +210,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (t == 'xe' || t == 'xem' || t == 'xyr') return xeGreen;
 
       // Ze/Zir family (includes common variants used in the list)
-      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie')
+      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') {
         return zePurple;
+      }
 
       if (t == 'fae' || t == 'faer') return faeLightGreen;
       if (t == 'ae' || t == 'aer') return aeSilver;
@@ -243,7 +247,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final isSelected = _selectedPronouns.contains(pronoun);
     final baseColors = _pronounColors(pronoun);
     final opacity = isSelected ? 0.95 : 0.35;
-    final colors = baseColors.map((c) => c.withOpacity(opacity)).toList();
+    final colors = baseColors.map((c) => c.withValues(alpha: opacity)).toList();
     final textColor = _contrastTextColor(baseColors);
     final borderColor = isSelected ? Colors.white : Colors.white54;
 
@@ -541,7 +545,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         prefixIcon: icon != null ? Icon(icon, color: Colors.white) : null,
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.08),
+        fillColor: Colors.white.withValues(alpha: 0.08),
         enabledBorder: inputBorder,
         focusedBorder: inputBorder.copyWith(
           borderSide: const BorderSide(color: Colors.white, width: 1.6),
@@ -562,7 +566,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: Container(
         decoration: const BoxDecoration(color: Color(0xFF17324D)),
         child: Container(
-          color: Colors.black.withOpacity(0.55),
+          color: Colors.black.withValues(alpha: 0.55),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -745,7 +749,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: Text(
                                 'Pronouns',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -791,8 +795,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ElevatedButton(
                                   onPressed: _addCustomPronoun,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white.withOpacity(
-                                      0.18,
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.18,
                                     ),
                                     foregroundColor: Colors.white,
                                   ),
@@ -808,7 +812,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 children: _customPronouns.map((pronoun) {
                                   final baseColors = _pronounColors(pronoun);
                                   final colors = baseColors
-                                      .map((c) => c.withOpacity(0.95))
+                                      .map((c) => c.withValues(alpha: 0.95))
                                       .toList();
                                   final textColor = _contrastTextColor(
                                     baseColors,
@@ -822,7 +826,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       ),
                                     ),
                                     backgroundColor: colors.first,
-                                    deleteIconColor: textColor.withOpacity(0.8),
+                                    deleteIconColor: textColor.withValues(
+                                      alpha: 0.8,
+                                    ),
                                     onDeleted: () =>
                                         _removeCustomPronoun(pronoun),
                                   );
@@ -863,7 +869,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _signUp,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.18),
+                          backgroundColor: Colors.white.withValues(alpha: 0.18),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

@@ -172,8 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (t == 'they' || t == 'them') return nbYellow;
 
       if (t == 'xe' || t == 'xem' || t == 'xyr') return xeGreen;
-      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie')
+      if (t == 'ze' || t == 'zir' || t == 'hir' || t == 'zem' || t == 'zie') {
         return zePurple;
+      }
       if (t == 'fae' || t == 'faer') return faeLightGreen;
       if (t == 'ae' || t == 'aer') return aeSilver;
       if (t == 'ey' || t == 'em') return eyLightYellow;
@@ -412,7 +413,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isSelected = _selectedPronouns.contains(pronoun);
     final baseColors = _pronounColors(pronoun);
     final opacity = isSelected ? 0.95 : 0.35;
-    final colors = baseColors.map((c) => c.withOpacity(opacity)).toList();
+    final colors = baseColors.map((c) => c.withValues(alpha: opacity)).toList();
     final textColor = _contrastTextColor(baseColors);
     final borderColor = isSelected ? Colors.white : Colors.white54;
 
@@ -495,11 +496,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfileData() async {
     final status = await _profileService.getStatus();
     final imagePath = await _profileService.getImagePath();
+    if (!mounted) return;
     User? user;
     try {
       final auth = Provider.of<AuthService>(context, listen: false);
       user = auth.currentUser ?? await auth.getCurrentUser();
     } catch (_) {}
+    if (!mounted) return;
 
     final flair = user?.flair;
     final pronouns = FlairUtils.extractPronouns(flair) ?? '';
@@ -832,7 +835,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: _customPronouns.map((pronoun) {
                     final baseColors = _pronounColors(pronoun);
                     final colors = baseColors
-                        .map((c) => c.withOpacity(0.95))
+                        .map((c) => c.withValues(alpha: 0.95))
                         .toList();
                     final textColor = _contrastTextColor(baseColors);
                     return InputChip(
@@ -844,7 +847,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       backgroundColor: colors.first,
-                      deleteIconColor: textColor.withOpacity(0.8),
+                      deleteIconColor: textColor.withValues(alpha: 0.8),
                       onDeleted: () => _removeCustomPronoun(pronoun),
                     );
                   }).toList(),

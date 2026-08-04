@@ -19,7 +19,7 @@ class DisplayProfilePic extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String? _resolveUrl(String? url) {
+    String? resolveUrl(String? url) {
       if (url == null || url.isEmpty) return null;
       final u = url.trim();
       if (u.startsWith('http://') || u.startsWith('https://')) {
@@ -40,7 +40,7 @@ class DisplayProfilePic extends StatelessWidget {
       return '${ApiEndpoints.host}/media/$u';
     }
 
-    final resolved = _resolveUrl(imageUrl);
+    final resolved = resolveUrl(imageUrl);
     final token = SharedPreferencesService().getData('user_token');
     final headers = token != null ? {'Authorization': 'Token $token'} : null;
     assert(() {
