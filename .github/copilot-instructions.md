@@ -1,7 +1,7 @@
 # NPO Community Flutter Guidelines
 
 ## Product Boundary
-- This is the stakeholder-only NPO Community app. It is not LYG, TransConnect, or TransWell.
+- This is the stakeholder-only NPO Community app. It is independent of all legacy and recovery projects.
 - The app serves adult volunteers, donors, alumni, event leads, mentors, chapter leads, partner leads, committee and board members, moderators, interns, staff, and admins.
 - Do not add participants, case management, P3 data, minors, guardians, service-delivery notes, or demographic/identity profile fields.
 - Use package name `npo_community`, visible name `NPO Community`, application IDs `org.npocommunity.app`, and deep links under `npo://`.
