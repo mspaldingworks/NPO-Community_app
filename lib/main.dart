@@ -1,10 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:npo_community/core/config/app_config.dart';
+import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/core/services/home_alert_service.dart';
+import 'package:npo_community/core/services/touring_service.dart';
+import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
+import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_controller.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_screen.dart';
+import 'package:npo_community/navigation/app_router.dart';
 import 'package:npo_community/theme/app_theme.dart';
-import 'package:provider/provider.dart';
+import 'package:npo_community/widgets/dev/dev_menu.dart';
+import 'package:npo_community/widgets/dev/touring_overlay.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,57 +27,57 @@ class NpoCommunityApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final home = config.environment == AppEnvironment.demo
-        ? ChangeNotifierProvider(
-            create: (_) => SupporterHubController.demo(),
-            child: const SupporterHubScreen(),
-          )
-        : _EnvironmentGate(environment: config.environment);
+    if (config.environment == AppEnvironment.demo) {
+      return ChangeNotifierProvider(
+        create: (_) => SupporterHubController.demo(),
+        child: MaterialApp(
+          title: 'NPO Community',
+          debugShowCheckedModeBanner: kDebugMode,
+          theme: AppTheme.lightTheme,
+          home: const SupporterHubScreen(),
+        ),
+      );
+    }
 
-    return MaterialApp(
-      title: 'NPO Community',
-      debugShowCheckedModeBanner: kDebugMode,
-      theme: AppTheme.lightTheme,
-      home: home,
-    );
+    return _FullApp(config: config);
   }
 }
 
-class _EnvironmentGate extends StatelessWidget {
-  const _EnvironmentGate({required this.environment});
+class _FullApp extends StatefulWidget {
+  const _FullApp({required this.config});
 
-  final AppEnvironment environment;
+  final AppConfig config;
+
+  @override
+  State<_FullApp> createState() => _FullAppState();
+}
+
+class _FullAppState extends State<_FullApp> {
+  final _authService = AuthService();
+  final _touringService = TouringService();
+  late final _router = AppRouter(authService: _authService).router;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.shield_outlined, size: 40),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Secure access is not configured',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '${environment.name} mode requires the NPO Community '
-                    'stakeholder API and authorization flow.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: _authService),
+        ChangeNotifierProvider.value(value: _touringService),
+        ChangeNotifierProvider(create: (_) => HomeAlertService()),
+        ChangeNotifierProvider(create: (_) => MeadowAlertService()),
+        ChangeNotifierProvider(create: (_) => OnboardingTourController()),
+        Provider(create: (_) => CommunityService()),
+      ],
+      child: MaterialApp.router(
+        title: 'NPO Community',
+        debugShowCheckedModeBanner: kDebugMode,
+        theme: AppTheme.lightTheme,
+        routerConfig: _router,
+        builder: (context, child) {
+          return DevMenu(
+            child: TouringOverlay(child: child),
+          );
+        },
       ),
     );
   }

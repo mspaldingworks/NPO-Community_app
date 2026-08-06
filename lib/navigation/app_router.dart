@@ -344,7 +344,8 @@ class AppRouter {
         return '/home';
       }
 
-      if (location.startsWith('/admin')) {
+      if (location.startsWith('/admin') &&
+          authService.currentUser?.isStaff != true) {
         return '/home';
       }
 

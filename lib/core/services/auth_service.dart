@@ -34,6 +34,12 @@ class AuthService extends ApiClient with ChangeNotifier {
   // Expose the current user.
   User? get currentUser => _currentUser;
 
+  void switchTouringUser(User user) {
+    _currentUser = user;
+    _authStateController.add(user);
+    notifyListeners();
+  }
+
   void enableDemoSession() {
     _currentUser = User(
       id: 0,
