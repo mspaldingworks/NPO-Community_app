@@ -162,16 +162,9 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String password2,
     required String username,
     required String city,
-    required List<String> pronouns,
-    required String statusMessage,
     File? profileImage,
   }) async {
     final uri = AppConfig.current.apiUri('/api/signup/');
-    final cleanedPronouns = pronouns
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
-    final pronounString = cleanedPronouns.join(', ');
 
     Future<http.Response> sendMultipart(File imageFile) async {
       final request = http.MultipartRequest('POST', uri)
@@ -179,9 +172,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         ..fields['password'] = password
         ..fields['password2'] = password2
         ..fields['username'] = username
-        ..fields['city'] = city
-        ..fields['flair'] = pronounString
-        ..fields['status_message'] = statusMessage;
+        ..fields['city'] = city;
 
       request.files.add(
         await http.MultipartFile.fromPath('profile_pic', imageFile.path),
@@ -198,8 +189,6 @@ class AuthService extends ApiClient with ChangeNotifier {
         'password2': password2,
         'username': username,
         'city': city,
-        'flair': pronounString,
-        'status_message': statusMessage,
       });
 
       return http.post(
