@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:npo_community/core/config/app_config.dart';
-import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/models/user.dart';
+import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
 
@@ -19,7 +19,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   // It MUST match the key used in _saveUser and the key expected by ApiClient (which we assume is 'user_token' now).
   static const String _tokenKey = 'user_token';
   static const String _usernameKey = 'username';
-  static const String _passwordKey = 'password';
+  static const String _legacyPasswordKey = 'password';
 
   // Use a StreamController to broadcast user state changes.
   final _authStateController = StreamController<User?>.broadcast();
@@ -80,33 +80,14 @@ class AuthService extends ApiClient with ChangeNotifier {
   /// Initializes the service, loading the user session from storage.
   /// Uses the inherited _prefsService (which is private to ApiClient).
   Future<void> init() async {
-    // Access the shared preferences data via the inherited methods (must use the same keys).
-    // Note: Since _prefsService is private in ApiClient, we'll access it
-    // indirectly or assume a public method is available if needed, but for now
-    // we use the private fields that ApiClient's constructor uses.
-    // However, since the keys used in ApiClient and AuthService differ ('authToken' vs 'user_token'),
-    // we must temporarily use a direct SharedPreferencesService instance or adjust ApiClient.
-    // Assuming the ApiClient token key is now 'user_token' for this service.
-
-    // TEMPORARY SOLUTION: Since ApiClient's constructor is private, we must rely on
-    // the inherited ApiClient's instance of SharedPreferencesService.
-    // Since we can't access ApiClient's private _prefsService,
-    // we'll temporarily re-introduce the singleton access to get the initial data.
-    // BEST PRACTICE: ApiClient should provide a public getter for the prefs service
-    // or expose a method to get data by key. Given the constraints, we'll re-add the singleton access.
-
     final prefsService = SharedPreferencesService();
     final token = prefsService.getData(_tokenKey);
-    final username = prefsService.getData(_usernameKey);
-    final password = prefsService.getData(_passwordKey);
+    await prefsService.clearData(_legacyPasswordKey);
 
-    if (token != null && username != null && password != null) {
+    if (token != null) {
       try {
-        // We can't use fetchUserFromToken because we don't know the password.
-        // The original logic re-signs in the user.
-        await signIn(username: username, password: password);
+        await getCurrentUser();
       } catch (_) {
-        // If sign-in fails (e.g., token expired, password changed), clear session.
         await signOut();
       }
     }
@@ -116,7 +97,6 @@ class AuthService extends ApiClient with ChangeNotifier {
   Future<void> _saveUser(
     User user,
     String token, {
-    String? password,
     bool setTourPending = false,
   }) async {
     _currentUser = user;
@@ -125,9 +105,7 @@ class AuthService extends ApiClient with ChangeNotifier {
     final prefsService = SharedPreferencesService();
     await prefsService.saveData(_tokenKey, token);
     await prefsService.saveData(_usernameKey, user.username);
-    if (password != null) {
-      await prefsService.saveData(_passwordKey, password);
-    }
+    await prefsService.clearData(_legacyPasswordKey);
 
     if (setTourPending) {
       final username = user.username;
@@ -148,7 +126,7 @@ class AuthService extends ApiClient with ChangeNotifier {
     final prefsService = SharedPreferencesService();
     await prefsService.clearData(_tokenKey);
     await prefsService.clearData(_usernameKey);
-    await prefsService.clearData(_passwordKey);
+    await prefsService.clearData(_legacyPasswordKey);
     notifyListeners(); // Notify listeners of the change
   }
 
@@ -261,23 +239,33 @@ class AuthService extends ApiClient with ChangeNotifier {
     // The post method now processes the response for us and returns the decoded body on 200 OK.
     final data =
         await post(
-              urlPath: '/api/login/',
-              jsonHeaders: jsonHeaders,
-              jsonPayload: jsonPayload,
-            )
-            as Map<String, dynamic>;
+          urlPath: '/api/login/',
+          jsonHeaders: jsonHeaders,
+          jsonPayload: jsonPayload,
+        );
 
-    if (data.containsKey('user') && data.containsKey('token')) {
-      final Map<String, dynamic> userData = data['user'];
-      final String token = data['token'];
+    if (data is! Map<String, dynamic>) {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid response.',
+      );
+    }
+
+    final userData = data['user'];
+    final token = data['token'];
+    if (userData is! Map<String, dynamic> ||
+        token is! String ||
+        token.trim().isEmpty) {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid response.',
+      );
+    }
+
+    try {
       final user = User.fromJson(userData);
-
-      // Save the user data including the token and (unrecommended) password.
-      await _saveUser(user, token, password: password, setTourPending: true);
-    } else {
-      // Throw an exception if the format is unexpected, which will be caught by the calling function.
-      throw Exception(
-        'Invalid response format from login API. Missing user or token.',
+      await _saveUser(user, token, setTourPending: true);
+    } on FormatException {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid account response.',
       );
     }
   }
@@ -366,4 +354,13 @@ class SignUpException implements Exception {
 
   @override
   String toString() => message ?? 'Sign up failed.';
+}
+
+class AuthException implements Exception {
+  final String message;
+
+  const AuthException(this.message);
+
+  @override
+  String toString() => message;
 }

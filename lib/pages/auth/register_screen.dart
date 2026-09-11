@@ -150,8 +150,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await _authService.signUp(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        password2: _confirmPasswordController.text.trim(),
+        password: _passwordController.text,
+        password2: _confirmPasswordController.text,
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
         profileImage: _profileImage,

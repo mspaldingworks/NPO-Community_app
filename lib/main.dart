@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -11,12 +12,14 @@ import 'package:npo_community/features/onboarding_tour/controllers/onboarding_to
 import 'package:npo_community/features/supporter_hub/supporter_hub_controller.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_screen.dart';
 import 'package:npo_community/navigation/app_router.dart';
+import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/theme/app_theme.dart';
 import 'package:npo_community/widgets/dev/dev_menu.dart';
 import 'package:npo_community/widgets/dev/touring_overlay.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SharedPreferencesService().init();
   runApp(NpoCommunityApp(config: AppConfig.current));
 }
 
@@ -56,6 +59,12 @@ class _FullAppState extends State<_FullApp> {
   final _authService = AuthService();
   final _touringService = TouringService();
   late final _router = AppRouter(authService: _authService).router;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_authService.init());
+  }
 
   @override
   Widget build(BuildContext context) {
