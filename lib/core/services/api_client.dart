@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:npo_community/core/config/app_config.dart';
@@ -36,7 +37,8 @@ class ApiClient implements ApiClientInterface {
     'Authorization': 'Token $authToken',
   };
 
-  http.Client get _httpClient => debugHttpClientOverride ?? http.Client();
+  @protected
+  http.Client get httpClient => debugHttpClientOverride ?? http.Client();
 
   /// Processes the HTTP response, checks the status code, and decodes the body.
   /// Throws an Exception on failure or returns the decoded JSON/null on success.
@@ -56,9 +58,9 @@ class ApiClient implements ApiClientInterface {
       }
       return null; // For 204 No Content
     } else {
-      final dynamic errorJson = _tryDecodeJson(response.body);
+      final dynamic errorJson = tryDecodeJson(response.body);
       throw ApiClientException(
-        _extractErrorMessage(errorJson, response.statusCode),
+        extractErrorMessage(errorJson, response.statusCode),
       );
     }
   }
@@ -69,7 +71,8 @@ class ApiClient implements ApiClientInterface {
     return uri;
   }
 
-  dynamic _tryDecodeJson(String body) {
+  @protected
+  dynamic tryDecodeJson(String body) {
     if (body.trim().isEmpty) {
       return null;
     }
@@ -81,13 +84,14 @@ class ApiClient implements ApiClientInterface {
     }
   }
 
-  String _extractErrorMessage(dynamic errorJson, int statusCode) {
+  @protected
+  String extractErrorMessage(dynamic errorJson, int statusCode) {
     if (errorJson is Map) {
       final primaryMessage =
-          _firstErrorString(errorJson['detail']) ??
-          _firstErrorString(errorJson['error']) ??
-          _firstErrorString(errorJson['message']) ??
-          _firstErrorString(errorJson['non_field_errors']);
+          firstErrorString(errorJson['detail']) ??
+          firstErrorString(errorJson['error']) ??
+          firstErrorString(errorJson['message']) ??
+          firstErrorString(errorJson['non_field_errors']);
       if (primaryMessage != null) {
         return primaryMessage;
       }
@@ -103,9 +107,9 @@ class ApiClient implements ApiClientInterface {
           return;
         }
 
-        final fieldMessage = _firstErrorString(value);
+        final fieldMessage = firstErrorString(value);
         if (fieldMessage != null) {
-          fieldErrors.add('${_formatFieldName(normalizedKey)}: $fieldMessage');
+          fieldErrors.add('${formatFieldName(normalizedKey)}: $fieldMessage');
         }
       });
 
@@ -114,7 +118,7 @@ class ApiClient implements ApiClientInterface {
       }
     }
 
-    final listMessage = _firstErrorString(errorJson);
+    final listMessage = firstErrorString(errorJson);
     if (listMessage != null) {
       return listMessage;
     }
@@ -122,14 +126,15 @@ class ApiClient implements ApiClientInterface {
     return 'Request failed with status code $statusCode.';
   }
 
-  String? _firstErrorString(dynamic value) {
+  @protected
+  String? firstErrorString(dynamic value) {
     if (value is String) {
       final trimmed = value.trim();
       return trimmed.isEmpty ? null : trimmed;
     }
     if (value is List) {
       final items = value
-          .map(_firstErrorString)
+          .map(firstErrorString)
           .whereType<String>()
           .where((item) => item.isNotEmpty)
           .toList();
@@ -141,7 +146,8 @@ class ApiClient implements ApiClientInterface {
     return null;
   }
 
-  String _formatFieldName(String field) {
+  @protected
+  String formatFieldName(String field) {
     return field
         .replaceAll('_', ' ')
         .split(' ')
@@ -150,7 +156,8 @@ class ApiClient implements ApiClientInterface {
         .join(' ');
   }
 
-  String _networkErrorMessage(Uri uri) {
+  @protected
+  String networkErrorMessage(Uri uri) {
     return 'Unable to reach the NPO Community API at ${uri.origin}. '
         'Verify the server is running and that --dart-define=API_ORIGIN '
         'points to a host reachable from this device.';
@@ -167,7 +174,7 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('POST Requesting URL: $uri');
-      final response = await _httpClient.post(
+      final response = await httpClient.post(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
@@ -177,11 +184,11 @@ class ApiClient implements ApiClientInterface {
     } on ApiClientException {
       rethrow;
     } on SocketException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on http.ClientException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on TimeoutException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } catch (_) {
       throw const ApiClientException(
         'The request could not be completed. Please try again.',
@@ -200,7 +207,7 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('PUT Requesting URL: $uri');
-      final response = await _httpClient.put(
+      final response = await httpClient.put(
         uri,
         headers: jsonHeaders,
         body: jsonPayload != null ? jsonEncode(jsonPayload) : null,
@@ -210,11 +217,11 @@ class ApiClient implements ApiClientInterface {
     } on ApiClientException {
       rethrow;
     } on SocketException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on http.ClientException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on TimeoutException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } catch (_) {
       throw const ApiClientException(
         'The request could not be completed. Please try again.',
@@ -232,17 +239,17 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('GET Requesting URL: $uri');
-      final response = await _httpClient.get(uri, headers: jsonHeaders);
+      final response = await httpClient.get(uri, headers: jsonHeaders);
       _logger.i('GET Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
     } on SocketException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on http.ClientException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on TimeoutException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } catch (_) {
       throw const ApiClientException(
         'The request could not be completed. Please try again.',
@@ -261,7 +268,7 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('PATCH Requesting URL: $uri');
-      final response = await _httpClient.patch(
+      final response = await httpClient.patch(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
@@ -271,11 +278,11 @@ class ApiClient implements ApiClientInterface {
     } on ApiClientException {
       rethrow;
     } on SocketException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on http.ClientException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on TimeoutException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } catch (_) {
       throw const ApiClientException(
         'The request could not be completed. Please try again.',
@@ -293,17 +300,17 @@ class ApiClient implements ApiClientInterface {
     final uri = _buildUri(urlPath);
     try {
       _logger.i('DELETE Requesting URL: $uri');
-      final response = await _httpClient.delete(uri, headers: jsonHeaders);
+      final response = await httpClient.delete(uri, headers: jsonHeaders);
       _logger.i('DELETE Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
     } on SocketException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on http.ClientException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } on TimeoutException {
-      throw ApiClientException(_networkErrorMessage(uri));
+      throw ApiClientException(networkErrorMessage(uri));
     } catch (_) {
       throw const ApiClientException(
         'The request could not be completed. Please try again.',

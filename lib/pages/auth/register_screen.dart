@@ -6,8 +6,20 @@ import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
+typedef SignUpHandler =
+    Future<void> Function({
+      required String email,
+      required String password,
+      required String password2,
+      required String username,
+      required String city,
+      File? profileImage,
+    });
+
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.onSignUp});
+
+  final SignUpHandler? onSignUp;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -97,6 +109,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   String? _usernameError;
   String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+  String? _cityError;
 
   @override
   void dispose() {
@@ -145,10 +160,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
       _usernameError = null;
       _emailError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+      _cityError = null;
     });
 
     try {
-      await _authService.signUp(
+      final signUp = widget.onSignUp ?? _authService.signUp;
+      await signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         password2: _confirmPasswordController.text,
@@ -168,22 +187,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _usernameError = e.errors['username']?.join(' ');
           _emailError = e.errors['email']?.join(' ');
+          _passwordError = e.errors['password']?.join(' ');
+          _confirmPasswordError = e.errors['password2']?.join(' ');
+          _cityError = e.errors['city']?.join(' ');
         });
-
-        final messages = <String>[
-          if (_usernameError != null && _usernameError!.isNotEmpty)
-            'Username: $_usernameError',
-          if (_emailError != null && _emailError!.isNotEmpty)
-            'Email: $_emailError',
-        ];
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              messages.isNotEmpty
-                  ? messages.join('\n')
-                  : (e.message ??
-                        'Registration failed. Please review your details and try again.'),
+              e.userMessage(
+                fieldLabels: const {
+                  'username': 'Username',
+                  'email': 'Email',
+                  'password': 'Password',
+                  'password2': 'Confirm Password',
+                  'city': 'City',
+                },
+              ),
             ),
           ),
         );
@@ -191,7 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${e.toString()}')),
+          SnackBar(content: Text(_errorMessage(e))),
         );
       }
     } finally {
@@ -341,8 +361,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             });
                           },
                         ),
-                      ),
+                      ).copyWith(errorText: _passwordError),
                       obscureText: _obscurePassword,
+                      onChanged: (_) {
+                        if (_passwordError != null) {
+                          setState(() {
+                            _passwordError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a password';
@@ -376,8 +403,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             });
                           },
                         ),
-                      ),
+                      ).copyWith(errorText: _confirmPasswordError),
                       obscureText: _obscureConfirmPassword,
+                      onChanged: (_) {
+                        if (_confirmPasswordError != null) {
+                          setState(() {
+                            _confirmPasswordError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please confirm your password';
@@ -390,18 +424,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // ZIP Code Field
+                    // City Field
                     TextFormField(
                       controller: _zipCodeController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
                       decoration: themedInput(
-                        label: 'ZIP Code',
+                        label: 'City',
                         icon: Icons.location_on,
-                      ),
-                      keyboardType: TextInputType.number,
+                      ).copyWith(errorText: _cityError),
+                      onChanged: (_) {
+                        if (_cityError != null) {
+                          setState(() {
+                            _cityError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your ZIP code';
+                          return 'Please enter your city';
                         }
                         return null;
                       },
@@ -470,5 +510,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  String _errorMessage(Object error) {
+    final message = error.toString();
+    return message.startsWith('Exception: ')
+        ? 'Registration failed: ${message.substring('Exception: '.length)}'
+        : 'Registration failed: $message';
   }
 }

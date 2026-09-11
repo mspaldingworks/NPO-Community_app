@@ -158,4 +158,80 @@ void main() {
       ),
     );
   });
+
+  test('signUp accepts a valid 200 response with user and token', () async {
+    ApiClient.debugHttpClientOverride = MockClient((request) async {
+      expect(request.url.path, '/api/signup/');
+      final payload = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(payload['city'], 'Louisville');
+      return http.Response(
+        jsonEncode({
+          'token': 'signup-token',
+          'user': {
+            'id': 11,
+            'username': 'newmember',
+            'email': 'newmember@test.dev',
+            'city': 'Louisville',
+          },
+        }),
+        200,
+        headers: {'content-type': 'application/json'},
+      );
+    });
+
+    await AuthService().signUp(
+      email: 'newmember@test.dev',
+      password: 'C@\$S3cur3!',
+      password2: 'C@\$S3cur3!',
+      username: 'newmember',
+      city: 'Louisville',
+    );
+
+    expect(AuthService().currentUser?.username, 'newmember');
+    expect(AuthService().currentUser?.city, 'Louisville');
+    expect(await AuthService().getToken(), 'signup-token');
+  });
+
+  test('signUp preserves API validation errors for password and city', () async {
+    ApiClient.debugHttpClientOverride = MockClient(
+      (_) async => http.Response(
+        jsonEncode({
+          'password': ['Password must include a symbol.'],
+          'city': ['Enter a real city name.'],
+        }),
+        400,
+        headers: {'content-type': 'application/json'},
+      ),
+    );
+
+    await expectLater(
+      AuthService().signUp(
+        email: 'newmember@test.dev',
+        password: 'Secret123',
+        password2: 'Secret123',
+        username: 'newmember',
+        city: '40218',
+      ),
+      throwsA(
+        isA<SignUpException>()
+            .having(
+              (error) => error.errors['password'],
+              'password errors',
+              ['Password must include a symbol.'],
+            )
+            .having(
+              (error) => error.errors['city'],
+              'city errors',
+              ['Enter a real city name.'],
+            )
+            .having(
+              (error) => error.userMessage(
+                fieldLabels: const {'password': 'Password', 'city': 'City'},
+              ),
+              'user message',
+              'Password: Password must include a symbol.\nCity: Enter a real city name.',
+            ),
+      ),
+    );
+  });
 }

@@ -169,7 +169,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         'city': city,
       });
 
-      return http.post(
+      return httpClient.post(
         uri,
         headers: const {'Content-Type': 'application/json'},
         body: payload,
@@ -181,34 +181,59 @@ class AuthService extends ApiClient with ChangeNotifier {
       response = profileImage != null
           ? await sendMultipart(profileImage)
           : await sendJson();
+    } on SocketException {
+      throw SignUpException(
+        message: networkErrorMessage(uri),
+      );
+    } on http.ClientException {
+      throw SignUpException(message: networkErrorMessage(uri));
     } catch (e) {
       throw SignUpException(
         message:
-            'Unable to reach the server. Please check your connection and try again.',
+            'Unable to complete registration right now. Please try again.',
       );
     }
 
-    if (response.statusCode == 201) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decodedBody = tryDecodeJson(response.body);
+      if (decodedBody is Map<String, dynamic> &&
+          decodedBody['user'] is Map<String, dynamic> &&
+          decodedBody['token'] is String &&
+          (decodedBody['token'] as String).trim().isNotEmpty) {
+        try {
+          final user = User.fromJson(decodedBody['user'] as Map<String, dynamic>);
+          await _saveUser(user, decodedBody['token'] as String, setTourPending: true);
+          return;
+        } on FormatException {
+          throw SignUpException(
+            message:
+                'Registration succeeded but the server returned an invalid account response.',
+          );
+        }
+      }
+
       await signIn(username: username, password: password);
       return;
     }
 
-    Map<String, dynamic>? decodedBody;
-    try {
-      if (response.body.isNotEmpty) {
-        decodedBody = jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (_) {
-      // Ignore decoding errors; fall back to generic messaging below.
-    }
+    final decodedBody = tryDecodeJson(response.body);
 
-    if (decodedBody != null) {
+    if (decodedBody is Map<String, dynamic>) {
       final errors = <String, List<String>>{};
-      String? message;
+      String? message = firstErrorString(decodedBody['detail']) ??
+          firstErrorString(decodedBody['error']) ??
+          firstErrorString(decodedBody['message']) ??
+          firstErrorString(decodedBody['non_field_errors']);
 
       decodedBody.forEach((key, value) {
-        if (key == 'detail' && value is String) {
-          message = value;
+        if (key == 'detail' ||
+            key == 'error' ||
+            key == 'message' ||
+            key == 'non_field_errors') {
+          final normalized = firstErrorString(value);
+          if (message == null && normalized != null) {
+            message = normalized;
+          }
         } else if (value is List) {
           errors[key] = value.map((item) => item.toString()).toList();
         } else if (value is String) {
@@ -217,9 +242,15 @@ class AuthService extends ApiClient with ChangeNotifier {
       });
 
       throw SignUpException(
-        message: message ?? 'Registration failed. Please review your details.',
+        message:
+            message ?? extractErrorMessage(decodedBody, response.statusCode),
         errors: errors,
       );
+    }
+
+    final listError = firstErrorString(decodedBody);
+    if (listError != null) {
+      throw SignUpException(message: listError);
     }
 
     throw SignUpException(
@@ -351,6 +382,39 @@ class SignUpException implements Exception {
 
   SignUpException({this.message, Map<String, List<String>>? errors})
     : errors = errors ?? {};
+
+  String userMessage({Map<String, String>? fieldLabels}) {
+    if (errors.isEmpty) {
+      return message ?? 'Sign up failed.';
+    }
+
+    final lines = <String>[];
+    errors.forEach((field, values) {
+      if (values.isEmpty) {
+        return;
+      }
+
+      final label =
+          fieldLabels?[field] ??
+          field
+              .replaceAll('_', ' ')
+              .split(' ')
+              .where((part) => part.isNotEmpty)
+              .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+              .join(' ');
+      lines.add('$label: ${values.join(' ')}');
+    });
+
+    if (lines.isEmpty) {
+      return message ?? 'Sign up failed.';
+    }
+
+    if (message != null && message!.trim().isNotEmpty) {
+      return '$message\n${lines.join('\n')}';
+    }
+
+    return lines.join('\n');
+  }
 
   @override
   String toString() => message ?? 'Sign up failed.';
