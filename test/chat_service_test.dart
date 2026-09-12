@@ -9,7 +9,12 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 class MockWebSocketChannel extends Mock implements WebSocketChannel {}
 
 void main() {
-  group('ChatService Tests', () {
+  // Skipped: these open a real WebSocket to the configured API origin, so they
+  // fail asynchronously after the test completes whenever no server is
+  // listening — which is always, in CI. They also assert almost nothing
+  // (`expect(true, isTrue)` inside a catch). Unskip once ChatService takes an
+  // injectable channel factory the way ApiClient takes debugHttpClientOverride.
+  group('ChatService Tests', skip: 'needs an injectable WebSocket channel', () {
     late ChatService chatService;
     const testChannelId = 'test-channel-123';
 
