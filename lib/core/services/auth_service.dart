@@ -56,38 +56,32 @@ class AuthService extends ApiClient with ChangeNotifier {
     await _clearUser();
   }
 
-  /// Initializes the service, loading the user session from storage.
-  /// Uses the inherited _prefsService (which is private to ApiClient).
+  /// Initializes the service, restoring the session from the stored token.
+  ///
+  /// The token alone is enough to re-establish the session, so no password is
+  /// kept on the device. Any password persisted by an older build is deleted
+  /// the first time this runs.
   Future<void> init() async {
-    // Access the shared preferences data via the inherited methods (must use the same keys).
-    // Note: Since _prefsService is private in ApiClient, we'll access it
-    // indirectly or assume a public method is available if needed, but for now
-    // we use the private fields that ApiClient's constructor uses.
-    // However, since the keys used in ApiClient and AuthService differ ('authToken' vs 'user_token'),
-    // we must temporarily use a direct SharedPreferencesService instance or adjust ApiClient.
-    // Assuming the ApiClient token key is now 'user_token' for this service.
-
-    // TEMPORARY SOLUTION: Since ApiClient's constructor is private, we must rely on
-    // the inherited ApiClient's instance of SharedPreferencesService.
-    // Since we can't access ApiClient's private _prefsService,
-    // we'll temporarily re-introduce the singleton access to get the initial data.
-    // BEST PRACTICE: ApiClient should provide a public getter for the prefs service
-    // or expose a method to get data by key. Given the constraints, we'll re-add the singleton access.
-
     final prefsService = SharedPreferencesService();
-    final token = prefsService.getData(_tokenKey);
-    final username = prefsService.getData(_usernameKey);
-    final password = prefsService.getData(_passwordKey);
 
-    if (token != null && username != null && password != null) {
-      try {
-        // We can't use fetchUserFromToken because we don't know the password.
-        // The original logic re-signs in the user.
-        await signIn(username: username, password: password);
-      } catch (_) {
-        // If sign-in fails (e.g., token expired, password changed), clear session.
-        await signOut();
-      }
+    // Migration: older builds stored the password in plain text.
+    if (prefsService.getData(_passwordKey) != null) {
+      await prefsService.clearData(_passwordKey);
+    }
+
+    final token = prefsService.getData(_tokenKey);
+    if (token == null) {
+      return;
+    }
+
+    try {
+      final userData =
+          await read(urlPath: 'api/user/me/', jsonHeaders: authHeaders)
+              as Map<String, dynamic>;
+      await _saveUser(User.fromJson(userData), token);
+    } catch (_) {
+      // Token rejected, revoked, or the server is unreachable — start signed out.
+      await signOut();
     }
   }
 
@@ -95,7 +89,6 @@ class AuthService extends ApiClient with ChangeNotifier {
   Future<void> _saveUser(
     User user,
     String token, {
-    String? password,
     bool setTourPending = false,
   }) async {
     _currentUser = user;
@@ -104,9 +97,6 @@ class AuthService extends ApiClient with ChangeNotifier {
     final prefsService = SharedPreferencesService();
     await prefsService.saveData(_tokenKey, token);
     await prefsService.saveData(_usernameKey, user.username);
-    if (password != null) {
-      await prefsService.saveData(_passwordKey, password);
-    }
 
     if (setTourPending) {
       final username = user.username;
@@ -143,6 +133,9 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String city,
     required List<String> pronouns,
     required String statusMessage,
+    required DateTime dateOfBirth,
+    required bool adultAttestation,
+    required bool conductPolicyAccepted,
     File? profileImage,
   }) async {
     final uri = AppConfig.current.apiUri('/api/signup/');
@@ -151,6 +144,10 @@ class AuthService extends ApiClient with ChangeNotifier {
         .where((p) => p.isNotEmpty)
         .toList();
     final pronounString = cleanedPronouns.join(', ');
+    // The API takes a plain YYYY-MM-DD date, and requires both attestations.
+    String two(int v) => v.toString().padLeft(2, '0');
+    final dateOfBirthValue =
+        '${dateOfBirth.year}-${two(dateOfBirth.month)}-${two(dateOfBirth.day)}';
 
     Future<http.Response> sendMultipart(File imageFile) async {
       final request = http.MultipartRequest('POST', uri)
@@ -160,7 +157,11 @@ class AuthService extends ApiClient with ChangeNotifier {
         ..fields['username'] = username
         ..fields['city'] = city
         ..fields['flair'] = pronounString
-        ..fields['status_message'] = statusMessage;
+        ..fields['pronouns'] = pronounString
+        ..fields['status_message'] = statusMessage
+        ..fields['date_of_birth'] = dateOfBirthValue
+        ..fields['adult_attestation'] = adultAttestation.toString()
+        ..fields['conduct_policy_accepted'] = conductPolicyAccepted.toString();
 
       request.files.add(
         await http.MultipartFile.fromPath('profile_pic', imageFile.path),
@@ -178,7 +179,11 @@ class AuthService extends ApiClient with ChangeNotifier {
         'username': username,
         'city': city,
         'flair': pronounString,
+        'pronouns': pronounString,
         'status_message': statusMessage,
+        'date_of_birth': dateOfBirthValue,
+        'adult_attestation': adultAttestation,
+        'conduct_policy_accepted': conductPolicyAccepted,
       });
 
       return http.post(
@@ -239,6 +244,19 @@ class AuthService extends ApiClient with ChangeNotifier {
     );
   }
 
+  /// ApiClient reports failures as
+  /// "Failed to create resource: Exception: <server message>". Peel the
+  /// wrappers off so the sign-in screen shows the server's own wording.
+  static String _unwrapError(Object error) {
+    var message = error.toString();
+    const marker = 'Exception:';
+    while (message.contains(marker)) {
+      message = message.substring(message.indexOf(marker) + marker.length);
+    }
+    message = message.trim();
+    return message.isEmpty ? 'Sign in failed. Please try again.' : message;
+  }
+
   Future<void> signIn({
     required String username,
     required String password,
@@ -249,21 +267,26 @@ class AuthService extends ApiClient with ChangeNotifier {
     final jsonPayload = {'username': username, 'password': password};
 
     // The post method now processes the response for us and returns the decoded body on 200 OK.
-    final data =
-        await post(
-              urlPath: '/api/login/',
-              jsonHeaders: jsonHeaders,
-              jsonPayload: jsonPayload,
-            )
-            as Map<String, dynamic>;
+    final Map<String, dynamic> data;
+    try {
+      data =
+          await post(
+                urlPath: '/api/login/',
+                jsonHeaders: jsonHeaders,
+                jsonPayload: jsonPayload,
+              )
+              as Map<String, dynamic>;
+    } catch (e) {
+      throw SignInException(_unwrapError(e));
+    }
 
     if (data.containsKey('user') && data.containsKey('token')) {
       final Map<String, dynamic> userData = data['user'];
       final String token = data['token'];
       final user = User.fromJson(userData);
 
-      // Save the user data including the token and (unrecommended) password.
-      await _saveUser(user, token, password: password, setTourPending: true);
+      // Only the token is persisted; the password is never written to disk.
+      await _saveUser(user, token, setTourPending: true);
     } else {
       // Throw an exception if the format is unexpected, which will be caught by the calling function.
       throw Exception(
@@ -345,6 +368,15 @@ class AuthService extends ApiClient with ChangeNotifier {
       return [];
     }
   }
+}
+
+class SignInException implements Exception {
+  final String message;
+
+  SignInException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class SignUpException implements Exception {

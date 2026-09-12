@@ -100,11 +100,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Set<String> _selectedPronouns = <String>{_defaultPronoun};
   final List<String> _customPronouns = <String>[];
   File? _profileImage;
+  DateTime? _dateOfBirth;
+  bool _adultAttestation = false;
+  bool _conductPolicyAccepted = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _usernameError;
   String? _emailError;
+  String? _dateOfBirthError;
+  final GlobalKey<FormFieldState<bool>> _adultAttestationKey =
+      GlobalKey<FormFieldState<bool>>();
+  final GlobalKey<FormFieldState<bool>> _conductPolicyKey =
+      GlobalKey<FormFieldState<bool>>();
   final List<String> _availablePronouns = [
     'She/Her',
     'He/Him',
@@ -426,6 +434,117 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  Widget _buildAttestationField({
+    required GlobalKey<FormFieldState<bool>> fieldKey,
+    required bool value,
+    required String label,
+    required String errorText,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return FormField<bool>(
+      key: fieldKey,
+      initialValue: value,
+      validator: (fieldValue) => fieldValue == true ? null : errorText,
+      builder: (field) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: _isLoading
+                  ? null
+                  : () {
+                      final next = !value;
+                      onChanged(next);
+                      field.didChange(next);
+                    },
+              borderRadius: BorderRadius.circular(8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: value,
+                    onChanged: _isLoading
+                        ? null
+                        : (next) {
+                            final selected = next ?? false;
+                            onChanged(selected);
+                            field.didChange(selected);
+                          },
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      width: 1.6,
+                    ),
+                    checkColor: Colors.white,
+                    fillColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? Colors.white.withValues(alpha: 0.35)
+                          : Colors.transparent,
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (field.hasError) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  field.errorText ?? '',
+                  style: const TextStyle(
+                    color: Colors.redAccent,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  static int _ageOn(DateTime birthDate, DateTime today) {
+    var age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age -= 1;
+    }
+    return age;
+  }
+
+  Future<void> _pickDateOfBirth() async {
+    final today = DateTime.now();
+    final eighteenthBirthday = DateTime(today.year - 18, today.month, today.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateOfBirth ?? eighteenthBirthday,
+      firstDate: DateTime(today.year - 120),
+      lastDate: eighteenthBirthday,
+      helpText: 'Select your date of birth',
+    );
+
+    if (picked == null) {
+      return;
+    }
+
+    setState(() {
+      _dateOfBirth = picked;
+      _dateOfBirthError = null;
+    });
+  }
+
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -453,10 +572,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    // The API requires a date of birth and both attestations, and rejects
+    // anyone under 18. Check here so the trip to the server isn't wasted.
+    final dateOfBirth = _dateOfBirth;
+    if (dateOfBirth == null) {
+      setState(() {
+        _dateOfBirthError = 'Please enter your date of birth';
+      });
+      return;
+    }
+    if (_ageOn(dateOfBirth, DateTime.now()) < 18) {
+      setState(() {
+        _dateOfBirthError = 'Accounts are limited to adults age 18 or older';
+      });
+      return;
+    }
+    if (!_adultAttestation || !_conductPolicyAccepted) {
+      _adultAttestationKey.currentState?.validate();
+      _conductPolicyKey.currentState?.validate();
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _usernameError = null;
       _emailError = null;
+      _dateOfBirthError = null;
     });
 
     try {
@@ -478,6 +619,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         city: _zipCodeController.text.trim(),
         pronouns: pronouns,
         statusMessage: _statusMessageController.text.trim(),
+        dateOfBirth: dateOfBirth,
+        adultAttestation: _adultAttestation,
+        conductPolicyAccepted: _conductPolicyAccepted,
         profileImage: _profileImage,
       );
 
@@ -492,14 +636,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _usernameError = e.errors['username']?.join(' ');
           _emailError = e.errors['email']?.join(' ');
+          _dateOfBirthError = e.errors['date_of_birth']?.join(' ');
         });
 
-        final messages = <String>[
-          if (_usernameError != null && _usernameError!.isNotEmpty)
-            'Username: $_usernameError',
-          if (_emailError != null && _emailError!.isNotEmpty)
-            'Email: $_emailError',
-        ];
+        // Show every field the server rejected, not just the ones that have a
+        // dedicated inline slot — otherwise a rejection on any other field
+        // looks like an unexplained failure.
+        const fieldLabels = <String, String>{
+          'username': 'Username',
+          'email': 'Email',
+          'password': 'Password',
+          'password2': 'Confirm password',
+          'city': 'ZIP code',
+          'date_of_birth': 'Date of birth',
+          'adult_attestation': 'Age attestation',
+          'conduct_policy_accepted': 'Conduct policy',
+          'profile_pic': 'Profile picture',
+          'non_field_errors': 'Error',
+        };
+
+        final messages = e.errors.entries
+            .where((entry) => entry.value.isNotEmpty)
+            .map(
+              (entry) =>
+                  '${fieldLabels[entry.key] ?? entry.key}: ${entry.value.join(' ')}',
+            )
+            .toList();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -728,6 +890,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return 'Please enter your ZIP code';
                         }
                         return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Date of Birth
+                    TourAnchor(
+                      name: 'Date of Birth',
+                      child: InkWell(
+                        onTap: _isLoading ? null : _pickDateOfBirth,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InputDecorator(
+                          decoration: themedInput(
+                            label: 'Date of Birth',
+                            icon: Icons.cake,
+                          ).copyWith(errorText: _dateOfBirthError),
+                          child: Text(
+                            _dateOfBirth == null
+                                ? 'Tap to select'
+                                : '${_dateOfBirth!.month}/${_dateOfBirth!.day}/${_dateOfBirth!.year}',
+                            style: TextStyle(
+                              color: _dateOfBirth == null
+                                  ? Colors.white.withValues(alpha: 0.6)
+                                  : Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Adult attestation — required by the API.
+                    _buildAttestationField(
+                      fieldKey: _adultAttestationKey,
+                      value: _adultAttestation,
+                      label: 'I confirm that I am at least 18 years old.',
+                      errorText: 'You must confirm that you are at least 18',
+                      onChanged: (value) {
+                        setState(() => _adultAttestation = value);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Conduct policy — required by the API.
+                    _buildAttestationField(
+                      fieldKey: _conductPolicyKey,
+                      value: _conductPolicyAccepted,
+                      label:
+                          'I have read and accept the community conduct policy.',
+                      errorText: 'You must accept the conduct policy',
+                      onChanged: (value) {
+                        setState(() => _conductPolicyAccepted = value);
                       },
                     ),
                     const SizedBox(height: 16),
