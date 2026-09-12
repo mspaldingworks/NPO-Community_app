@@ -12,6 +12,13 @@ class AppConfig {
     defaultValue: 'http://127.0.0.1:8000',
   );
 
+  // Organization-level Givebutter API key.
+  // Pass via --dart-define=GIVEBUTTER_API_KEY=<key> at build time.
+  static const String givebutterApiKey = String.fromEnvironment(
+    'GIVEBUTTER_API_KEY',
+    defaultValue: '',
+  );
+
   static final AppConfig current = AppConfig.fromValues(
     environment: _environmentValue,
     apiOrigin: _apiOriginValue,

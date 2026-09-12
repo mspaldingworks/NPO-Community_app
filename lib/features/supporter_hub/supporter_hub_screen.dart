@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:npo_community/features/fundraising/fundraising_controller.dart';
+import 'package:npo_community/features/fundraising/models/givebutter_campaign.dart';
+import 'package:npo_community/features/fundraising/screens/create_campaign_screen.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_controller.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SupporterHubScreen extends StatelessWidget {
   const SupporterHubScreen({super.key});
@@ -301,29 +305,209 @@ class _FundraisingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final opportunities = context.watch<SupporterHubController>().fundraising;
+    final controller = context.watch<FundraisingController>();
+
+    Widget body;
+    switch (controller.status) {
+      case FundraisingStatus.idle:
+      case FundraisingStatus.loading:
+        body = const Padding(
+          padding: EdgeInsets.only(top: 48),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      case FundraisingStatus.error:
+        body = _GivebutterErrorCard(
+          message: controller.error ?? 'Could not load campaigns.',
+          onRetry: controller.loadCampaigns,
+        );
+      case FundraisingStatus.loaded:
+        body = controller.campaigns.isEmpty
+            ? _GivebutterEmptyState(
+                onCreateCampaign: () => _pushCreate(context, controller),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: controller.campaigns
+                    .map((c) => _GivebutterCampaignCard(campaign: c))
+                    .toList(),
+              );
+    }
+
     return _ToolPage(
       title: 'Fundraising',
-      subtitle: 'Coordinate sign-ups, prospects, and stewardship follow-ups.',
-      action: IconButton.filled(
-        tooltip: 'Add opportunity',
-        onPressed: () => _showMessage(
-          context,
-          'Opportunity creation will connect to the NPO API.',
-        ),
+      subtitle: 'Live campaigns powered by Givebutter.',
+      action: FilledButton.icon(
+        onPressed: controller.isCreating
+            ? null
+            : () => _pushCreate(context, controller),
         icon: const Icon(Icons.add),
+        label: const Text('New'),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _CampaignProgress(),
-          const SizedBox(height: 24),
-          const _SectionHeading(title: 'Active pipeline'),
-          const SizedBox(height: 8),
-          ...opportunities.map(
-            (opportunity) => _FundraisingRow(item: opportunity),
-          ),
-        ],
+      child: body,
+    );
+  }
+
+  Future<void> _pushCreate(
+    BuildContext context,
+    FundraisingController controller,
+  ) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CreateCampaignScreen(controller: controller),
+      ),
+    );
+  }
+}
+
+class _GivebutterCampaignCard extends StatelessWidget {
+  const _GivebutterCampaignCard({required this.campaign});
+
+  final GivebutterCampaign campaign;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ListSurface(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    campaign.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _SourceBadge(label: campaign.status.toUpperCase()),
+              ],
+            ),
+            if (campaign.subtitle != null && campaign.subtitle!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                campaign.subtitle!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  campaign.raisedLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(' raised of ${campaign.goalLabel}'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: campaign.goalProgress,
+              backgroundColor: const Color(0xFFE8ECE8),
+              color: const Color(0xFF2F6B4F),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${campaign.donors} donor${campaign.donors == 1 ? '' : 's'}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (campaign.url.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _launchUrl(campaign.url),
+                child: Text(
+                  campaign.url,
+                  style: const TextStyle(
+                    color: Color(0xFF2F6B4F),
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color(0xFF2F6B4F),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+}
+
+class _GivebutterErrorCard extends StatelessWidget {
+  const _GivebutterErrorCard({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ListSurface(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, color: Color(0xFFB33A2B), size: 32),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 14),
+            FilledButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GivebutterEmptyState extends StatelessWidget {
+  const _GivebutterEmptyState({required this.onCreateCampaign});
+
+  final VoidCallback onCreateCampaign;
+
+  @override
+  Widget build(BuildContext context) {
+    return _ListSurface(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.volunteer_activism_outlined,
+              size: 40,
+              color: Color(0xFF2F6B4F),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No campaigns yet',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Create your first Givebutter campaign to start fundraising.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onCreateCampaign,
+              icon: const Icon(Icons.add),
+              label: const Text('Create campaign'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -605,81 +789,6 @@ class _EventRow extends StatelessWidget {
   }
 }
 
-class _CampaignProgress extends StatelessWidget {
-  const _CampaignProgress();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF173D33),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Fall Benefit sign-ups',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.white),
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              r'$53,500 committed of $75,000 goal',
-              style: TextStyle(color: Color(0xFFDDE9DF)),
-            ),
-            const SizedBox(height: 14),
-            const LinearProgressIndicator(
-              value: 0.713,
-              backgroundColor: Color(0xFF49685F),
-              color: Color(0xFFD9B857),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              '38 supporters signed up  |  12 table hosts',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FundraisingRow extends StatelessWidget {
-  const _FundraisingRow({required this.item});
-
-  final FundraisingPipeline item;
-
-  @override
-  Widget build(BuildContext context) {
-    return _ListSurface(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        title: Row(
-          children: [
-            Expanded(child: Text(item.name)),
-            Text(
-              item.amountLabel,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(
-            '${item.stage}  |  ${item.nextStep}\nOwner: ${item.owner}',
-          ),
-        ),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => _showMessage(context, item.nextStep),
-      ),
-    );
-  }
-}
 
 class _SupporterRow extends StatelessWidget {
   const _SupporterRow({required this.supporter});

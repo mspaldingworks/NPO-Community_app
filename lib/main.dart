@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:npo_community/core/config/app_config.dart';
+import 'package:npo_community/core/services/givebutter_service.dart';
+import 'package:npo_community/features/fundraising/fundraising_controller.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_controller.dart';
 import 'package:npo_community/features/supporter_hub/supporter_hub_screen.dart';
 import 'package:npo_community/theme/app_theme.dart';
@@ -19,8 +21,21 @@ class NpoCommunityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final home = config.environment == AppEnvironment.demo
-        ? ChangeNotifierProvider(
-            create: (_) => SupporterHubController.demo(),
+        ? MultiProvider(
+            providers: [
+              ChangeNotifierProvider(
+                create: (_) => SupporterHubController.demo(),
+              ),
+              ChangeNotifierProvider(
+                create: (_) {
+                  final controller = FundraisingController(
+                    GivebutterService(AppConfig.givebutterApiKey),
+                  );
+                  controller.loadCampaigns();
+                  return controller;
+                },
+              ),
+            ],
             child: const SupporterHubScreen(),
           )
         : _EnvironmentGate(environment: config.environment);
