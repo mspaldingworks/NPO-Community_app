@@ -13,16 +13,16 @@ class GivebutterService {
   bool get isConfigured => _apiKey.isNotEmpty;
 
   Map<String, String> get _headers => {
-        'Authorization': 'Bearer $_apiKey',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+    'Authorization': 'Bearer $_apiKey',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   Future<List<GivebutterCampaign>> listCampaigns({String? scope}) async {
     final params = <String, String>{if (scope != null) 'scope': scope};
-    final uri = Uri.parse('$_baseUrl/campaigns').replace(
-      queryParameters: params.isEmpty ? null : params,
-    );
+    final uri = Uri.parse(
+      '$_baseUrl/campaigns',
+    ).replace(queryParameters: params.isEmpty ? null : params);
     final response = await http.get(uri, headers: _headers);
     _assertSuccess(response);
     final body = jsonDecode(response.body) as Map<String, dynamic>;
@@ -53,7 +53,8 @@ class GivebutterService {
       'title': title,
       'type': type,
       if (subtitle != null && subtitle.isNotEmpty) 'subtitle': subtitle,
-      if (description != null && description.isNotEmpty) 'description': description,
+      if (description != null && description.isNotEmpty)
+        'description': description,
       if (goal != null && goal > 0) 'goal': goal,
       if (endAt != null) 'end_at': endAt,
     };
@@ -74,9 +75,9 @@ class GivebutterService {
     final params = <String, String>{
       if (campaignCode != null) 'campaign_code': campaignCode,
     };
-    final uri = Uri.parse('$_baseUrl/transactions').replace(
-      queryParameters: params.isEmpty ? null : params,
-    );
+    final uri = Uri.parse(
+      '$_baseUrl/transactions',
+    ).replace(queryParameters: params.isEmpty ? null : params);
     final response = await http.get(uri, headers: _headers);
     _assertSuccess(response);
     final body = jsonDecode(response.body) as Map<String, dynamic>;

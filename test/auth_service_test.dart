@@ -23,30 +23,33 @@ void main() {
     ApiClient.debugHttpClientOverride = null;
   });
 
-  test('signIn saves the logged-in user and token from a valid response', () async {
-    String? transmittedPassword;
+  test(
+    'signIn saves the logged-in user and token from a valid response',
+    () async {
+      String? transmittedPassword;
 
-    ApiClient.debugHttpClientOverride = MockClient((request) async {
-      expect(request.url.path, '/api/login/');
-      final payload = jsonDecode(request.body) as Map<String, dynamic>;
-      transmittedPassword = payload['password'] as String;
-      return http.Response(
-        jsonEncode({
-          'token': 'test-token',
-          'user': {'id': 7, 'username': 'member', 'email': 'member@test.dev'},
-        }),
-        200,
-        headers: {'content-type': 'application/json'},
-      );
-    });
+      ApiClient.debugHttpClientOverride = MockClient((request) async {
+        expect(request.url.path, '/api/login/');
+        final payload = jsonDecode(request.body) as Map<String, dynamic>;
+        transmittedPassword = payload['password'] as String;
+        return http.Response(
+          jsonEncode({
+            'token': 'test-token',
+            'user': {'id': 7, 'username': 'member', 'email': 'member@test.dev'},
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
 
-    await AuthService().signIn(username: 'member', password: '  Secret  ');
+      await AuthService().signIn(username: 'member', password: '  Secret  ');
 
-    expect(transmittedPassword, '  Secret  ');
-    expect(AuthService().currentUser?.username, 'member');
-    expect(await AuthService().getToken(), 'test-token');
-    expect(SharedPreferencesService().getData('password'), isNull);
-  });
+      expect(transmittedPassword, '  Secret  ');
+      expect(AuthService().currentUser?.username, 'member');
+      expect(await AuthService().getToken(), 'test-token');
+      expect(SharedPreferencesService().getData('password'), isNull);
+    },
+  );
 
   test('signIn surfaces invalid credential errors from the API', () async {
     ApiClient.debugHttpClientOverride = MockClient(
@@ -138,26 +141,29 @@ void main() {
     );
   });
 
-  test('signIn explains unreachable API origins without leaking credentials', () async {
-    ApiClient.debugHttpClientOverride = MockClient(
-      (_) async => throw const SocketException('Connection refused'),
-    );
+  test(
+    'signIn explains unreachable API origins without leaking credentials',
+    () async {
+      ApiClient.debugHttpClientOverride = MockClient(
+        (_) async => throw const SocketException('Connection refused'),
+      );
 
-    await expectLater(
-      AuthService().signIn(username: 'member', password: 'Secret'),
-      throwsA(
-        isA<ApiClientException>().having(
-          (error) => error.toString(),
-          'message',
-          allOf(
-            contains('http://127.0.0.1:8000'),
-            contains('--dart-define=API_ORIGIN'),
-            contains('reachable from this device'),
+      await expectLater(
+        AuthService().signIn(username: 'member', password: 'Secret'),
+        throwsA(
+          isA<ApiClientException>().having(
+            (error) => error.toString(),
+            'message',
+            allOf(
+              contains('http://127.0.0.1:8000'),
+              contains('--dart-define=API_ORIGIN'),
+              contains('reachable from this device'),
+            ),
           ),
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   test('signUp accepts a valid 200 response with user and token', () async {
     ApiClient.debugHttpClientOverride = MockClient((request) async {
@@ -220,16 +226,12 @@ void main() {
       ),
       throwsA(
         isA<SignUpException>()
-            .having(
-              (error) => error.errors['password'],
-              'password errors',
-              ['Password must include a symbol.'],
-            )
-            .having(
-              (error) => error.errors['city'],
-              'city errors',
-              ['Enter a real city name.'],
-            )
+            .having((error) => error.errors['password'], 'password errors', [
+              'Password must include a symbol.',
+            ])
+            .having((error) => error.errors['city'], 'city errors', [
+              'Enter a real city name.',
+            ])
             .having(
               (error) => error.userMessage(
                 fieldLabels: const {'password': 'Password', 'city': 'City'},

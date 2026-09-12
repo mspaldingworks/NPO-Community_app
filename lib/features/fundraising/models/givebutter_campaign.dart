@@ -73,9 +73,11 @@ class GivebutterCampaign {
       status: json['status'] as String? ?? 'active',
       timezone: json['timezone'] as String?,
       endAt: json['end_at'] as String?,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
           DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ??
+      updatedAt:
+          DateTime.tryParse(json['updated_at'] as String? ?? '') ??
           DateTime.now(),
     );
   }

@@ -12,13 +12,11 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: SignInScreen(
-          onSignIn: ({
-            required String username,
-            required String password,
-          }) async {
-            receivedUsername = username;
-            receivedPassword = password;
-          },
+          onSignIn:
+              ({required String username, required String password}) async {
+                receivedUsername = username;
+                receivedPassword = password;
+              },
         ),
       ),
     );

@@ -7,9 +7,7 @@ void main() {
   testWidgets('register screen labels the location field as City', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      const MaterialApp(home: RegisterScreen()),
-    );
+    await tester.pumpWidget(const MaterialApp(home: RegisterScreen()));
 
     expect(find.text('City'), findsOneWidget);
     expect(find.text('ZIP Code'), findsNothing);
@@ -21,24 +19,25 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: RegisterScreen(
-          onSignUp: ({
-            required String email,
-            required String password,
-            required String password2,
-            required String username,
-            required String city,
-            required DateTime dateOfBirth,
-            required bool adultAttestation,
-            required bool conductPolicyAccepted,
-            profileImage,
-          }) async {
-            throw SignUpException(
-              errors: {
-                'password': ['Password must include a symbol.'],
-                'city': ['Enter a real city name.'],
+          onSignUp:
+              ({
+                required String email,
+                required String password,
+                required String password2,
+                required String username,
+                required String city,
+                required DateTime dateOfBirth,
+                required bool adultAttestation,
+                required bool conductPolicyAccepted,
+                profileImage,
+              }) async {
+                throw SignUpException(
+                  errors: {
+                    'password': ['Password must include a symbol.'],
+                    'city': ['Enter a real city name.'],
+                  },
+                );
               },
-            );
-          },
         ),
       ),
     );

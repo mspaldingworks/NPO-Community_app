@@ -789,7 +789,6 @@ class _EventRow extends StatelessWidget {
   }
 }
 
-
 class _SupporterRow extends StatelessWidget {
   const _SupporterRow({required this.supporter});
 

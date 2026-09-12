@@ -206,15 +206,12 @@ class AuthService extends ApiClient with ChangeNotifier {
           ? await sendMultipart(profileImage)
           : await sendJson();
     } on SocketException {
-      throw SignUpException(
-        message: networkErrorMessage(uri),
-      );
+      throw SignUpException(message: networkErrorMessage(uri));
     } on http.ClientException {
       throw SignUpException(message: networkErrorMessage(uri));
     } catch (e) {
       throw SignUpException(
-        message:
-            'Unable to complete registration right now. Please try again.',
+        message: 'Unable to complete registration right now. Please try again.',
       );
     }
 
@@ -225,8 +222,14 @@ class AuthService extends ApiClient with ChangeNotifier {
           decodedBody['token'] is String &&
           (decodedBody['token'] as String).trim().isNotEmpty) {
         try {
-          final user = User.fromJson(decodedBody['user'] as Map<String, dynamic>);
-          await _saveUser(user, decodedBody['token'] as String, setTourPending: true);
+          final user = User.fromJson(
+            decodedBody['user'] as Map<String, dynamic>,
+          );
+          await _saveUser(
+            user,
+            decodedBody['token'] as String,
+            setTourPending: true,
+          );
           return;
         } on FormatException {
           throw SignUpException(
@@ -244,7 +247,8 @@ class AuthService extends ApiClient with ChangeNotifier {
 
     if (decodedBody is Map<String, dynamic>) {
       final errors = <String, List<String>>{};
-      String? message = firstErrorString(decodedBody['detail']) ??
+      String? message =
+          firstErrorString(decodedBody['detail']) ??
           firstErrorString(decodedBody['error']) ??
           firstErrorString(decodedBody['message']) ??
           firstErrorString(decodedBody['non_field_errors']);

@@ -96,9 +96,7 @@ class _FullAppState extends State<_FullApp> {
         theme: AppTheme.lightTheme,
         routerConfig: _router,
         builder: (context, child) {
-          return DevMenu(
-            child: TouringOverlay(child: child),
-          );
+          return DevMenu(child: TouringOverlay(child: child));
         },
       ),
     );

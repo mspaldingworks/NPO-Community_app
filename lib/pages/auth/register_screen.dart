@@ -242,7 +242,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _pickDateOfBirth() async {
     final today = DateTime.now();
-    final eighteenthBirthday = DateTime(today.year - 18, today.month, today.day);
+    final eighteenthBirthday = DateTime(
+      today.year - 18,
+      today.month,
+      today.day,
+    );
     final picked = await showDatePicker(
       context: context,
       initialDate: _dateOfBirth ?? eighteenthBirthday,
@@ -337,7 +341,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _dateOfBirthError = e.errors['date_of_birth']?.join(' ');
         });
 
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -360,9 +363,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } on Exception catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_errorMessage(e))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(_errorMessage(e))));
       }
     } finally {
       if (mounted) {

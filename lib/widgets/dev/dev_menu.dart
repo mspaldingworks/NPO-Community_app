@@ -333,9 +333,7 @@ class _DevMenuDialog extends StatelessWidget {
                             : FontWeight.w400,
                       ),
                     ),
-                    avatar: isActive
-                        ? const Icon(Icons.check, size: 14)
-                        : null,
+                    avatar: isActive ? const Icon(Icons.check, size: 14) : null,
                     onPressed: () {
                       touring.activateProfile(i, auth.switchTouringUser);
                       Navigator.pop(context);
@@ -376,7 +374,9 @@ class _DevMenuDialog extends StatelessWidget {
                   return ActionChip(
                     label: Text(p.label, style: const TextStyle(fontSize: 11)),
                     avatar: Icon(
-                      p.user.isStaff ? Icons.admin_panel_settings : Icons.person,
+                      p.user.isStaff
+                          ? Icons.admin_panel_settings
+                          : Icons.person,
                       size: 14,
                     ),
                     onPressed: () {

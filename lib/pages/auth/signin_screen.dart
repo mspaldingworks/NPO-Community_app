@@ -4,10 +4,7 @@ import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 typedef SignInHandler =
-    Future<void> Function({
-      required String username,
-      required String password,
-    });
+    Future<void> Function({required String username, required String password});
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key, this.onSignIn});

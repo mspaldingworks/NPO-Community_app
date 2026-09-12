@@ -28,7 +28,10 @@ class GivebutterTransaction {
   final String currency;
 
   String get donorName {
-    final parts = [firstName, lastName].whereType<String>().where((p) => p.isNotEmpty);
+    final parts = [
+      firstName,
+      lastName,
+    ].whereType<String>().where((p) => p.isNotEmpty);
     return parts.isEmpty ? 'Anonymous' : parts.join(' ');
   }
 

@@ -211,8 +211,7 @@ class _ProfilePickerSheet extends StatelessWidget {
               profile.label,
               style: TextStyle(
                 color: Colors.white,
-                fontWeight:
-                    isActive ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
             subtitle: Text(
