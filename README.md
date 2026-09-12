@@ -48,7 +48,16 @@ flutter run \
 flutter run \
   --dart-define=APP_ENV=local \
   --dart-define=API_ORIGIN=http://192.168.1.50:8000
+
+# Physical device against the live backend
+flutter run \
+  --dart-define=APP_ENV=production \
+  --dart-define=API_ORIGIN=https://api.lyg-community.com
 ```
+
+- `API_ORIGIN` is baked in at build time, so a running app keeps whatever origin
+  it was compiled with. Changing it means a rebuild, not a hot reload.
+- `APP_ENV=production` requires an HTTPS origin; `AppConfig` throws otherwise.
 
 - If login fails with an unreachable API message, confirm the backend is running
   and update `--dart-define=API_ORIGIN=...` to a host the simulator or device
