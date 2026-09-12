@@ -34,6 +34,27 @@ class AuthService extends ApiClient with ChangeNotifier {
   // Expose the current user.
   User? get currentUser => _currentUser;
 
+  void switchTouringUser(User user) {
+    _currentUser = user;
+    _authStateController.add(user);
+    notifyListeners();
+  }
+
+  void enableDemoSession() {
+    _currentUser = User(
+      id: 0,
+      username: 'Demo Steward',
+      email: 'demo@npo-community.local',
+      city: 'Demo Community',
+      statusMessage: 'Exploring the nonprofit stewardship workspace',
+      userType: 'staff',
+      isStaff: true,
+      fullName: 'Demo Steward',
+    );
+    _authStateController.add(_currentUser);
+    notifyListeners();
+  }
+
   Future<User> getCurrentUser() async {
     if (_currentUser != null) {
       return _currentUser!;
@@ -131,19 +152,12 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String password2,
     required String username,
     required String city,
-    required List<String> pronouns,
-    required String statusMessage,
     required DateTime dateOfBirth,
     required bool adultAttestation,
     required bool conductPolicyAccepted,
     File? profileImage,
   }) async {
     final uri = AppConfig.current.apiUri('/api/signup/');
-    final cleanedPronouns = pronouns
-        .map((p) => p.trim())
-        .where((p) => p.isNotEmpty)
-        .toList();
-    final pronounString = cleanedPronouns.join(', ');
     // The API takes a plain YYYY-MM-DD date, and requires both attestations.
     String two(int v) => v.toString().padLeft(2, '0');
     final dateOfBirthValue =
@@ -156,9 +170,6 @@ class AuthService extends ApiClient with ChangeNotifier {
         ..fields['password2'] = password2
         ..fields['username'] = username
         ..fields['city'] = city
-        ..fields['flair'] = pronounString
-        ..fields['pronouns'] = pronounString
-        ..fields['status_message'] = statusMessage
         ..fields['date_of_birth'] = dateOfBirthValue
         ..fields['adult_attestation'] = adultAttestation.toString()
         ..fields['conduct_policy_accepted'] = conductPolicyAccepted.toString();
@@ -178,9 +189,6 @@ class AuthService extends ApiClient with ChangeNotifier {
         'password2': password2,
         'username': username,
         'city': city,
-        'flair': pronounString,
-        'pronouns': pronounString,
-        'status_message': statusMessage,
         'date_of_birth': dateOfBirthValue,
         'adult_attestation': adultAttestation,
         'conduct_policy_accepted': conductPolicyAccepted,
@@ -285,6 +293,7 @@ class AuthService extends ApiClient with ChangeNotifier {
       final String token = data['token'];
       final user = User.fromJson(userData);
 
+      // Save the user data including the token and (unrecommended) password.
       // Only the token is persisted; the password is never written to disk.
       await _saveUser(user, token, setTourPending: true);
     } else {

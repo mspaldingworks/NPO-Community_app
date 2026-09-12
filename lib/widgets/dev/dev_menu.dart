@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/resource_service.dart';
+import 'package:npo_community/core/services/touring_service.dart';
 import 'package:npo_community/models/resource.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:npo_community/core/constants/api_endpoints.dart';
 
 class DevMenu extends StatefulWidget {
-  final Widget child;
+  final Widget? child;
 
   const DevMenu({super.key, required this.child});
 
@@ -41,7 +44,6 @@ class _DevMenuState extends State<DevMenu> {
 
     _lastTap = now;
 
-    // Show dev menu after 5 taps
     if (_tapCount >= 5) {
       _tapCount = 0;
       _showDevMenu();
@@ -182,9 +184,7 @@ class _DevMenuState extends State<DevMenu> {
       r.url,
     ].whereType<String>().join(' ').toLowerCase();
 
-    if (type.contains('advocacy')) {
-      out.add('Advocacy');
-    }
+    if (type.contains('advocacy')) out.add('Advocacy');
     if (type.contains('community')) {
       if (text.contains('support') || text.contains('group')) {
         out.add('Support Group');
@@ -192,24 +192,15 @@ class _DevMenuState extends State<DevMenu> {
         out.add('Service');
       }
     }
-    if (type.contains('youth')) {
-      out.add('Youth');
-    }
+    if (type.contains('youth')) out.add('Youth');
     if (type.contains('medical') ||
         type.contains('clinic') ||
         type.contains('telehealth')) {
       out.add('Medical');
     }
-    if (type.contains('mental')) {
-      out.add('Mental Health');
-    }
-    if (type.contains('legal') || type.contains('law')) {
-      out.add('Legal');
-    }
-    if (type.contains('hotline')) {
-      out.add('Hotline');
-    }
-
+    if (type.contains('mental')) out.add('Mental Health');
+    if (type.contains('legal') || type.contains('law')) out.add('Legal');
+    if (type.contains('hotline')) out.add('Hotline');
     if (text.contains('youth') ||
         text.contains('young') ||
         text.contains('teen')) {
@@ -229,12 +220,8 @@ class _DevMenuState extends State<DevMenu> {
         text.contains('pharmacy')) {
       out.add('Medical');
     }
-    if (text.contains('hotline') || text.contains('crisis')) {
-      out.add('Hotline');
-    }
-    if (text.contains('support')) {
-      out.add('Support Group');
-    }
+    if (text.contains('hotline') || text.contains('crisis')) out.add('Hotline');
+    if (text.contains('support')) out.add('Support Group');
     if (text.contains('employ') ||
         text.contains('job') ||
         text.contains('workforce')) {
@@ -261,52 +248,21 @@ class _DevMenuState extends State<DevMenu> {
   }
 
   void _showDevMenu() {
+    final touring = Provider.of<TouringService>(context, listen: false);
+    final auth = Provider.of<AuthService>(context, listen: false);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Developer Menu'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Development tools and test screens'),
-            if (_lastResult != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(_lastResult!),
-              ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _adminTokenController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Admin override token (optional)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: _running
-                ? null
-                : () async {
-                    Navigator.pop(context);
-                    await _bulkAssignResourceTags();
-                  },
-            child: _running
-                ? const Text('Working...')
-                : const Text('Bulk tag resources'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-        actionsOverflowButtonSpacing: 8,
-        actionsOverflowDirection: VerticalDirection.down,
-        actionsAlignment: MainAxisAlignment.spaceEvenly,
-        buttonPadding: const EdgeInsets.all(16),
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      builder: (dialogContext) => _DevMenuDialog(
+        touring: touring,
+        auth: auth,
+        running: _running,
+        lastResult: _lastResult,
+        adminTokenController: _adminTokenController,
+        onBulkTagResources: () async {
+          Navigator.pop(dialogContext);
+          await _bulkAssignResourceTags();
+        },
       ),
     );
   }
@@ -317,7 +273,162 @@ class _DevMenuState extends State<DevMenu> {
       behavior: HitTestBehavior.translucent,
       onTap: _handleTap,
       onLongPress: _showDevMenu,
-      child: widget.child,
+      child: widget.child ?? const SizedBox.shrink(),
+    );
+  }
+}
+
+class _DevMenuDialog extends StatelessWidget {
+  final TouringService touring;
+  final AuthService auth;
+  final bool running;
+  final String? lastResult;
+  final TextEditingController adminTokenController;
+  final VoidCallback onBulkTagResources;
+
+  const _DevMenuDialog({
+    required this.touring,
+    required this.auth,
+    required this.running,
+    required this.lastResult,
+    required this.adminTokenController,
+    required this.onBulkTagResources,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Developer Menu'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Touring Mode ──────────────────────────────────────
+            const Text(
+              'Touring Mode',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            if (touring.isActive) ...[
+              Text(
+                'Active: ${touring.activeProfile?.label ?? "—"}',
+                style: const TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: TouringService.profiles.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final p = entry.value;
+                  final isActive = touring.activeIndex == i;
+                  return ActionChip(
+                    label: Text(
+                      p.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                      ),
+                    ),
+                    avatar: isActive
+                        ? const Icon(Icons.check, size: 14)
+                        : null,
+                    onPressed: () {
+                      touring.activateProfile(i, auth.switchTouringUser);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  touring.deactivate(auth.signOut);
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.exit_to_app, size: 16),
+                label: const Text('Exit Touring Mode'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  textStyle: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ] else ...[
+              const Text(
+                'Pick a profile to start touring:',
+                style: TextStyle(fontSize: 12),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: TouringService.profiles.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final p = entry.value;
+                  return ActionChip(
+                    label: Text(p.label, style: const TextStyle(fontSize: 11)),
+                    avatar: Icon(
+                      p.user.isStaff ? Icons.admin_panel_settings : Icons.person,
+                      size: 14,
+                    ),
+                    onPressed: () {
+                      touring.activateProfile(i, auth.switchTouringUser);
+                      Navigator.pop(context);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+
+            const Divider(height: 24),
+
+            // ── Resource Tools ────────────────────────────────────
+            const Text(
+              'Resource Tools',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            if (lastResult != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(lastResult!, style: const TextStyle(fontSize: 12)),
+              ),
+            TextField(
+              controller: adminTokenController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Admin override token (optional)',
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: running ? null : onBulkTagResources,
+          child: running
+              ? const Text('Working...')
+              : const Text('Bulk tag resources'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+      actionsOverflowButtonSpacing: 8,
+      actionsOverflowDirection: VerticalDirection.down,
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      buttonPadding: const EdgeInsets.all(16),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     );
   }
 }
