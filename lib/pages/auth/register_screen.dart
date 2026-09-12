@@ -6,8 +6,23 @@ import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
+typedef SignUpHandler =
+    Future<void> Function({
+      required String email,
+      required String password,
+      required String password2,
+      required String username,
+      required String city,
+      required DateTime dateOfBirth,
+      required bool adultAttestation,
+      required bool conductPolicyAccepted,
+      File? profileImage,
+    });
+
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  const RegisterScreen({super.key, this.onSignUp});
+
+  final SignUpHandler? onSignUp;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -100,6 +115,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   String? _usernameError;
   String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+  String? _cityError;
   String? _dateOfBirthError;
   final GlobalKey<FormFieldState<bool>> _adultAttestationKey =
       GlobalKey<FormFieldState<bool>>();
@@ -282,14 +300,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
       _usernameError = null;
       _emailError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+      _cityError = null;
       _dateOfBirthError = null;
     });
 
     try {
-      await _authService.signUp(
+      final signUp = widget.onSignUp ?? _authService.signUp;
+      await signUp(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        password2: _confirmPasswordController.text.trim(),
+        password: _passwordController.text,
+        password2: _confirmPasswordController.text,
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
         dateOfBirth: dateOfBirth,
@@ -309,40 +331,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         setState(() {
           _usernameError = e.errors['username']?.join(' ');
           _emailError = e.errors['email']?.join(' ');
+          _passwordError = e.errors['password']?.join(' ');
+          _confirmPasswordError = e.errors['password2']?.join(' ');
+          _cityError = e.errors['city']?.join(' ');
           _dateOfBirthError = e.errors['date_of_birth']?.join(' ');
         });
 
-        // Show every field the server rejected, not just the ones that have a
-        // dedicated inline slot — otherwise a rejection on any other field
-        // looks like an unexplained failure.
-        const fieldLabels = <String, String>{
-          'username': 'Username',
-          'email': 'Email',
-          'password': 'Password',
-          'password2': 'Confirm password',
-          'city': 'ZIP code',
-          'date_of_birth': 'Date of birth',
-          'adult_attestation': 'Age attestation',
-          'conduct_policy_accepted': 'Conduct policy',
-          'profile_pic': 'Profile picture',
-          'non_field_errors': 'Error',
-        };
-
-        final messages = e.errors.entries
-            .where((entry) => entry.value.isNotEmpty)
-            .map(
-              (entry) =>
-                  '${fieldLabels[entry.key] ?? entry.key}: ${entry.value.join(' ')}',
-            )
-            .toList();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              messages.isNotEmpty
-                  ? messages.join('\n')
-                  : (e.message ??
-                        'Registration failed. Please review your details and try again.'),
+              e.userMessage(
+                fieldLabels: const {
+                  'username': 'Username',
+                  'email': 'Email',
+                  'password': 'Password',
+                  'password2': 'Confirm Password',
+                  'city': 'City',
+                  'date_of_birth': 'Date of Birth',
+                  'adult_attestation': 'Age Attestation',
+                  'conduct_policy_accepted': 'Conduct Policy',
+                  'profile_pic': 'Profile Picture',
+                },
+              ),
             ),
           ),
         );
@@ -350,7 +361,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${e.toString()}')),
+          SnackBar(content: Text(_errorMessage(e))),
         );
       }
     } finally {
@@ -500,8 +511,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             });
                           },
                         ),
-                      ),
+                      ).copyWith(errorText: _passwordError),
                       obscureText: _obscurePassword,
+                      onChanged: (_) {
+                        if (_passwordError != null) {
+                          setState(() {
+                            _passwordError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a password';
@@ -535,8 +553,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             });
                           },
                         ),
-                      ),
+                      ).copyWith(errorText: _confirmPasswordError),
                       obscureText: _obscureConfirmPassword,
+                      onChanged: (_) {
+                        if (_confirmPasswordError != null) {
+                          setState(() {
+                            _confirmPasswordError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please confirm your password';
@@ -549,18 +574,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // ZIP Code Field
+                    // City Field
                     TextFormField(
                       controller: _zipCodeController,
                       style: const TextStyle(color: Colors.white, fontSize: 18),
                       decoration: themedInput(
-                        label: 'ZIP Code',
+                        label: 'City',
                         icon: Icons.location_on,
-                      ),
-                      keyboardType: TextInputType.number,
+                      ).copyWith(errorText: _cityError),
+                      onChanged: (_) {
+                        if (_cityError != null) {
+                          setState(() {
+                            _cityError = null;
+                          });
+                        }
+                      },
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your ZIP code';
+                          return 'Please enter your city';
                         }
                         return null;
                       },
@@ -681,5 +712,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
+  }
+
+  String _errorMessage(Object error) {
+    final message = error.toString();
+    return message.startsWith('Exception: ')
+        ? 'Registration failed: ${message.substring('Exception: '.length)}'
+        : 'Registration failed: $message';
   }
 }

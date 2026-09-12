@@ -4,8 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:npo_community/core/config/app_config.dart';
-import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/models/user.dart';
+import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
 
@@ -19,7 +19,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   // It MUST match the key used in _saveUser and the key expected by ApiClient (which we assume is 'user_token' now).
   static const String _tokenKey = 'user_token';
   static const String _usernameKey = 'username';
-  static const String _passwordKey = 'password';
+  static const String _legacyPasswordKey = 'password';
 
   // Use a StreamController to broadcast user state changes.
   final _authStateController = StreamController<User?>.broadcast();
@@ -84,25 +84,23 @@ class AuthService extends ApiClient with ChangeNotifier {
   /// the first time this runs.
   Future<void> init() async {
     final prefsService = SharedPreferencesService();
+    final token = prefsService.getData(_tokenKey);
 
     // Migration: older builds stored the password in plain text.
-    if (prefsService.getData(_passwordKey) != null) {
-      await prefsService.clearData(_passwordKey);
-    }
+    await prefsService.clearData(_legacyPasswordKey);
 
-    final token = prefsService.getData(_tokenKey);
-    if (token == null) {
-      return;
-    }
-
-    try {
-      final userData =
-          await read(urlPath: 'api/user/me/', jsonHeaders: authHeaders)
-              as Map<String, dynamic>;
-      await _saveUser(User.fromJson(userData), token);
-    } catch (_) {
-      // Token rejected, revoked, or the server is unreachable — start signed out.
-      await signOut();
+    if (token != null) {
+      try {
+        final userData =
+            await read(urlPath: 'api/user/me/', jsonHeaders: authHeaders)
+                as Map<String, dynamic>;
+        // Goes through _saveUser rather than getCurrentUser so the restored
+        // session is broadcast — the router's refreshListenable needs it.
+        await _saveUser(User.fromJson(userData), token);
+      } catch (_) {
+        // Token rejected, revoked, or the server unreachable — start signed out.
+        await signOut();
+      }
     }
   }
 
@@ -118,6 +116,7 @@ class AuthService extends ApiClient with ChangeNotifier {
     final prefsService = SharedPreferencesService();
     await prefsService.saveData(_tokenKey, token);
     await prefsService.saveData(_usernameKey, user.username);
+    await prefsService.clearData(_legacyPasswordKey);
 
     if (setTourPending) {
       final username = user.username;
@@ -138,7 +137,7 @@ class AuthService extends ApiClient with ChangeNotifier {
     final prefsService = SharedPreferencesService();
     await prefsService.clearData(_tokenKey);
     await prefsService.clearData(_usernameKey);
-    await prefsService.clearData(_passwordKey);
+    await prefsService.clearData(_legacyPasswordKey);
     notifyListeners(); // Notify listeners of the change
   }
 
@@ -194,7 +193,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         'conduct_policy_accepted': conductPolicyAccepted,
       });
 
-      return http.post(
+      return httpClient.post(
         uri,
         headers: const {'Content-Type': 'application/json'},
         body: payload,
@@ -206,34 +205,59 @@ class AuthService extends ApiClient with ChangeNotifier {
       response = profileImage != null
           ? await sendMultipart(profileImage)
           : await sendJson();
+    } on SocketException {
+      throw SignUpException(
+        message: networkErrorMessage(uri),
+      );
+    } on http.ClientException {
+      throw SignUpException(message: networkErrorMessage(uri));
     } catch (e) {
       throw SignUpException(
         message:
-            'Unable to reach the server. Please check your connection and try again.',
+            'Unable to complete registration right now. Please try again.',
       );
     }
 
-    if (response.statusCode == 201) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decodedBody = tryDecodeJson(response.body);
+      if (decodedBody is Map<String, dynamic> &&
+          decodedBody['user'] is Map<String, dynamic> &&
+          decodedBody['token'] is String &&
+          (decodedBody['token'] as String).trim().isNotEmpty) {
+        try {
+          final user = User.fromJson(decodedBody['user'] as Map<String, dynamic>);
+          await _saveUser(user, decodedBody['token'] as String, setTourPending: true);
+          return;
+        } on FormatException {
+          throw SignUpException(
+            message:
+                'Registration succeeded but the server returned an invalid account response.',
+          );
+        }
+      }
+
       await signIn(username: username, password: password);
       return;
     }
 
-    Map<String, dynamic>? decodedBody;
-    try {
-      if (response.body.isNotEmpty) {
-        decodedBody = jsonDecode(response.body) as Map<String, dynamic>;
-      }
-    } catch (_) {
-      // Ignore decoding errors; fall back to generic messaging below.
-    }
+    final decodedBody = tryDecodeJson(response.body);
 
-    if (decodedBody != null) {
+    if (decodedBody is Map<String, dynamic>) {
       final errors = <String, List<String>>{};
-      String? message;
+      String? message = firstErrorString(decodedBody['detail']) ??
+          firstErrorString(decodedBody['error']) ??
+          firstErrorString(decodedBody['message']) ??
+          firstErrorString(decodedBody['non_field_errors']);
 
       decodedBody.forEach((key, value) {
-        if (key == 'detail' && value is String) {
-          message = value;
+        if (key == 'detail' ||
+            key == 'error' ||
+            key == 'message' ||
+            key == 'non_field_errors') {
+          final normalized = firstErrorString(value);
+          if (message == null && normalized != null) {
+            message = normalized;
+          }
         } else if (value is List) {
           errors[key] = value.map((item) => item.toString()).toList();
         } else if (value is String) {
@@ -242,27 +266,26 @@ class AuthService extends ApiClient with ChangeNotifier {
       });
 
       throw SignUpException(
-        message: message ?? 'Registration failed. Please review your details.',
+        // Only synthesise a top-level message when there are no field errors.
+        // extractErrorMessage renders those same fields, and userMessage()
+        // prepends message to them — setting both prints every error twice.
+        message:
+            message ??
+            (errors.isEmpty
+                ? extractErrorMessage(decodedBody, response.statusCode)
+                : null),
         errors: errors,
       );
+    }
+
+    final listError = firstErrorString(decodedBody);
+    if (listError != null) {
+      throw SignUpException(message: listError);
     }
 
     throw SignUpException(
       message: 'Registration failed with status code ${response.statusCode}.',
     );
-  }
-
-  /// ApiClient reports failures as
-  /// "Failed to create resource: Exception: <server message>". Peel the
-  /// wrappers off so the sign-in screen shows the server's own wording.
-  static String _unwrapError(Object error) {
-    var message = error.toString();
-    const marker = 'Exception:';
-    while (message.contains(marker)) {
-      message = message.substring(message.indexOf(marker) + marker.length);
-    }
-    message = message.trim();
-    return message.isEmpty ? 'Sign in failed. Please try again.' : message;
   }
 
   Future<void> signIn({
@@ -275,31 +298,35 @@ class AuthService extends ApiClient with ChangeNotifier {
     final jsonPayload = {'username': username, 'password': password};
 
     // The post method now processes the response for us and returns the decoded body on 200 OK.
-    final Map<String, dynamic> data;
-    try {
-      data =
-          await post(
-                urlPath: '/api/login/',
-                jsonHeaders: jsonHeaders,
-                jsonPayload: jsonPayload,
-              )
-              as Map<String, dynamic>;
-    } catch (e) {
-      throw SignInException(_unwrapError(e));
+    final data = await post(
+      urlPath: '/api/login/',
+      jsonHeaders: jsonHeaders,
+      jsonPayload: jsonPayload,
+    );
+
+    if (data is! Map<String, dynamic>) {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid response.',
+      );
     }
 
-    if (data.containsKey('user') && data.containsKey('token')) {
-      final Map<String, dynamic> userData = data['user'];
-      final String token = data['token'];
-      final user = User.fromJson(userData);
+    final userData = data['user'];
+    final token = data['token'];
+    if (userData is! Map<String, dynamic> ||
+        token is! String ||
+        token.trim().isEmpty) {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid response.',
+      );
+    }
 
-      // Save the user data including the token and (unrecommended) password.
+    try {
+      final user = User.fromJson(userData);
       // Only the token is persisted; the password is never written to disk.
       await _saveUser(user, token, setTourPending: true);
-    } else {
-      // Throw an exception if the format is unexpected, which will be caught by the calling function.
-      throw Exception(
-        'Invalid response format from login API. Missing user or token.',
+    } on FormatException {
+      throw const AuthException(
+        'Login succeeded but the server returned an invalid account response.',
       );
     }
   }
@@ -379,15 +406,6 @@ class AuthService extends ApiClient with ChangeNotifier {
   }
 }
 
-class SignInException implements Exception {
-  final String message;
-
-  SignInException(this.message);
-
-  @override
-  String toString() => message;
-}
-
 class SignUpException implements Exception {
   final String? message;
   final Map<String, List<String>> errors;
@@ -395,6 +413,48 @@ class SignUpException implements Exception {
   SignUpException({this.message, Map<String, List<String>>? errors})
     : errors = errors ?? {};
 
+  String userMessage({Map<String, String>? fieldLabels}) {
+    if (errors.isEmpty) {
+      return message ?? 'Sign up failed.';
+    }
+
+    final lines = <String>[];
+    errors.forEach((field, values) {
+      if (values.isEmpty) {
+        return;
+      }
+
+      final label =
+          fieldLabels?[field] ??
+          field
+              .replaceAll('_', ' ')
+              .split(' ')
+              .where((part) => part.isNotEmpty)
+              .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+              .join(' ');
+      lines.add('$label: ${values.join(' ')}');
+    });
+
+    if (lines.isEmpty) {
+      return message ?? 'Sign up failed.';
+    }
+
+    if (message != null && message!.trim().isNotEmpty) {
+      return '$message\n${lines.join('\n')}';
+    }
+
+    return lines.join('\n');
+  }
+
   @override
   String toString() => message ?? 'Sign up failed.';
+}
+
+class AuthException implements Exception {
+  final String message;
+
+  const AuthException(this.message);
+
+  @override
+  String toString() => message;
 }

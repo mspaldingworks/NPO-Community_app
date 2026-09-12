@@ -3,8 +3,16 @@ import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
+typedef SignInHandler =
+    Future<void> Function({
+      required String username,
+      required String password,
+    });
+
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({super.key, this.onSignIn});
+
+  final SignInHandler? onSignIn;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -30,16 +38,17 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
-      await _authService.signIn(
+      final signIn = widget.onSignIn ?? _authService.signIn;
+      await signIn(
         username: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
+        password: _passwordController.text,
       );
       // The router's refreshListenable will handle navigation on auth state change.
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ).showSnackBar(SnackBar(content: Text(_errorMessage(e))));
       }
     }
 
@@ -163,5 +172,12 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
       ),
     );
+  }
+
+  String _errorMessage(Object error) {
+    final message = error.toString();
+    return message.startsWith('Exception: ')
+        ? message.substring('Exception: '.length)
+        : message;
   }
 }
