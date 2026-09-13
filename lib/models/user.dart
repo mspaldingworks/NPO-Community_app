@@ -13,6 +13,7 @@ class User {
   final String? userType;
   final bool isStaff;
   final bool isSuperuser;
+  final int? programYear;
   final String? fullName;
 
   User({
@@ -28,6 +29,7 @@ class User {
     this.userType,
     this.isStaff = false,
     this.isSuperuser = false,
+    this.programYear,
     this.fullName,
   });
 
@@ -81,6 +83,7 @@ class User {
       userType: json['user_type'] as String?,
       isStaff: json['is_staff'] as bool? ?? false,
       isSuperuser: json['is_superuser'] as bool? ?? false,
+      programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,
     );
   }

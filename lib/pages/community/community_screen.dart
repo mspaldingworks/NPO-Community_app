@@ -326,6 +326,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                    child: ListTile(
+                      leading: const Icon(Icons.school_outlined),
+                      title: const Text('Class chats'),
+                      subtitle: const Text(
+                        'One group per program year, 2010 to today.',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          GoRouter.of(context).push('/community/classes'),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

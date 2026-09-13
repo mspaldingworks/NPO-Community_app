@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/view_mode_service.dart';
 import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
 import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
@@ -86,6 +87,45 @@ class SettingsScreen extends StatelessWidget {
                   }
                 },
               ),
+            ),
+            // Board view switch — only shown to accounts that may use it, so
+            // it is invisible rather than merely disabled for everyone else.
+            Consumer<ViewModeService>(
+              builder: (context, viewMode, _) {
+                if (!viewMode.canUseBoardView) {
+                  return const SizedBox.shrink();
+                }
+                final inBoardView = viewMode.isBoardView;
+                return Semantics(
+                  button: true,
+                  label: inBoardView
+                      ? 'Switch to member view'
+                      : 'Switch to board view',
+                  hint: 'Changes which version of the app you are using',
+                  child: ListTile(
+                    title: Text(inBoardView ? 'Member view' : 'Board view'),
+                    subtitle: Text(
+                      inBoardView
+                          ? 'Go back to the app as an alum sees it'
+                          : 'Board roster, seats and committees',
+                    ),
+                    leading: Icon(
+                      inBoardView
+                          ? Icons.people_outline
+                          : Icons.account_balance_outlined,
+                    ),
+                    trailing: const Icon(Icons.swap_horiz),
+                    minVerticalPadding: 16,
+                    onTap: () async {
+                      await viewMode.toggle();
+                      if (!context.mounted) return;
+                      if (viewMode.isBoardView) {
+                        context.push('/board');
+                      }
+                    },
+                  ),
+                );
+              },
             ),
             Semantics(
               button: true,

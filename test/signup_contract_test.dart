@@ -23,6 +23,7 @@ const requiredSignupFields = <String>{
   'password',
   'password2',
   'city',
+  'program_year',
   'date_of_birth',
   'adult_attestation',
   'conduct_policy_accepted',
@@ -68,6 +69,7 @@ void main() {
       password2: 'C0ntr@ct!Str0ng',
       username: 'contract',
       city: '40218',
+      programYear: 2015,
       dateOfBirth: DateTime(1990, 4, 17),
       adultAttestation: true,
       conductPolicyAccepted: true,
@@ -112,6 +114,7 @@ void main() {
       password2: 'C0ntr@ct!Str0ng',
       username: 'contract',
       city: '40218',
+      programYear: 2015,
       // Single digits must be zero-padded, not '1990-4-7'.
       dateOfBirth: DateTime(1990, 4, 7),
       adultAttestation: true,

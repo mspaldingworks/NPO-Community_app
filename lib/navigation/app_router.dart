@@ -16,6 +16,8 @@ import 'package:npo_community/pages/community/create_post_screen.dart';
 import 'package:npo_community/pages/community/post_detail_screen.dart';
 import 'package:npo_community/pages/community/edit_post_screen.dart';
 import 'package:npo_community/pages/community/regional_chats_screen.dart';
+import 'package:npo_community/pages/community/cohort_chats_screen.dart';
+import 'package:npo_community/features/board/board_screen.dart';
 import 'package:npo_community/pages/community/gender_chats_screen.dart';
 import 'package:npo_community/pages/community/wellness_screen.dart';
 import 'package:npo_community/pages/community/photo_album_screen.dart';
@@ -110,6 +112,10 @@ class AppRouter {
                   GoRoute(
                     path: 'regional',
                     builder: (context, state) => const RegionalChatsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'classes',
+                    builder: (context, state) => const CohortChatsScreen(),
                   ),
                   GoRoute(
                     path: 'gender',
@@ -318,6 +324,7 @@ class AppRouter {
           return PublicUserProfileScreen(userId: userId);
         },
       ),
+      GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
       GoRoute(
         path: '/admin/moderation',
         builder: (context, state) => const ModerationScreen(),

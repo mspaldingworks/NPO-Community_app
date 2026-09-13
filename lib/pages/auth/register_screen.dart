@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/core/services/program_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 typedef SignUpHandler =
@@ -13,6 +14,7 @@ typedef SignUpHandler =
       required String password2,
       required String username,
       required String city,
+      required int programYear,
       required DateTime dateOfBirth,
       required bool adultAttestation,
       required bool conductPolicyAccepted,
@@ -107,6 +109,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
   File? _profileImage;
+  int? _programYear;
+  List<int> _programYears = const [];
   DateTime? _dateOfBirth;
   bool _adultAttestation = false;
   bool _conductPolicyAccepted = false;
@@ -119,10 +123,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _confirmPasswordError;
   String? _cityError;
   String? _dateOfBirthError;
+  String? _programYearError;
   final GlobalKey<FormFieldState<bool>> _adultAttestationKey =
       GlobalKey<FormFieldState<bool>>();
   final GlobalKey<FormFieldState<bool>> _conductPolicyKey =
       GlobalKey<FormFieldState<bool>>();
+
+  @override
+  void initState() {
+    super.initState();
+    ProgramService().fetchProgramYears().then((years) {
+      if (mounted) {
+        setState(() => _programYears = years);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -294,6 +309,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
       return;
     }
+    final programYear = _programYear;
+    if (programYear == null) {
+      setState(() {
+        _programYearError =
+            'Please select the year you went through the program';
+      });
+      return;
+    }
     if (!_adultAttestation || !_conductPolicyAccepted) {
       _adultAttestationKey.currentState?.validate();
       _conductPolicyKey.currentState?.validate();
@@ -318,6 +341,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password2: _confirmPasswordController.text,
         username: _usernameController.text.trim(),
         city: _zipCodeController.text.trim(),
+        programYear: programYear,
         dateOfBirth: dateOfBirth,
         adultAttestation: _adultAttestation,
         conductPolicyAccepted: _conductPolicyAccepted,
@@ -339,6 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _confirmPasswordError = e.errors['password2']?.join(' ');
           _cityError = e.errors['city']?.join(' ');
           _dateOfBirthError = e.errors['date_of_birth']?.join(' ');
+          _programYearError = e.errors['program_year']?.join(' ');
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,6 +377,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   'password2': 'Confirm Password',
                   'city': 'City',
                   'date_of_birth': 'Date of Birth',
+                  'program_year': 'Program Year',
                   'adult_attestation': 'Age Attestation',
                   'conduct_policy_accepted': 'Conduct Policy',
                   'profile_pic': 'Profile Picture',
@@ -624,6 +650,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Program year — which cohort this member came through.
+                    TourAnchor(
+                      name: 'Program Year',
+                      child: DropdownButtonFormField<int>(
+                        initialValue: _programYear,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF1B2430),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                        iconEnabledColor: Colors.white,
+                        decoration: themedInput(
+                          label: 'Program Year',
+                          icon: Icons.school,
+                        ).copyWith(errorText: _programYearError),
+                        hint: Text(
+                          _programYears.isEmpty
+                              ? 'Loading years…'
+                              : 'Select your year',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 18,
+                          ),
+                        ),
+                        items: _programYears
+                            .map(
+                              (year) => DropdownMenuItem<int>(
+                                value: year,
+                                child: Text('$year'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: _isLoading || _programYears.isEmpty
+                            ? null
+                            : (value) {
+                                setState(() {
+                                  _programYear = value;
+                                  _programYearError = null;
+                                });
+                              },
                       ),
                     ),
                     const SizedBox(height: 16),

@@ -26,6 +26,7 @@ void main() {
                 required String password2,
                 required String username,
                 required String city,
+                required int programYear,
                 required DateTime dateOfBirth,
                 required bool adultAttestation,
                 required bool conductPolicyAccepted,
@@ -47,6 +48,15 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(2), 'Secret123');
     await tester.enterText(find.byType(TextFormField).at(3), 'Secret123');
     await tester.enterText(find.byType(TextFormField).at(4), '40218');
+
+    // Program year is required too. The API call for the year list fails in
+    // tests, so ProgramService falls back to a locally computed range.
+    final yearField = find.byType(DropdownButtonFormField<int>);
+    await tester.ensureVisible(yearField);
+    await tester.tap(yearField);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('${DateTime.now().year}').last);
+    await tester.pumpAndSettle();
 
     // Date of birth and both attestations are required before the form will
     // submit; the picker's default selection is the 18-years-ago date.

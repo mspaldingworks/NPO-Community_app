@@ -7,6 +7,7 @@ import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/core/services/view_mode_service.dart';
 import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
 
 class AuthService extends ApiClient with ChangeNotifier {
@@ -185,6 +186,9 @@ class AuthService extends ApiClient with ChangeNotifier {
     await prefsService.clearData(_tokenKey);
     await prefsService.clearData(_usernameKey);
     await prefsService.clearData(_legacyPasswordKey);
+    // Board view is a per-account privilege; never let it survive to whoever
+    // signs in on this device next.
+    await ViewModeService().reset();
     notifyListeners(); // Notify listeners of the change
   }
 
@@ -198,6 +202,7 @@ class AuthService extends ApiClient with ChangeNotifier {
     required String password2,
     required String username,
     required String city,
+    required int programYear,
     required DateTime dateOfBirth,
     required bool adultAttestation,
     required bool conductPolicyAccepted,
@@ -216,6 +221,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         ..fields['password2'] = password2
         ..fields['username'] = username
         ..fields['city'] = city
+        ..fields['program_year'] = programYear.toString()
         ..fields['date_of_birth'] = dateOfBirthValue
         ..fields['adult_attestation'] = adultAttestation.toString()
         ..fields['conduct_policy_accepted'] = conductPolicyAccepted.toString();
@@ -235,6 +241,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         'password2': password2,
         'username': username,
         'city': city,
+        'program_year': programYear,
         'date_of_birth': dateOfBirthValue,
         'adult_attestation': adultAttestation,
         'conduct_policy_accepted': conductPolicyAccepted,

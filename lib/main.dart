@@ -8,6 +8,7 @@ import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/givebutter_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/touring_service.dart';
+import 'package:npo_community/core/services/view_mode_service.dart';
 import 'package:npo_community/features/fundraising/fundraising_controller.dart';
 import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
 import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
@@ -71,12 +72,13 @@ class _FullApp extends StatefulWidget {
 class _FullAppState extends State<_FullApp> {
   final _authService = AuthService();
   final _touringService = TouringService();
+  final _viewModeService = ViewModeService();
   late final _router = AppRouter(authService: _authService).router;
 
   @override
   void initState() {
     super.initState();
-    unawaited(_authService.init());
+    unawaited(_authService.init().then((_) => _viewModeService.restore()));
   }
 
   @override
@@ -85,6 +87,7 @@ class _FullAppState extends State<_FullApp> {
       providers: [
         ChangeNotifierProvider.value(value: _authService),
         ChangeNotifierProvider.value(value: _touringService),
+        ChangeNotifierProvider.value(value: _viewModeService),
         ChangeNotifierProvider(create: (_) => HomeAlertService()),
         ChangeNotifierProvider(create: (_) => MeadowAlertService()),
         ChangeNotifierProvider(create: (_) => OnboardingTourController()),
