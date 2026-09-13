@@ -142,7 +142,7 @@ class _TouringPill extends StatelessWidget {
             // Close / deactivate
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => service.deactivate(auth.signOut),
+              onTap: () => service.deactivate(auth.stopTouring),
               child: const Padding(
                 padding: EdgeInsets.all(4),
                 child: Icon(Icons.close, color: Colors.white38, size: 16),
@@ -232,7 +232,7 @@ class _ProfilePickerSheet extends StatelessWidget {
         const SizedBox(height: 16),
         TextButton.icon(
           onPressed: () {
-            service.deactivate(auth.signOut);
+            service.deactivate(auth.stopTouring);
             Navigator.of(context).pop();
           },
           icon: const Icon(Icons.exit_to_app, color: Colors.white54),

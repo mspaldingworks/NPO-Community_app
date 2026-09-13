@@ -33,6 +33,14 @@ class _DevMenuState extends State<DevMenu> {
   }
 
   void _handleTap() {
+    // The developer menu can switch user types and carries admin tooling, so
+    // the gesture must not exist for ordinary accounts. Judged on the real
+    // account rather than currentUser, which touring replaces with a persona.
+    if (!AuthService().canTour) {
+      _tapCount = 0;
+      return;
+    }
+
     final now = DateTime.now();
 
     if (_lastTap != null &&
@@ -344,7 +352,9 @@ class _DevMenuDialog extends StatelessWidget {
               const SizedBox(height: 8),
               OutlinedButton.icon(
                 onPressed: () {
-                  touring.deactivate(auth.signOut);
+                  // Restore the real account rather than signing out — the
+                  // token was never swapped, only the on-screen persona.
+                  touring.deactivate(auth.stopTouring);
                   Navigator.pop(context);
                 },
                 icon: const Icon(Icons.exit_to_app, size: 16),

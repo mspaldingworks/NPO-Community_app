@@ -12,6 +12,7 @@ class User {
   final List<Friend> friends;
   final String? userType;
   final bool isStaff;
+  final bool isSuperuser;
   final String? fullName;
 
   User({
@@ -26,6 +27,7 @@ class User {
     this.friends = const [],
     this.userType,
     this.isStaff = false,
+    this.isSuperuser = false,
     this.fullName,
   });
 
@@ -78,6 +80,7 @@ class User {
       friends: friendsList,
       userType: json['user_type'] as String?,
       isStaff: json['is_staff'] as bool? ?? false,
+      isSuperuser: json['is_superuser'] as bool? ?? false,
       fullName: json['full_name'] as String?,
     );
   }

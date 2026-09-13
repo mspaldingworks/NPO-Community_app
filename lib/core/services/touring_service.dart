@@ -111,9 +111,12 @@ class TouringService extends ChangeNotifier {
     );
   }
 
-  void deactivate(void Function() onSignOut) {
+  /// Ends touring and hands control back to the caller to restore the real
+  /// account. Touring never changed the stored token, so this is a UI
+  /// restoration, not a sign-out.
+  void deactivate(void Function() onRestore) {
     _active = false;
-    onSignOut();
+    onRestore();
     notifyListeners();
   }
 }

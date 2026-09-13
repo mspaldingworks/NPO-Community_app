@@ -28,15 +28,61 @@ class AuthService extends ApiClient with ChangeNotifier {
   // A private variable to hold the current user.
   User? _currentUser;
 
+  // Set only while touring: the real account behind the persona.
+  User? _touringOriginalUser;
+
   // Expose the stream to outside classes.
   Stream<User?> get authStateChanges => _authStateController.stream;
 
   // Expose the current user.
   User? get currentUser => _currentUser;
 
+  /// The signed-in account, ignoring any touring persona currently worn.
+  ///
+  /// Touring swaps [currentUser] for a fake profile, so anything deciding
+  /// *permissions* must ask this instead — otherwise adopting the volunteer
+  /// persona would revoke the superuser's own ability to stop touring.
+  User? get realUser => _touringOriginalUser ?? _currentUser;
+
+  /// Only superusers and staff may tour. Judged on [realUser], never on the
+  /// persona, so touring cannot escalate or strand anyone.
+  bool get canTour =>
+      (realUser?.isSuperuser ?? false) || (realUser?.isStaff ?? false);
+
+  bool get isTouring => _touringOriginalUser != null;
+
+  /// Seeds the signed-in account without a network round trip. Tests only.
+  @visibleForTesting
+  void debugSetCurrentUser(User? user) {
+    _currentUser = user;
+    _touringOriginalUser = null;
+    _authStateController.add(user);
+    notifyListeners();
+  }
+
   void switchTouringUser(User user) {
+    if (!canTour) {
+      return;
+    }
+    // Remember the real account the first time a persona is worn.
+    _touringOriginalUser ??= _currentUser;
     _currentUser = user;
     _authStateController.add(user);
+    notifyListeners();
+  }
+
+  /// Drops the touring persona and restores the real account.
+  ///
+  /// Touring is a preview, not a session change: it never touched the stored
+  /// token, so there is nothing to re-authenticate.
+  void stopTouring() {
+    final original = _touringOriginalUser;
+    if (original == null) {
+      return;
+    }
+    _touringOriginalUser = null;
+    _currentUser = original;
+    _authStateController.add(original);
     notifyListeners();
   }
 
@@ -133,6 +179,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   // Private method to clear user data on logout.
   Future<void> _clearUser() async {
     _currentUser = null;
+    _touringOriginalUser = null;
     _authStateController.add(null);
     final prefsService = SharedPreferencesService();
     await prefsService.clearData(_tokenKey);
