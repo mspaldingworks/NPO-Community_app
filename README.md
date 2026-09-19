@@ -1,7 +1,9 @@
-# NPO Community
+# Emerge Kentucky Alumni
 
-Stakeholder operations app for NPO Community. The current release target is an
-iOS demo backed exclusively by synthetic, in-memory data.
+Alumni directory and community app for the Emerge Kentucky program. Alumni CRM
+data is served from the API's NGP VAN integration; the app never talks to VAN
+directly. The current release target is an iOS demo backed exclusively by
+synthetic, in-memory data.
 
 ## Demo
 

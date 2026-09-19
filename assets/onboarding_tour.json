@@ -1,6 +1,6 @@
 {
   "welcome_message": {
-    "title": "Welcome to NPO Community",
+    "title": "Welcome to Emerge Kentucky Alumni",
     "body": "Here is a quick tour of the Home dashboard."
   },
   "tour": [
@@ -29,15 +29,15 @@
       "progress": "Step 2 of 9"
     },
     {
-      "id": "exchange-tab",
+      "id": "directory-tab",
       "screen": "home",
       "spotlight": {
-        "target_element_name": "Exchange",
+        "target_element_name": "Alumni Directory",
         "padding_px": 12,
         "shroud_opacity": 0.6
       },
-      "title": "Exchange",
-      "body": "The Exchange tab is for mutual aid and community support.",
+      "title": "Alumni Directory",
+      "body": "Find and connect with Emerge Kentucky alumni by cohort in the Alumni Directory.",
       "progress": "Step 3 of 9"
     },
     {

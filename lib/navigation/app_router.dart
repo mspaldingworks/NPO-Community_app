@@ -26,9 +26,7 @@ import 'package:npo_community/pages/friends/user_search_screen.dart';
 import 'package:npo_community/pages/dev/chat_test_screen.dart';
 import 'package:npo_community/navigation/scaffold_with_nav_bar.dart';
 import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
-import 'package:npo_community/pages/exchange/exchange_hub_screen.dart';
-import 'package:npo_community/pages/exchange/create_exchange_post_screen.dart';
-import 'package:npo_community/pages/exchange/exchange_post_detail_screen.dart';
+import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
 import 'package:npo_community/pages/resources/create_resource_screen.dart';
 import 'package:npo_community/pages/resources/edit_resource_screen.dart';
 import 'package:npo_community/pages/resources/resources_screen.dart';
@@ -40,7 +38,6 @@ import 'package:npo_community/models/resource.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
 import 'package:npo_community/pages/admin/moderation_screen.dart';
-import 'package:npo_community/features/meadow/screens/meadow_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -153,25 +150,13 @@ class AppRouter {
                   ),
                   GoRoute(
                     path: 'mutual-aid',
-                    redirect: (context, state) => '/exchange',
+                    redirect: (context, state) => '/community',
                   ),
                   GoRoute(
                     path: 'group/:id',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
                       final groupName = state.extra as String? ?? 'Group';
-
-                      final lowered = groupName.trim().toLowerCase();
-                      final isGeneral =
-                          lowered == 'general' ||
-                          lowered == 'general chat' ||
-                          lowered.startsWith('general ') ||
-                          lowered == 'the meadow' ||
-                          lowered == 'meadow';
-                      if (isGeneral) {
-                        return MeadowScreen(groupId: id, groupName: groupName);
-                      }
-
                       return PostListScreen(groupId: id, groupName: groupName);
                     },
                     routes: [
@@ -214,34 +199,13 @@ class AppRouter {
               ),
             ],
           ),
-          // Exchange
+          // Alumni Directory
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/exchange',
+                path: '/directory',
                 pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: ExchangeHubScreen()),
-                routes: [
-                  GoRoute(
-                    path: 'help',
-                    redirect: (context, state) => '/exchange',
-                  ),
-                  GoRoute(
-                    path: 'create',
-                    builder: (context, state) =>
-                        const CreateExchangePostScreen(),
-                  ),
-                  GoRoute(
-                    path: 'post/:postId',
-                    builder: (context, state) {
-                      final postId = int.parse(state.pathParameters['postId']!);
-                      return ExchangePostDetailScreen(
-                        postId: postId,
-                        initialPost: state.extra as Post?,
-                      );
-                    },
-                  ),
-                ],
+                    const NoTransitionPage(child: AlumniDirectoryScreen()),
               ),
             ],
           ),
@@ -255,7 +219,7 @@ class AppRouter {
                 routes: [
                   GoRoute(
                     path: 'feed',
-                    redirect: (context, state) => '/exchange',
+                    redirect: (context, state) => '/community',
                   ),
                 ],
               ),
@@ -284,15 +248,9 @@ class AppRouter {
               ),
             ],
           ),
-          // The Meadow + Events (reachable from Home cards)
+          // Events
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/meadow',
-                pageBuilder: (context, state) => const NoTransitionPage(
-                  child: MeadowScreen(groupId: 0, groupName: 'The Meadow'),
-                ),
-              ),
               GoRoute(
                 path: '/events/calendar',
                 pageBuilder: (context, state) =>

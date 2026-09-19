@@ -27,7 +27,6 @@ import 'package:npo_community/core/services/chat_favorites_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/models/chat_message.dart';
 import 'package:npo_community/core/services/report_service.dart';
-import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
@@ -1317,10 +1316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final meadowAlerts = Provider.of<MeadowAlertService>(context, listen: true);
-    final int meadowUnreadCount = meadowAlerts.unreadChats;
-    final bool hasMeadowMessages = meadowAlerts.hasUnread;
-    final totalNewMessages = meadowUnreadCount + _unreadReplyCount;
+    final totalNewMessages = _unreadReplyCount;
     final String messageCardText = totalNewMessages <= 0
         ? 'No new messages'
         : (totalNewMessages > 99
@@ -1389,19 +1385,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Icons.mark_email_unread_outlined,
                     messageCardText,
                     onTap: () async {
-                      if (hasMeadowMessages) {
-                        meadowAlerts.markAllRead();
-                        if (!mounted) return;
-                        context.push('/meadow');
-                        return;
-                      }
                       if (_unreadReplyCount > 0) {
                         await _markRepliesRead();
                         if (!context.mounted) return;
-                        context.push('/community');
-                        return;
                       }
-                      context.push('/meadow');
+                      context.push('/community');
                     },
                     isHighlighted: hasAnyMessages,
                     highlightColor: Colors.redAccent,

@@ -9,7 +9,6 @@ class OnboardingTourController extends ChangeNotifier {
   static const String defaultAssetPath = 'assets/onboarding_tour.json';
   static const String _seenKeyPrefix = 'onboarding_tour_seen__';
   static const String defaultSeenKeyPrefix = _seenKeyPrefix;
-  static const String meadowSeenKeyPrefix = 'meadow_tour_seen__';
 
   OnboardingTourConfig? _config;
   bool _active = false;

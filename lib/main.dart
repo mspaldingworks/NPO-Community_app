@@ -5,15 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/community_service.dart';
-import 'package:npo_community/core/services/givebutter_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/touring_service.dart';
 import 'package:npo_community/core/services/view_mode_service.dart';
-import 'package:npo_community/features/fundraising/fundraising_controller.dart';
-import 'package:npo_community/features/meadow/services/meadow_alert_service.dart';
+import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
 import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
-import 'package:npo_community/features/supporter_hub/supporter_hub_controller.dart';
-import 'package:npo_community/features/supporter_hub/supporter_hub_screen.dart';
 import 'package:npo_community/navigation/app_router.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/theme/app_theme.dart';
@@ -34,25 +30,11 @@ class NpoCommunityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (config.environment == AppEnvironment.demo) {
-      return MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => SupporterHubController.demo()),
-          ChangeNotifierProvider(
-            create: (_) {
-              final controller = FundraisingController(
-                GivebutterService(AppConfig.givebutterApiKey),
-              );
-              controller.loadCampaigns();
-              return controller;
-            },
-          ),
-        ],
-        child: MaterialApp(
-          title: 'NPO Community',
-          debugShowCheckedModeBanner: kDebugMode,
-          theme: AppTheme.lightTheme,
-          home: const SupporterHubScreen(),
-        ),
+      return MaterialApp(
+        title: 'Emerge Kentucky Alumni',
+        debugShowCheckedModeBanner: kDebugMode,
+        theme: AppTheme.lightTheme,
+        home: const AlumniDirectoryScreen(),
       );
     }
 
@@ -89,12 +71,11 @@ class _FullAppState extends State<_FullApp> {
         ChangeNotifierProvider.value(value: _touringService),
         ChangeNotifierProvider.value(value: _viewModeService),
         ChangeNotifierProvider(create: (_) => HomeAlertService()),
-        ChangeNotifierProvider(create: (_) => MeadowAlertService()),
         ChangeNotifierProvider(create: (_) => OnboardingTourController()),
         Provider(create: (_) => CommunityService()),
       ],
       child: MaterialApp.router(
-        title: 'NPO Community',
+        title: 'Emerge Kentucky Alumni',
         debugShowCheckedModeBanner: kDebugMode,
         theme: AppTheme.lightTheme,
         routerConfig: _router,

@@ -254,9 +254,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
               final n = g.name.trim().toLowerCase();
               return n == 'general' ||
                   n == 'general chat' ||
-                  n.startsWith('general ') ||
-                  n == 'the meadow' ||
-                  n == 'meadow';
+                  n.startsWith('general ');
             }
 
             final otherGroups = groups

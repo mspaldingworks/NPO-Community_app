@@ -30,9 +30,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   const Spacer(),
                   const TourAnchor(
-                    name: 'Welcome to NPO Community',
+                    name: 'Welcome to Emerge Kentucky Alumni',
                     child: Text(
-                      'Welcome to NPO Community',
+                      'Welcome to Emerge Kentucky Alumni',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,

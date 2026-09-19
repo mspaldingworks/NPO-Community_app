@@ -21,7 +21,7 @@ class _OnboardingTourOverlayState extends State<OnboardingTourOverlay> {
   static const String _pointerAssetPath = 'assets/tour/tour_butterfly.gif';
   static const Set<String> _bottomNavStepIds = <String>{
     'community-tab',
-    'exchange-tab',
+    'directory-tab',
     'resources-tab',
     'events-tab',
   };

@@ -19,7 +19,7 @@ class WelcomeScreen extends StatelessWidget {
                 const FlutterLogo(size: 120),
                 const SizedBox(height: 48),
                 Text(
-                  'Welcome to NPO Community',
+                  'Welcome to Emerge Kentucky Alumni',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),

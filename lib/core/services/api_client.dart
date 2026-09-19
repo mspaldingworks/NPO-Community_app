@@ -158,7 +158,7 @@ class ApiClient implements ApiClientInterface {
 
   @protected
   String networkErrorMessage(Uri uri) {
-    return 'Unable to reach the NPO Community API at ${uri.origin}. '
+    return 'Unable to reach the Emerge Kentucky Alumni API at ${uri.origin}. '
         'Verify the server is running and that --dart-define=API_ORIGIN '
         'points to a host reachable from this device.';
   }

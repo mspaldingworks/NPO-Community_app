@@ -14,18 +14,22 @@ class AppInfoScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text('Welcome to NPO Community', style: textTheme.headlineSmall),
+            Text(
+              'Welcome to Emerge Kentucky Alumni',
+              style: textTheme.headlineSmall,
+            ),
             const SizedBox(height: 12),
             Text(
-              'NPO Community is a private workspace for nonprofit volunteers, donors, alumni, partners, committee members, board members, and staff. '
-              'It brings coordination, events, resources, and stewardship into one place.',
+              'Emerge Kentucky Alumni is a private workspace for graduates of the Emerge Kentucky program, '
+              'along with staff, board members, and program partners. '
+              'It brings the alumni directory, cohort community, events, and resources into one place.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),
             Text('How the app is organized', style: textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
-              'Use the bottom tabs to move between Community conversations, the Exchange for mutual aid, your Home dashboard, '
+              'Use the bottom tabs to move between Community conversations, the Alumni Directory, your Home dashboard, '
               'Resources, and Events. Your Home dashboard is the command center for quick actions, updates, and cards that take '
               'you deeper into the app.',
               style: textTheme.bodyMedium,

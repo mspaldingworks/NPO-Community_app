@@ -45,7 +45,7 @@ class _VideoSplashScreenState extends State<VideoSplashScreen> {
                   Icon(Icons.groups_2_outlined, color: Colors.white, size: 72),
                   SizedBox(height: 20),
                   Text(
-                    'NPO Community',
+                    'Emerge Kentucky Alumni',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 30,

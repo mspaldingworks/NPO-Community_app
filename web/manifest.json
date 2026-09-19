@@ -1,11 +1,11 @@
 {
-    "name": "NPO Community",
-    "short_name": "NPO Community",
+    "name": "Emerge Kentucky Alumni",
+    "short_name": "Emerge KY",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A stakeholder engagement and stewardship platform for nonprofits.",
+    "description": "Alumni directory and community app for the Emerge Kentucky program.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

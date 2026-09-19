@@ -59,15 +59,13 @@ class _GeneralChatsScreenState extends State<GeneralChatsScreen> {
           }
           final groups = snapshot.data ?? [];
           final generalGroup = _findByNames(groups, [
-            'the meadow',
-            'meadow',
             'general chat',
             'general',
           ]);
           final hobbiesGroup = _findByNames(groups, ['hobbies', 'hobby']);
           final items = <_CardItem>[
             _CardItem(
-              title: 'The Meadow',
+              title: 'General',
               icon: Icons.forum,
               group: generalGroup,
               imageUrl: generalGroup?.fullImageUrl,

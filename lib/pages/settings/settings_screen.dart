@@ -130,7 +130,7 @@ class SettingsScreen extends StatelessWidget {
             Semantics(
               button: true,
               label: 'Log out',
-              hint: 'Signs you out of your NPO Community account',
+              hint: 'Signs you out of your Emerge Kentucky Alumni account',
               child: TourAnchor(
                 name: 'Log out',
                 child: ListTile(

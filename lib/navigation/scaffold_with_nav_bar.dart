@@ -33,10 +33,10 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: TourAnchor(name: 'Community', child: Icon(Icons.group)),
           ),
           const NavigationDestination(
-            label: 'Exchange',
+            label: 'Alumni Directory',
             icon: TourAnchor(
-              name: 'Exchange',
-              child: Icon(Icons.swap_horiz_outlined),
+              name: 'Alumni Directory',
+              child: Icon(Icons.people_outline),
             ),
           ),
           NavigationDestination(
@@ -55,11 +55,8 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: TourAnchor(name: 'Resources', child: Icon(Icons.book)),
           ),
           const NavigationDestination(
-            label: 'The Meadow',
-            icon: TourAnchor(
-              name: 'The Meadow',
-              child: Icon(Icons.local_florist),
-            ),
+            label: 'Events',
+            icon: TourAnchor(name: 'Events', child: Icon(Icons.calendar_today)),
           ),
         ],
         onDestinationSelected: _goBranch,
