@@ -17,21 +17,25 @@ class PresignedUpload {
 }
 
 class MediaRepository {
-  MediaRepository({required this.config, required this.httpClient});
+  MediaRepository({required this.config});
 
   final AppConfig config;
-  final http.Client httpClient;
 
   Future<PresignedUpload> createUploadUrl({required String filename}) async {
     if (!config.networkEnabled) {
       throw StateError('Demo mode does not request remote media URLs.');
     }
 
-    final response = await httpClient.post(
+    final response = await http.post(
       config.apiUri('/api/media/presign-upload/'),
       headers: {'content-type': 'application/json'},
       body: jsonEncode({'filename': filename}),
     );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw StateError(
+        'Upload URL request failed (${response.statusCode}).',
+      );
+    }
     final payload = jsonDecode(response.body) as Map<String, dynamic>;
     return PresignedUpload.fromJson(payload);
   }

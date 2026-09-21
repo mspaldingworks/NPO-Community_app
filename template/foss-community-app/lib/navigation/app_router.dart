@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 
+import '../core/services/capability_service.dart';
 import '../pages/admin/admin_page.dart';
 import '../pages/auth/auth_page.dart';
+import '../pages/auth/unauthorized_page.dart';
 import '../pages/chat/chat_page.dart';
 import '../pages/community/community_page.dart';
 import '../pages/dashboard/dashboard_page.dart';
@@ -16,10 +18,19 @@ import '../features/dev/dev_tools_page.dart';
 import '../features/onboarding_tour/onboarding_tour_page.dart';
 
 class AppRouter {
-  static GoRouter create() => GoRouter(
+  static GoRouter create({required CapabilityService capabilityService}) =>
+      GoRouter(
+    redirect: (_, state) {
+      if (state.matchedLocation.startsWith('/admin') &&
+          !capabilityService.has(AppCapability.adminPanel)) {
+        return '/unauthorized';
+      }
+      return null;
+    },
     initialLocation: '/dashboard',
     routes: [
       GoRoute(path: '/auth', builder: (_, __) => const AuthPage()),
+      GoRoute(path: '/unauthorized', builder: (_, __) => const UnauthorizedPage()),
       GoRoute(path: '/dashboard', builder: (_, __) => const DashboardPage()),
       GoRoute(path: '/community', builder: (_, __) => const CommunityPage()),
       GoRoute(path: '/chat', builder: (_, __) => const ChatPage()),

@@ -20,13 +20,11 @@ class MatomoAnalyticsService implements AnalyticsService {
   MatomoAnalyticsService({
     required this.config,
     required this.publicConfig,
-    required this.httpClient,
     required this.userOptIn,
   });
 
   final AppConfig config;
   final PublicConfig publicConfig;
-  final http.Client httpClient;
   final bool userOptIn;
 
   @override
@@ -35,15 +33,22 @@ class MatomoAnalyticsService implements AnalyticsService {
       return;
     }
 
-    final endpoint = Uri.parse(publicConfig.matomoUrl).replace(path: '/matomo.php');
-    await httpClient.post(
-      endpoint,
-      headers: {'content-type': 'application/json'},
-      body: jsonEncode({
-        'site_id': publicConfig.matomoSiteId,
-        'event_name': name,
-        'event_data': data ?? const <String, String>{},
-      }),
+    final baseUri = Uri.parse(publicConfig.matomoUrl);
+    final normalizedBasePath = baseUri.path.endsWith('/')
+        ? baseUri.path.substring(0, baseUri.path.length - 1)
+        : baseUri.path;
+    final queryParameters = <String, String>{
+      ...baseUri.queryParameters,
+      'idsite': publicConfig.matomoSiteId,
+      'rec': '1',
+      'e_c': 'app',
+      'e_a': name,
+      'e_n': jsonEncode(data ?? const <String, String>{}),
+    };
+    final endpoint = baseUri.replace(
+      path: '$normalizedBasePath/matomo.php',
+      queryParameters: queryParameters,
     );
+    await http.get(endpoint);
   }
 }

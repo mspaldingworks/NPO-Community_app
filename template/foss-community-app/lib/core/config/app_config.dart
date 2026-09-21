@@ -48,6 +48,20 @@ class AppConfig {
     if (parsedOrigin.scheme != 'http' && parsedOrigin.scheme != 'https') {
       throw ArgumentError.value(apiOrigin, 'apiOrigin', 'Expected HTTP or HTTPS');
     }
+    if (parsedOrigin.path.isNotEmpty && parsedOrigin.path != '/') {
+      throw ArgumentError.value(
+        apiOrigin,
+        'apiOrigin',
+        'Expected origin without a path',
+      );
+    }
+    if (parsedOrigin.hasQuery || parsedOrigin.hasFragment) {
+      throw ArgumentError.value(
+        apiOrigin,
+        'apiOrigin',
+        'Expected origin without query or fragment',
+      );
+    }
     if (parsedEnvironment == AppEnvironment.production &&
         parsedOrigin.scheme != 'https') {
       throw ArgumentError('Production API origin must use HTTPS');
@@ -55,7 +69,7 @@ class AppConfig {
 
     return AppConfig._(
       environment: parsedEnvironment,
-      apiOrigin: parsedOrigin.replace(path: ''),
+      apiOrigin: parsedOrigin.replace(path: '', query: null, fragment: null),
       sentryDsn: sentryDsn.trim(),
     );
   }

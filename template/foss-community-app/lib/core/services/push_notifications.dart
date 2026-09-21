@@ -18,12 +18,10 @@ class DisabledPushNotificationService implements PushNotificationService {
 class NtfyPushNotificationService implements PushNotificationService {
   NtfyPushNotificationService({
     required this.config,
-    required this.httpClient,
     required this.topic,
   });
 
   final AppConfig config;
-  final http.Client httpClient;
   final String topic;
 
   @override
@@ -32,10 +30,13 @@ class NtfyPushNotificationService implements PushNotificationService {
       return;
     }
 
-    await httpClient.post(
+    final response = await http.post(
       config.apiUri('/api/push/subscribe/'),
       headers: {'content-type': 'application/json'},
       body: jsonEncode({'provider': 'ntfy', 'topic': topic, 'endpoint': endpoint}),
     );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw StateError('Push subscription failed (${response.statusCode}).');
+    }
   }
 }
