@@ -1,0 +1,72 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Android
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/gradle/
+/android/local.properties
+
+# iOS
+/ios/Pods/
+/ios/Flutter/App.framework
+/ios/Flutter/engine.version
+/ios/Flutter/flutter_assets/
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/info.plist
+/ios/Flutter/pod_helper.rb
+/ios/Flutter/xcode_backend.sh
+/ios/Runner/GeneratedPluginRegistrant.h
+/ios/Runner/GeneratedPluginRegistrant.m
+/ios/Runner.xcworkspace/contents.xcworkspacedata
+/ios/Runner.xcworkspace/xcshareddata/
+/ios/Runner.xcodeproj/project.xcworkspace/
+/ios/Runner.xcodeproj/xcshareddata/
+/ios/Runner.xcodeproj/xcuserdata/
+/ios/Pods/
+/ios/ServiceDefinitions.json
+/ios/Podfile.lock
+
+# macOS
+/macos/Flutter/ephemeral/
+/macos/Pods/
+/macos/Podfile.lock
+
+# Linux
+/linux/flutter/ephemeral/
+
+# Windows
+/windows/flutter/ephemeral/
+
+# Firebase
+*GoogleService-Info.plist
+
+# Gradle
+.gradle/
