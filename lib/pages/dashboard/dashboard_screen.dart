@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:npo_community/widgets/emergency_alert_banner.dart';
+import 'package:npo_community/features/alumni_running/widgets/alumni_wins_card.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:npo_community/core/services/chat_service.dart';
@@ -1345,6 +1346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           children: [
             const EmergencyAlertBanner(),
+            const AlumniWinsCard(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -1408,6 +1410,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _buildAlumniRunningButton(),
             const SizedBox(height: 24),
             _buildButterflyPerchSection(),
             Builder(
@@ -1440,6 +1444,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlumniRunningButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        key: const Key('alumni-running-button'),
+        onPressed: () => context.push('/alumni/running'),
+        icon: const Icon(Icons.how_to_vote_outlined),
+        label: const Text('Alumni on the Ballot'),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );

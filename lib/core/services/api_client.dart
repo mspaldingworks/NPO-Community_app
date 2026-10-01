@@ -20,7 +20,18 @@ class ApiClient implements ApiClientInterface {
   static const String _authTokenKey = 'user_token';
   final SharedPreferencesService _prefsService;
 
-  ApiClient() : _prefsService = SharedPreferencesService();
+  /// Whether request URLs and status codes are written to the debug log.
+  ///
+  /// Clients whose URLs reveal sensitive facts about the user (for example
+  /// which campaign channel they joined) pass `false`.
+  final bool logRequests;
+
+  ApiClient({this.logRequests = true})
+    : _prefsService = SharedPreferencesService();
+
+  void _log(String message) {
+    if (logRequests) _logger.i(message);
+  }
 
   String get authToken {
     final token = _prefsService.getData(_authTokenKey);
@@ -61,13 +72,14 @@ class ApiClient implements ApiClientInterface {
       final dynamic errorJson = tryDecodeJson(response.body);
       throw ApiClientException(
         extractErrorMessage(errorJson, response.statusCode),
+        statusCode: response.statusCode,
       );
     }
   }
 
   Uri _buildUri(String urlPath) {
     final uri = AppConfig.current.apiUri(urlPath);
-    _logger.i('Requesting URL: $uri');
+    _log('Requesting URL: $uri');
     return uri;
   }
 
@@ -173,13 +185,13 @@ class ApiClient implements ApiClientInterface {
   }) async {
     final uri = _buildUri(urlPath);
     try {
-      _logger.i('POST Requesting URL: $uri');
+      _log('POST Requesting URL: $uri');
       final response = await httpClient.post(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
       );
-      _logger.i('POST Response: ${response.statusCode}');
+      _log('POST Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
@@ -206,13 +218,13 @@ class ApiClient implements ApiClientInterface {
   }) async {
     final uri = _buildUri(urlPath);
     try {
-      _logger.i('PUT Requesting URL: $uri');
+      _log('PUT Requesting URL: $uri');
       final response = await httpClient.put(
         uri,
         headers: jsonHeaders,
         body: jsonPayload != null ? jsonEncode(jsonPayload) : null,
       );
-      _logger.i('PUT Response: ${response.statusCode}');
+      _log('PUT Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
@@ -238,9 +250,9 @@ class ApiClient implements ApiClientInterface {
   }) async {
     final uri = _buildUri(urlPath);
     try {
-      _logger.i('GET Requesting URL: $uri');
+      _log('GET Requesting URL: $uri');
       final response = await httpClient.get(uri, headers: jsonHeaders);
-      _logger.i('GET Response: ${response.statusCode}');
+      _log('GET Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
@@ -267,13 +279,13 @@ class ApiClient implements ApiClientInterface {
   }) async {
     final uri = _buildUri(urlPath);
     try {
-      _logger.i('PATCH Requesting URL: $uri');
+      _log('PATCH Requesting URL: $uri');
       final response = await httpClient.patch(
         uri,
         headers: jsonHeaders,
         body: jsonEncode(jsonPayload),
       );
-      _logger.i('PATCH Response: ${response.statusCode}');
+      _log('PATCH Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
@@ -299,9 +311,9 @@ class ApiClient implements ApiClientInterface {
   }) async {
     final uri = _buildUri(urlPath);
     try {
-      _logger.i('DELETE Requesting URL: $uri');
+      _log('DELETE Requesting URL: $uri');
       final response = await httpClient.delete(uri, headers: jsonHeaders);
-      _logger.i('DELETE Response: ${response.statusCode}');
+      _log('DELETE Response: ${response.statusCode}');
       return _processResponse(response, expectedStatusCode: expectedStatusCode);
     } on ApiClientException {
       rethrow;
@@ -322,7 +334,12 @@ class ApiClient implements ApiClientInterface {
 class ApiClientException implements Exception {
   final String message;
 
-  const ApiClientException(this.message);
+  /// HTTP status code when the server responded, `null` for network errors.
+  final int? statusCode;
+
+  const ApiClientException(this.message, {this.statusCode});
+
+  bool get isForbidden => statusCode == 403;
 
   @override
   String toString() => message;

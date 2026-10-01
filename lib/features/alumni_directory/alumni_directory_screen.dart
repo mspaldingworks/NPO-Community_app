@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
 
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
 /// backed by the server-side NGP VAN CRM.
 class AlumniDirectoryScreen extends StatefulWidget {
-  const AlumniDirectoryScreen({super.key, this.controller});
+  const AlumniDirectoryScreen({super.key, this.controller, this.initialSearch});
 
   /// Optional injected controller (used in tests / demo mode).
   final AlumniDirectoryController? controller;
+
+  /// Pre-fills the search, e.g. when linked from a candidate page.
+  final String? initialSearch;
 
   @override
   State<AlumniDirectoryScreen> createState() => _AlumniDirectoryScreenState();
@@ -22,7 +26,13 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? AlumniDirectoryController();
-    _controller.load();
+    final search = widget.initialSearch?.trim() ?? '';
+    if (search.isEmpty) {
+      _controller.load();
+    } else {
+      _searchController.text = search;
+      _controller.setSearch(search);
+    }
   }
 
   @override
@@ -38,7 +48,16 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Alumni Directory')),
+      appBar: AppBar(
+        title: const Text('Alumni Directory'),
+        actions: [
+          IconButton(
+            tooltip: 'Alumni on the Ballot',
+            icon: const Icon(Icons.how_to_vote_outlined),
+            onPressed: () => context.push('/alumni/running'),
+          ),
+        ],
+      ),
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
