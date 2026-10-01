@@ -15,6 +15,7 @@ import 'package:npo_community/features/alumni_running/demo_campaign_repository.d
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_channel.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_shift.dart';
+import 'package:npo_community/features/alumni_running/models/candidate_draft.dart';
 import 'package:npo_community/features/alumni_running/widgets/alumni_wins_card.dart';
 import 'package:npo_community/models/chat_message.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +28,7 @@ class RecordingApiClient extends ApiClient {
 
   final Map<String, Object?> responses;
   final List<String> requests = [];
+  final List<Map<String, dynamic>> payloads = [];
 
   @override
   Map<String, String> get authHeaders => const {'Authorization': 'Token t'};
@@ -51,7 +53,21 @@ class RecordingApiClient extends ApiClient {
     required Map<String, String> jsonHeaders,
     required Map<String, dynamic> jsonPayload,
     int expectedStatusCode = 200,
-  }) async => _respond('POST', urlPath);
+  }) async {
+    payloads.add(jsonPayload);
+    return _respond('POST', urlPath);
+  }
+
+  @override
+  Future<dynamic> update({
+    required String urlPath,
+    required Map<String, String> jsonHeaders,
+    required Map<String, dynamic> jsonPayload,
+    int expectedStatusCode = 200,
+  }) async {
+    payloads.add(jsonPayload);
+    return _respond('PATCH', urlPath);
+  }
 
   @override
   Future<dynamic> delete({
@@ -66,12 +82,16 @@ class FakeCampaignRepository implements CampaignRepository {
     List<AlumniCandidate>? candidates,
     List<CampaignShift>? shifts,
     this.writes = true,
+    this.canManage = false,
   }) : candidates = candidates ?? [_candidate('c1')],
        shifts = shifts ?? [];
 
   List<AlumniCandidate> candidates;
   List<CampaignShift> shifts;
   final bool writes;
+  bool canManage;
+  Object? manageError;
+  int createCalls = 0;
   final Map<String, String> memberships = {};
   Object? joinError;
   Object? messagesError;
@@ -82,6 +102,57 @@ class FakeCampaignRepository implements CampaignRepository {
 
   @override
   Future<List<AlumniCandidate>> fetchCandidates() async => candidates;
+
+  @override
+  Future<bool> fetchCanManageCandidates() async {
+    if (manageError != null) throw manageError!;
+    return canManage;
+  }
+
+  @override
+  Future<AlumniCandidate> createCandidate(CandidateDraft draft) async {
+    createCalls++;
+    if (manageError != null) throw manageError!;
+    final created = _fromDraft('new-${candidates.length + 1}', draft);
+    candidates = [...candidates, created];
+    return created;
+  }
+
+  @override
+  Future<AlumniCandidate> updateCandidate(
+    String id,
+    CandidateDraft draft,
+  ) async {
+    if (manageError != null) throw manageError!;
+    final updated = _fromDraft(id, draft);
+    candidates = [for (final c in candidates) c.id == id ? updated : c];
+    return updated;
+  }
+
+  @override
+  Future<void> deleteCandidate(String id) async {
+    if (manageError != null) throw manageError!;
+    candidates = [
+      for (final c in candidates)
+        if (c.id != id) c,
+    ];
+  }
+
+  static AlumniCandidate _fromDraft(String id, CandidateDraft d) =>
+      AlumniCandidate(
+        id: id,
+        name: d.name,
+        office: d.office,
+        electionName: d.electionName,
+        electionDate: d.electionDate,
+        status: d.status,
+        bio: d.bio,
+        vanId: d.vanId,
+        campaignUrl: d.campaignUrl,
+        donateUrl: d.donateUrl,
+        volunteerUrl: d.volunteerUrl,
+        infoUrl: d.infoUrl,
+      );
 
   @override
   Future<List<CampaignChannelMembership>> fetchMyChannels() async => [
@@ -180,6 +251,21 @@ CampaignShift _shift({int remaining = 3, bool signedUp = false}) =>
       remaining: remaining,
       signedUp: signedUp,
     );
+
+Future<void> _tapSave(WidgetTester tester) async {
+  final save = find.byKey(const Key('save-candidate'));
+  await tester.scrollUntilVisible(
+    save,
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byType(ListView),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.tap(save);
+}
 
 Widget _app(CampaignHubController hub, String location) =>
     ChangeNotifierProvider.value(
@@ -339,6 +425,99 @@ void main() {
     });
   });
 
+  group('ApiCampaignRepository candidate management', () {
+    final media = Uri.parse('https://api.example.org');
+
+    test('reads the permission flag and fails closed', () async {
+      final granted = ApiCampaignRepository(
+        client: RecordingApiClient({
+          'GET /api/campaigns/permissions/': {'can_manage_candidates': true},
+        }),
+        mediaOrigin: media,
+      );
+      expect(await granted.fetchCanManageCandidates(), isTrue);
+
+      final truthyString = ApiCampaignRepository(
+        client: RecordingApiClient({
+          'GET /api/campaigns/permissions/': {'can_manage_candidates': 'yes'},
+        }),
+        mediaOrigin: media,
+      );
+      expect(await truthyString.fetchCanManageCandidates(), isFalse);
+    });
+
+    test('creates with POST and updates with PATCH', () async {
+      final client = RecordingApiClient({
+        'POST /api/campaigns/candidates/': {
+          'id': 9,
+          'name': 'Pat',
+          'office': 'Council',
+        },
+        'PATCH /api/campaigns/candidates/9/': {
+          'id': 9,
+          'name': 'Pat',
+          'office': 'Council',
+          'status': 'won',
+        },
+      });
+      final repo = ApiCampaignRepository(client: client, mediaOrigin: media);
+      const draft = CandidateDraft(name: 'Pat', office: 'Council');
+
+      expect((await repo.createCandidate(draft)).id, '9');
+      expect((await repo.updateCandidate('9', draft)).status.isWin, isTrue);
+      expect(client.requests, [
+        'POST /api/campaigns/candidates/',
+        'PATCH /api/campaigns/candidates/9/',
+      ]);
+      expect(client.payloads.first['name'], 'Pat');
+      expect(client.payloads.first['status'], 'running');
+    });
+  });
+
+  group('CandidateDraft', () {
+    test('serializes cleared fields as null and dates as ISO days', () {
+      final json = CandidateDraft(
+        name: 'Pat',
+        office: 'Council',
+        electionDate: DateTime(2026, 11, 3),
+        status: CandidateRaceStatus.wonPrimary,
+        campaignUrl: Uri.parse('https://pat.example'),
+      ).toJson();
+      expect(json['election_date'], '2026-11-03');
+      expect(json['status'], 'won_primary');
+      expect(json['campaign_url'], 'https://pat.example');
+      expect(json.containsKey('donate_url'), isTrue);
+      expect(json['donate_url'], isNull);
+      expect(json.containsKey('headshot_url'), isFalse);
+    });
+
+    test('accepts only absolute https links', () {
+      expect(CandidateDraft.parseLink('  '), isNull);
+      expect(
+        CandidateDraft.parseLink('https://pat.example/x').toString(),
+        'https://pat.example/x',
+      );
+      for (final bad in [
+        'http://pat.example',
+        'pat.example',
+        'javascript:alert(1)',
+      ]) {
+        expect(
+          () => CandidateDraft.parseLink(bad),
+          throwsFormatException,
+          reason: bad,
+        );
+      }
+    });
+
+    test('editing an unknown status falls back to running', () {
+      final draft = CandidateDraft.fromCandidate(
+        _candidate('c1', status: CandidateRaceStatus.unknown),
+      );
+      expect(draft.status, CandidateRaceStatus.running);
+    });
+  });
+
   group('DemoCampaignRepository', () {
     tearDown(() => ApiClient.debugHttpClientOverride = null);
 
@@ -363,13 +542,21 @@ void main() {
         expect(c.name, startsWith('Demo Candidate'));
       }
       final names = candidates.map((c) => c.name).join(' ');
-      for (final real in ['Furman', 'Olson', 'Serenity']) {
+      for (final real in [
+        'Furman',
+        'Olson',
+        'Serenity',
+        'Donworth',
+        'Berg',
+        'Parrish-Wright',
+      ]) {
         expect(names, isNot(contains(real)));
       }
     });
 
     test('rejects writes', () async {
       final repo = DemoCampaignRepository();
+      ApiClient.debugHttpClientOverride = null;
       expect(
         repo.joinChannel('demo-1'),
         throwsA(isA<CampaignWritesDisabledException>()),
@@ -378,6 +565,11 @@ void main() {
         repo.signUpForShift(_shift()),
         throwsA(isA<CampaignWritesDisabledException>()),
       );
+      expect(
+        repo.createCandidate(const CandidateDraft(name: 'X', office: 'Y')),
+        throwsA(isA<CampaignWritesDisabledException>()),
+      );
+      expect(await repo.fetchCanManageCandidates(), isFalse);
     });
   });
 
@@ -421,6 +613,93 @@ void main() {
         repository: FakeCampaignRepository(writes: false),
       );
       expect(demo.capabilities.writesEnabled, isFalse);
+    });
+
+    test('candidate management needs the server grant', () async {
+      final hub = CampaignHubController(repository: FakeCampaignRepository());
+      await hub.load();
+      expect(hub.capabilities.canManageCandidates, isFalse);
+      await expectLater(
+        hub.saveCandidate(const CandidateDraft(name: 'X', office: 'Y')),
+        throwsA(isA<CampaignHubError>()),
+      );
+      expect(await hub.deleteCandidate('c1'), isNotNull);
+      expect(hub.candidateById('c1'), isNotNull);
+    });
+
+    test('a failed permission check fails closed', () async {
+      final repo = FakeCampaignRepository(canManage: true)
+        ..manageError = const ApiClientException('Down', statusCode: 500);
+      final hub = CampaignHubController(repository: repo);
+      await hub.load();
+      expect(hub.status, CampaignHubStatus.loaded);
+      expect(hub.capabilities.canManageCandidates, isFalse);
+    });
+
+    test('management is off in Role Preview and demo', () async {
+      final preview = CampaignHubController(
+        repository: FakeCampaignRepository(canManage: true),
+        isPreviewActive: () => true,
+      );
+      await preview.load();
+      expect(preview.capabilities.canManageCandidates, isFalse);
+
+      final demo = CampaignHubController(
+        repository: FakeCampaignRepository(canManage: true, writes: false),
+      );
+      await demo.load();
+      expect(demo.capabilities.canManageCandidates, isFalse);
+    });
+
+    test('staff can add, edit, and remove candidates', () async {
+      final repo = FakeCampaignRepository(canManage: true);
+      final hub = CampaignHubController(repository: repo);
+      await hub.load();
+      expect(hub.capabilities.canManageCandidates, isTrue);
+
+      final id = await hub.saveCandidate(
+        const CandidateDraft(name: 'New Alum', office: 'Council'),
+      );
+      expect(hub.candidateById(id)!.name, 'New Alum');
+
+      await hub.saveCandidate(
+        const CandidateDraft(
+          name: 'New Alum',
+          office: 'Council',
+          status: CandidateRaceStatus.won,
+        ),
+        id: id,
+      );
+      expect(hub.wins.single.id, id);
+
+      expect(await hub.deleteCandidate(id), isNull);
+      expect(hub.candidateById(id), isNull);
+    });
+
+    test('a 403 on save revokes management controls', () async {
+      final repo = FakeCampaignRepository(canManage: true);
+      final hub = CampaignHubController(repository: repo);
+      await hub.load();
+      repo.manageError = _forbidden;
+      await expectLater(
+        hub.saveCandidate(const CandidateDraft(name: 'X', office: 'Y')),
+        throwsA(isA<CampaignHubError>()),
+      );
+      expect(hub.capabilities.canManageCandidates, isFalse);
+    });
+
+    test('session changes revoke management', () async {
+      final controller = StreamController<Object?>();
+      final hub = CampaignHubController(
+        repository: FakeCampaignRepository(canManage: true),
+        sessionChanges: controller.stream,
+      );
+      await hub.load();
+      expect(hub.capabilities.canManageCandidates, isTrue);
+      controller.add(null);
+      await Future<void>.delayed(Duration.zero);
+      expect(hub.capabilities.canManageCandidates, isFalse);
+      await controller.close();
     });
 
     test('shift sign-up updates capacity and cancelling restores it', () async {
@@ -611,6 +890,78 @@ void main() {
       await tester.pumpWidget(_app(hub, '/alumni/running'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('wins-section')), findsOneWidget);
+    });
+  });
+
+  group('Candidate editor', () {
+    testWidgets('add and edit controls are hidden without the grant', (
+      tester,
+    ) async {
+      final hub = CampaignHubController(repository: FakeCampaignRepository());
+      await tester.pumpWidget(_app(hub, '/alumni/running'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('add-candidate')), findsNothing);
+
+      await tester.pumpWidget(_app(hub, '/alumni/running/c1'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('edit-candidate')), findsNothing);
+    });
+
+    testWidgets('the editor refuses users without the grant', (tester) async {
+      final hub = CampaignHubController(repository: FakeCampaignRepository());
+      await tester.pumpWidget(_app(hub, '/alumni/running/new'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('editor-not-allowed')), findsOneWidget);
+      expect(find.byKey(const Key('save-candidate')), findsNothing);
+    });
+
+    testWidgets('staff can add a candidate and land on its page', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final repo = FakeCampaignRepository(canManage: true);
+      final hub = CampaignHubController(repository: repo);
+      await tester.pumpWidget(_app(hub, '/alumni/running'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('add-candidate')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('field-name')), 'New Alum');
+      await tester.enterText(find.byKey(const Key('field-office')), 'Council');
+      await tester.enterText(
+        find.byKey(const Key('field-campaign-url')),
+        'http://insecure.example',
+      );
+      await _tapSave(tester);
+      await tester.pumpAndSettle();
+      expect(find.text('Enter a full https:// link.'), findsOneWidget);
+      expect(repo.createCalls, 0);
+
+      await tester.enterText(
+        find.byKey(const Key('field-campaign-url')),
+        'https://new-alum.example',
+      );
+      await _tapSave(tester);
+      await tester.pumpAndSettle();
+
+      expect(repo.createCalls, 1);
+      expect(find.text('New Alum'), findsWidgets);
+      expect(find.byKey(const Key('action-campaign')), findsOneWidget);
+      expect(find.byKey(const Key('edit-candidate')), findsOneWidget);
+    });
+
+    testWidgets('editing prefills the form', (tester) async {
+      final hub = CampaignHubController(
+        repository: FakeCampaignRepository(canManage: true),
+      );
+      await tester.pumpWidget(_app(hub, '/alumni/running/c1/edit'));
+      await tester.pumpAndSettle();
+      expect(find.text('Edit candidate'), findsOneWidget);
+      expect(find.text('Test Candidate c1'), findsOneWidget);
+      expect(find.byKey(const Key('delete-candidate')), findsOneWidget);
     });
   });
 }

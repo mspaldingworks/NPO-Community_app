@@ -25,6 +25,14 @@ enum CandidateRaceStatus {
     };
   }
 
+  /// The API value for this status. [unknown] is never sent.
+  String get wireValue => switch (this) {
+    CandidateRaceStatus.running || CandidateRaceStatus.unknown => 'running',
+    CandidateRaceStatus.wonPrimary => 'won_primary',
+    CandidateRaceStatus.won => 'won',
+    CandidateRaceStatus.didNotWin => 'did_not_win',
+  };
+
   bool get isWin =>
       this == CandidateRaceStatus.wonPrimary || this == CandidateRaceStatus.won;
 

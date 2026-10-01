@@ -26,7 +26,18 @@ class _AlumniRunningScreenState extends State<AlumniRunningScreen> {
   Widget build(BuildContext context) {
     final hub = context.watch<CampaignHubController>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Alumni on the Ballot')),
+      appBar: AppBar(
+        title: const Text('Alumni on the Ballot'),
+        actions: [
+          if (hub.capabilities.canManageCandidates)
+            IconButton(
+              key: const Key('add-candidate'),
+              tooltip: 'Add candidate',
+              icon: const Icon(Icons.person_add_alt_1),
+              onPressed: () => context.push('/alumni/running/new'),
+            ),
+        ],
+      ),
       body: switch (hub.status) {
         CampaignHubStatus.idle || CampaignHubStatus.loading => const Center(
           child: CircularProgressIndicator(),

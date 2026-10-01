@@ -6,6 +6,7 @@ import 'package:npo_community/features/alumni_running/api_campaign_repository.da
 import 'package:npo_community/features/alumni_running/campaign_channel_screen.dart';
 import 'package:npo_community/features/alumni_running/campaign_repository.dart';
 import 'package:npo_community/features/alumni_running/candidate_detail_screen.dart';
+import 'package:npo_community/features/alumni_running/candidate_editor_screen.dart';
 import 'package:npo_community/features/alumni_running/demo_campaign_repository.dart';
 
 /// Picks the hub's data source at the composition root: synthetic in demo
@@ -13,27 +14,40 @@ import 'package:npo_community/features/alumni_running/demo_campaign_repository.d
 CampaignRepository createCampaignRepository(AppConfig config) =>
     config.networkEnabled ? ApiCampaignRepository() : DemoCampaignRepository();
 
-/// `/alumni/running`, `/alumni/running/:id`, `/alumni/running/:id/channel`.
-GoRoute campaignHubRoute({GlobalKey<NavigatorState>? parentNavigatorKey}) =>
+/// `/alumni/running`, `/alumni/running/new`, `/alumni/running/:id`,
+/// `/alumni/running/:id/edit`, `/alumni/running/:id/channel`.
+GoRoute campaignHubRoute({
+  GlobalKey<NavigatorState>? parentNavigatorKey,
+}) => GoRoute(
+  path: '/alumni/running',
+  parentNavigatorKey: parentNavigatorKey,
+  builder: (context, state) => const AlumniRunningScreen(),
+  routes: [
+    // Before `:id` so "new" is never read as a candidate id.
     GoRoute(
-      path: '/alumni/running',
+      path: 'new',
       parentNavigatorKey: parentNavigatorKey,
-      builder: (context, state) => const AlumniRunningScreen(),
+      builder: (context, state) => const CandidateEditorScreen(),
+    ),
+    GoRoute(
+      path: ':id',
+      parentNavigatorKey: parentNavigatorKey,
+      builder: (context, state) =>
+          CandidateDetailScreen(candidateId: state.pathParameters['id']!),
       routes: [
         GoRoute(
-          path: ':id',
+          path: 'edit',
           parentNavigatorKey: parentNavigatorKey,
           builder: (context, state) =>
-              CandidateDetailScreen(candidateId: state.pathParameters['id']!),
-          routes: [
-            GoRoute(
-              path: 'channel',
-              parentNavigatorKey: parentNavigatorKey,
-              builder: (context, state) => CampaignChannelScreen(
-                candidateId: state.pathParameters['id']!,
-              ),
-            ),
-          ],
+              CandidateEditorScreen(candidateId: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: 'channel',
+          parentNavigatorKey: parentNavigatorKey,
+          builder: (context, state) =>
+              CampaignChannelScreen(candidateId: state.pathParameters['id']!),
         ),
       ],
-    );
+    ),
+  ],
+);

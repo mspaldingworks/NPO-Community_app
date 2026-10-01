@@ -1,6 +1,7 @@
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_channel.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_shift.dart';
+import 'package:npo_community/features/alumni_running/models/candidate_draft.dart';
 import 'package:npo_community/models/chat_message.dart';
 
 /// Thrown when a write is attempted where writes are not allowed
@@ -25,6 +26,16 @@ abstract class CampaignRepository {
   bool get supportsWrites;
 
   Future<List<AlumniCandidate>> fetchCandidates();
+
+  /// Whether the server grants this user candidate management. Granted by a
+  /// server-side permission, never inferred from the user's role.
+  Future<bool> fetchCanManageCandidates();
+
+  Future<AlumniCandidate> createCandidate(CandidateDraft draft);
+
+  Future<AlumniCandidate> updateCandidate(String id, CandidateDraft draft);
+
+  Future<void> deleteCandidate(String id);
 
   /// Supporter channels the current user has joined.
   Future<List<CampaignChannelMembership>> fetchMyChannels();

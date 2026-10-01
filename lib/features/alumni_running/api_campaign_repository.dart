@@ -5,6 +5,7 @@ import 'package:npo_community/features/alumni_running/campaign_repository.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_channel.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_shift.dart';
+import 'package:npo_community/features/alumni_running/models/candidate_draft.dart';
 import 'package:npo_community/models/chat_message.dart';
 
 /// Live Campaign Support Hub data from the authenticated `/api/campaigns/`
@@ -40,6 +41,59 @@ class ApiCampaignRepository implements CampaignRepository {
       data,
       (json) => AlumniCandidate.fromJson(json, mediaOrigin: _mediaOrigin),
     );
+  }
+
+  @override
+  Future<bool> fetchCanManageCandidates() async {
+    final data = await _client.read(
+      urlPath: '$_base/permissions/',
+      jsonHeaders: _client.authHeaders,
+    );
+    return data is Map<String, dynamic> &&
+        data['can_manage_candidates'] == true;
+  }
+
+  @override
+  Future<AlumniCandidate> createCandidate(CandidateDraft draft) async {
+    final data = await _client.post(
+      urlPath: '$_base/candidates/',
+      jsonHeaders: _client.authHeaders,
+      jsonPayload: draft.toJson(),
+      expectedStatusCode: 201,
+    );
+    return _parseCandidate(data);
+  }
+
+  @override
+  Future<AlumniCandidate> updateCandidate(
+    String id,
+    CandidateDraft draft,
+  ) async {
+    final data = await _client.update(
+      urlPath: '$_base/candidates/${_seg(id)}/',
+      jsonHeaders: _client.authHeaders,
+      jsonPayload: draft.toJson(),
+    );
+    return _parseCandidate(data);
+  }
+
+  @override
+  Future<void> deleteCandidate(String id) async {
+    await _client.delete(
+      urlPath: '$_base/candidates/${_seg(id)}/',
+      jsonHeaders: _client.authHeaders,
+    );
+  }
+
+  AlumniCandidate _parseCandidate(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      throw const ApiClientException('Unexpected response for candidate.');
+    }
+    try {
+      return AlumniCandidate.fromJson(data, mediaOrigin: _mediaOrigin);
+    } on FormatException {
+      throw const ApiClientException('Unexpected response for candidate.');
+    }
   }
 
   @override

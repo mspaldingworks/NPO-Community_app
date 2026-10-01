@@ -6,8 +6,19 @@ import 'package:npo_community/features/alumni_running/campaign_capabilities.dart
 import 'package:npo_community/features/alumni_running/campaign_repository.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_shift.dart';
+import 'package:npo_community/features/alumni_running/models/candidate_draft.dart';
 
 enum CampaignHubStatus { idle, loading, loaded, error }
+
+/// A user-facing failure from a hub action.
+class CampaignHubError implements Exception {
+  const CampaignHubError(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
 
 /// State for the Campaign Support Hub.
 ///
@@ -45,6 +56,7 @@ class CampaignHubController extends ChangeNotifier {
   final Map<String, String> _shiftErrors = {};
   final Set<String> _busy = {};
   List<CampaignShift> _myShifts = const [];
+  bool _managementGranted = false;
 
   CampaignHubStatus get status => _status;
   String? get error => _error;
@@ -57,7 +69,12 @@ class CampaignHubController extends ChangeNotifier {
   CampaignCapabilities get capabilities {
     if (!_repository.supportsWrites) return CampaignCapabilities.readOnlyDemo;
     if (_isPreviewActive()) return CampaignCapabilities.readOnlyPreview;
-    return CampaignCapabilities.full;
+    return _managementGranted
+        ? const CampaignCapabilities(
+            writesEnabled: true,
+            managementGranted: true,
+          )
+        : CampaignCapabilities.full;
   }
 
   AlumniCandidate? candidateById(String id) {
@@ -113,7 +130,9 @@ class CampaignHubController extends ChangeNotifier {
       final candidates = await _repository.fetchCandidates();
       final channels = await _repository.fetchMyChannels();
       final myShifts = await _repository.fetchMyShifts();
+      final canManage = await _fetchCanManage();
       if (generation != _generation) return;
+      _managementGranted = canManage;
       _candidates = candidates;
       _channelByCandidate
         ..clear()
@@ -130,6 +149,96 @@ class CampaignHubController extends ChangeNotifier {
       _status = CampaignHubStatus.error;
     }
     notifyListeners();
+  }
+
+  /// Management is fail-closed: any error means no management controls.
+  Future<bool> _fetchCanManage() async {
+    try {
+      return await _repository.fetchCanManageCandidates();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Creates a candidate, or updates [id] when given. Returns the saved
+  /// candidate's id, or throws a user-facing message as [CampaignHubError].
+  Future<String> saveCandidate(CandidateDraft draft, {String? id}) async {
+    if (!capabilities.canManageCandidates) {
+      throw CampaignHubError(
+        capabilities.reason ??
+            "You don't have permission to manage candidates.",
+      );
+    }
+    const key = 'candidate:save';
+    if (_busy.contains(key)) throw const CampaignHubError('Already saving.');
+    _busy.add(key);
+    notifyListeners();
+    try {
+      final saved = id == null
+          ? await _repository.createCandidate(draft)
+          : await _repository.updateCandidate(id, draft);
+      _candidates = [
+        for (final c in _candidates)
+          if (c.id != saved.id) c,
+        saved,
+      ];
+      if (id != null && id != saved.id) {
+        _candidates = [
+          for (final c in _candidates)
+            if (c.id != id) c,
+        ];
+      }
+      return saved.id;
+    } catch (e) {
+      if (_isForbidden(e)) _managementGranted = false;
+      throw CampaignHubError(_messageFor(e));
+    } finally {
+      _busy.remove(key);
+      notifyListeners();
+    }
+  }
+
+  /// Removes a candidate. Returns an error message, or `null` on success.
+  Future<String?> deleteCandidate(String id) async {
+    if (!capabilities.canManageCandidates) {
+      return capabilities.reason ??
+          "You don't have permission to manage candidates.";
+    }
+    final key = 'candidate:delete:$id';
+    if (_busy.contains(key)) return null;
+    _busy.add(key);
+    notifyListeners();
+    try {
+      await _repository.deleteCandidate(id);
+      _removeCandidate(id);
+      return null;
+    } on ApiClientException catch (e) {
+      if (e.statusCode == 404) {
+        _removeCandidate(id);
+        return null;
+      }
+      if (e.isForbidden) _managementGranted = false;
+      return _messageFor(e);
+    } catch (e) {
+      return _messageFor(e);
+    } finally {
+      _busy.remove(key);
+      notifyListeners();
+    }
+  }
+
+  void _removeCandidate(String id) {
+    _candidates = [
+      for (final c in _candidates)
+        if (c.id != id) c,
+    ];
+    final channelId = _channelByCandidate.remove(id);
+    if (channelId != null) _repository.unwatchChannel(channelId);
+    _shiftsByCandidate.remove(id);
+    _myShifts = [
+      for (final s in _myShifts)
+        if (s.candidateId != id) s,
+    ];
   }
 
   /// Joins [candidateId]'s supporter channel. Returns an error message, or
@@ -261,6 +370,7 @@ class CampaignHubController extends ChangeNotifier {
     _shiftErrors.clear();
     _busy.clear();
     _myShifts = const [];
+    _managementGranted = false;
     notifyListeners();
   }
 

@@ -82,7 +82,20 @@ class _CandidateDetailScreenState extends State<CandidateDetailScreen> {
     final joined = hub.isJoined(candidate.id);
 
     return Scaffold(
-      appBar: AppBar(title: Text(candidate.name)),
+      appBar: AppBar(
+        title: Text(candidate.name),
+        actions: [
+          if (hub.capabilities.canManageCandidates)
+            IconButton(
+              key: const Key('edit-candidate'),
+              tooltip: 'Edit candidate',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => context.push(
+                '/alumni/running/${Uri.encodeComponent(candidate.id)}/edit',
+              ),
+            ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () => hub.loadShifts(candidate.id),
         child: ListView(

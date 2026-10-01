@@ -2,6 +2,7 @@ import 'package:npo_community/features/alumni_running/campaign_repository.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_channel.dart';
 import 'package:npo_community/features/alumni_running/models/campaign_shift.dart';
+import 'package:npo_community/features/alumni_running/models/candidate_draft.dart';
 import 'package:npo_community/models/chat_message.dart';
 
 /// Synthetic, in-memory Campaign Support Hub data for demo builds.
@@ -54,6 +55,21 @@ class DemoCampaignRepository implements CampaignRepository {
       bio: 'Fictional demo candidate with no campaign links yet.',
     ),
   ];
+
+  @override
+  Future<bool> fetchCanManageCandidates() async => false;
+
+  @override
+  Future<AlumniCandidate> createCandidate(CandidateDraft draft) =>
+      Future.error(const CampaignWritesDisabledException());
+
+  @override
+  Future<AlumniCandidate> updateCandidate(String id, CandidateDraft draft) =>
+      Future.error(const CampaignWritesDisabledException());
+
+  @override
+  Future<void> deleteCandidate(String id) =>
+      Future.error(const CampaignWritesDisabledException());
 
   @override
   Future<List<CampaignChannelMembership>> fetchMyChannels() async => const [
