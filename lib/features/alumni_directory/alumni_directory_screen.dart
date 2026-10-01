@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
 
@@ -38,7 +39,16 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Alumni Directory')),
+      appBar: AppBar(
+        title: const Text('Alumni Directory'),
+        actions: [
+          IconButton(
+            tooltip: 'Alumni on the Ballot',
+            icon: const Icon(Icons.how_to_vote_outlined),
+            onPressed: () => context.push('/alumni/running'),
+          ),
+        ],
+      ),
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {

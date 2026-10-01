@@ -27,6 +27,7 @@ import 'package:npo_community/pages/dev/chat_test_screen.dart';
 import 'package:npo_community/navigation/scaffold_with_nav_bar.dart';
 import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
+import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
 import 'package:npo_community/pages/resources/create_resource_screen.dart';
 import 'package:npo_community/pages/resources/edit_resource_screen.dart';
 import 'package:npo_community/pages/resources/resources_screen.dart';
@@ -281,6 +282,11 @@ class AppRouter {
           final userId = int.parse(state.pathParameters['id']!);
           return PublicUserProfileScreen(userId: userId);
         },
+      ),
+      GoRoute(
+        path: '/alumni/running',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AlumniRunningScreen(),
       ),
       GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
       GoRoute(
