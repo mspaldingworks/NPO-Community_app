@@ -20,6 +20,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:npo_community/widgets/emergency_alert_banner.dart';
+import 'package:npo_community/features/alumni_running/widgets/alumni_wins_card.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:npo_community/core/services/chat_service.dart';
@@ -1345,6 +1346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           children: [
             const EmergencyAlertBanner(),
+            const AlumniWinsCard(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

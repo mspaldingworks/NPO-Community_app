@@ -27,7 +27,8 @@ import 'package:npo_community/pages/dev/chat_test_screen.dart';
 import 'package:npo_community/navigation/scaffold_with_nav_bar.dart';
 import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
-import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
+import 'package:npo_community/features/alumni_running/campaign_channels_screen.dart';
+import 'package:npo_community/features/alumni_running/campaign_hub_routes.dart';
 import 'package:npo_community/pages/resources/create_resource_screen.dart';
 import 'package:npo_community/pages/resources/edit_resource_screen.dart';
 import 'package:npo_community/pages/resources/resources_screen.dart';
@@ -114,6 +115,10 @@ class AppRouter {
                   GoRoute(
                     path: 'classes',
                     builder: (context, state) => const CohortChatsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'campaigns',
+                    builder: (context, state) => const CampaignChannelsScreen(),
                   ),
                   GoRoute(
                     path: 'gender',
@@ -205,8 +210,15 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/directory',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: AlumniDirectoryScreen()),
+                pageBuilder: (context, state) {
+                  final search = state.uri.queryParameters['search'];
+                  return NoTransitionPage(
+                    child: AlumniDirectoryScreen(
+                      key: ValueKey('directory:${search ?? ''}'),
+                      initialSearch: search,
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -283,11 +295,7 @@ class AppRouter {
           return PublicUserProfileScreen(userId: userId);
         },
       ),
-      GoRoute(
-        path: '/alumni/running',
-        parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AlumniRunningScreen(),
-      ),
+      campaignHubRoute(parentNavigatorKey: _rootNavigatorKey),
       GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
       GoRoute(
         path: '/admin/moderation',

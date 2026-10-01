@@ -16,6 +16,10 @@ flutter run \
 
 Demo mode must not make HTTP, WebSocket, or remote media requests.
 
+The Campaign Support Hub (`/alumni/running`) uses fictional candidates in demo
+mode. Live builds call the API described in
+[docs/campaign-hub-api.md](docs/campaign-hub-api.md).
+
 ## Validation
 
 ```sh

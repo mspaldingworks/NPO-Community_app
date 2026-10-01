@@ -36,6 +36,8 @@ class ConversationPreview {
 
 /// Service class for all chat and messaging related API calls and WebSocket connections.
 class ChatService extends ApiClient {
+  ChatService({super.logRequests});
+
   static const _reconnectDelay = Duration(seconds: 5);
   static const _maxReconnectAttempts = 5;
 

@@ -8,7 +8,10 @@ import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/touring_service.dart';
 import 'package:npo_community/core/services/view_mode_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
+import 'package:npo_community/features/alumni_running/campaign_hub_controller.dart';
+import 'package:npo_community/features/alumni_running/campaign_hub_routes.dart';
 import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
 import 'package:npo_community/navigation/app_router.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
@@ -30,15 +33,54 @@ class NpoCommunityApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (config.environment == AppEnvironment.demo) {
-      return MaterialApp(
-        title: 'Emerge Kentucky Alumni',
-        debugShowCheckedModeBanner: kDebugMode,
-        theme: AppTheme.lightTheme,
-        home: const AlumniDirectoryScreen(),
-      );
+      return _DemoApp(config: config);
     }
 
     return _FullApp(config: config);
+  }
+}
+
+/// Demo builds: synthetic data only, no authentication, no network.
+class _DemoApp extends StatefulWidget {
+  const _DemoApp({required this.config});
+
+  final AppConfig config;
+
+  @override
+  State<_DemoApp> createState() => _DemoAppState();
+}
+
+class _DemoAppState extends State<_DemoApp> {
+  late final _router = GoRouter(
+    initialLocation: '/directory',
+    routes: [
+      GoRoute(
+        path: '/directory',
+        builder: (context, state) {
+          final search = state.uri.queryParameters['search'];
+          return AlumniDirectoryScreen(
+            key: ValueKey('directory:${search ?? ''}'),
+            initialSearch: search,
+          );
+        },
+      ),
+      campaignHubRoute(),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => CampaignHubController(
+        repository: createCampaignRepository(widget.config),
+      ),
+      child: MaterialApp.router(
+        title: 'Emerge Kentucky Alumni',
+        debugShowCheckedModeBanner: kDebugMode,
+        theme: AppTheme.lightTheme,
+        routerConfig: _router,
+      ),
+    );
   }
 }
 
@@ -73,6 +115,14 @@ class _FullAppState extends State<_FullApp> {
         ChangeNotifierProvider(create: (_) => HomeAlertService()),
         ChangeNotifierProvider(create: (_) => OnboardingTourController()),
         Provider(create: (_) => CommunityService()),
+        ChangeNotifierProvider(
+          create: (_) => CampaignHubController(
+            repository: createCampaignRepository(widget.config),
+            isPreviewActive: () => _touringService.isActive,
+            previewChanges: _touringService,
+            sessionChanges: _authService.authStateChanges,
+          ),
+        ),
       ],
       child: MaterialApp.router(
         title: 'Emerge Kentucky Alumni',

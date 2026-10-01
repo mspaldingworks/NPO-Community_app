@@ -6,10 +6,13 @@ import 'package:npo_community/features/alumni_directory/models/alumni_profile.da
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
 /// backed by the server-side NGP VAN CRM.
 class AlumniDirectoryScreen extends StatefulWidget {
-  const AlumniDirectoryScreen({super.key, this.controller});
+  const AlumniDirectoryScreen({super.key, this.controller, this.initialSearch});
 
   /// Optional injected controller (used in tests / demo mode).
   final AlumniDirectoryController? controller;
+
+  /// Pre-fills the search, e.g. when linked from a candidate page.
+  final String? initialSearch;
 
   @override
   State<AlumniDirectoryScreen> createState() => _AlumniDirectoryScreenState();
@@ -23,7 +26,13 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? AlumniDirectoryController();
-    _controller.load();
+    final search = widget.initialSearch?.trim() ?? '';
+    if (search.isEmpty) {
+      _controller.load();
+    } else {
+      _searchController.text = search;
+      _controller.setSearch(search);
+    }
   }
 
   @override

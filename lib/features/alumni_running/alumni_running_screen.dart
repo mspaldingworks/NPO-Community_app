@@ -1,170 +1,169 @@
 import 'package:flutter/material.dart';
-import 'package:npo_community/features/alumni_running/alumni_candidates.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:npo_community/features/alumni_running/campaign_hub_controller.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:npo_community/features/alumni_running/widgets/campaign_widgets.dart';
 
-typedef CampaignLinkOpener = Future<bool> Function(Uri uri);
+/// "Alumni on the Ballot": Emerge Kentucky alumni running for office, with
+/// a Wins section, each card opening the candidate's hub page.
+class AlumniRunningScreen extends StatefulWidget {
+  const AlumniRunningScreen({super.key});
 
-Future<bool> _defaultOpenLink(Uri uri) async {
-  try {
-    if (await launchUrl(uri, mode: LaunchMode.inAppBrowserView)) return true;
-  } catch (_) {}
-  try {
-    return await launchUrl(uri, mode: LaunchMode.externalApplication);
-  } catch (_) {
-    return false;
-  }
+  @override
+  State<AlumniRunningScreen> createState() => _AlumniRunningScreenState();
 }
 
-/// Highlights Emerge Kentucky alumni running for office this year, with a
-/// card per candidate that opens their live campaign page.
-class AlumniRunningScreen extends StatelessWidget {
-  const AlumniRunningScreen({super.key, this.candidates, this.openLink});
-
-  /// Optional injected list (used in tests). Defaults to the curated list.
-  final List<AlumniCandidate>? candidates;
-
-  /// Optional injected link opener (used in tests).
-  final CampaignLinkOpener? openLink;
+class _AlumniRunningScreenState extends State<AlumniRunningScreen> {
+  @override
+  void initState() {
+    super.initState();
+    final hub = context.read<CampaignHubController>();
+    WidgetsBinding.instance.addPostFrameCallback((_) => hub.ensureLoaded());
+  }
 
   @override
   Widget build(BuildContext context) {
-    final list = candidates ?? alumniCandidates2026;
-    final textTheme = Theme.of(context).textTheme;
-
+    final hub = context.watch<CampaignHubController>();
     return Scaffold(
       appBar: AppBar(title: const Text('Alumni on the Ballot')),
-      body: list.isEmpty
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'No alumni candidates are listed yet. Check back soon.',
-                  textAlign: TextAlign.center,
-                ),
+      body: switch (hub.status) {
+        CampaignHubStatus.idle || CampaignHubStatus.loading => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        CampaignHubStatus.error => _Message(
+          text: hub.error ?? 'Unable to load alumni candidates.',
+          onRetry: hub.load,
+        ),
+        CampaignHubStatus.loaded => _buildList(context, hub),
+      },
+    );
+  }
+
+  Widget _buildList(BuildContext context, CampaignHubController hub) {
+    final candidates = hub.candidates;
+    if (candidates.isEmpty) {
+      return const _Message(
+        text: 'No alumni candidates are listed yet. Check back soon.',
+      );
+    }
+    final wins = hub.wins;
+    final textTheme = Theme.of(context).textTheme;
+    return RefreshIndicator(
+      onRefresh: hub.load,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Text(
+            'Emerge Kentucky alumni on the ballot. Open a card to see how '
+            'to help, volunteer, and connect with other supporters.',
+            style: textTheme.bodyMedium,
+          ),
+          if (wins.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Wins 🎉',
+              key: const Key('wins-section'),
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: list.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Text(
-                    'Emerge Kentucky alumni running in 2026. Tap a card to '
-                    'visit their campaign and show your support.',
-                    style: textTheme.bodyMedium,
-                  );
-                }
-                return AlumniCandidateCard(
-                  candidate: list[index - 1],
-                  openLink: openLink ?? _defaultOpenLink,
-                );
-              },
             ),
+            const SizedBox(height: 8),
+            for (final c in wins) ...[
+              AlumniCandidateCard(candidate: c),
+              const SizedBox(height: 12),
+            ],
+          ],
+          const SizedBox(height: 20),
+          Text(
+            'On the ballot',
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          for (final c in candidates.where((c) => !c.status.isWin)) ...[
+            AlumniCandidateCard(candidate: c),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
     );
   }
 }
 
 class AlumniCandidateCard extends StatelessWidget {
-  const AlumniCandidateCard({
-    super.key,
-    required this.candidate,
-    required this.openLink,
-  });
+  const AlumniCandidateCard({super.key, required this.candidate});
 
   final AlumniCandidate candidate;
-  final CampaignLinkOpener openLink;
-
-  Future<void> _open(BuildContext context) async {
-    final uri = candidate.primaryUrl;
-    if (uri == null) return;
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    final ok = await openLink(uri);
-    if (!ok) {
-      messenger?.showSnackBar(
-        SnackBar(content: Text('Could not open ${uri.host}')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final uri = candidate.primaryUrl;
-    final linkLabel = candidate.hasCampaignPage
-        ? 'Visit campaign page'
-        : 'View candidate info';
+    final countdown = electionCountdownText(candidate, DateTime.now());
+    final electionLine = [
+      if (candidate.electionName != null) candidate.electionName!,
+      if (countdown != null) countdown,
+    ].join(' · ');
 
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: uri == null ? null : () => _open(context),
+        onTap: () => context.push('/alumni/running/${candidate.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: colors.primaryContainer,
-                    foregroundColor: colors.onPrimaryContainer,
-                    child: Text(candidate.initials),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          candidate.name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          candidate.office,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ],
+              CandidateAvatar(candidate: candidate),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      candidate.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.how_to_vote_outlined,
-                    size: 18,
-                    color: colors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      candidate.election,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-                ],
-              ),
-              if (uri != null) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: FilledButton.icon(
-                    onPressed: () => _open(context),
-                    icon: const Icon(Icons.open_in_new, size: 18),
-                    label: Text(linkLabel),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(candidate.office, style: theme.textTheme.bodyMedium),
+                    const SizedBox(height: 6),
+                    CandidateStatusChip(status: candidate.status),
+                    if (electionLine.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(electionLine, style: theme.textTheme.bodySmall),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              const Icon(Icons.chevron_right),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.text, this.onRetry});
+
+  final String text;
+  final Future<void> Function()? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text, textAlign: TextAlign.center),
+            if (onRetry != null) ...[
+              const SizedBox(height: 12),
+              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+            ],
+          ],
         ),
       ),
     );

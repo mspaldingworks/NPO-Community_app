@@ -339,6 +339,21 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                    child: ListTile(
+                      leading: const Icon(Icons.how_to_vote_outlined),
+                      title: const Text('Campaign channels'),
+                      subtitle: const Text(
+                        'Supporter channels for alumni on the ballot you joined.',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          GoRouter.of(context).push('/community/campaigns'),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
