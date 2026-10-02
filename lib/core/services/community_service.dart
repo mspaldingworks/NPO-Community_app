@@ -21,6 +21,26 @@ class CommunityService extends ApiClient {
     return data.map((json) => Group.fromJson(json)).toList();
   }
 
+  /// Every regional group, with whether the member belongs to it.
+  Future<List<RegionalGroup>> fetchRegions() async {
+    final result = await read(
+      urlPath: '/api/groups/regions/',
+      jsonHeaders: authHeaders,
+    );
+    return (result as List<dynamic>)
+        .map((json) => RegionalGroup.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Joins or leaves a regional group. Leaving the home region sticks.
+  Future<void> setRegionMembership(int groupId, {required bool join}) async {
+    await post(
+      urlPath: '/api/groups/$groupId/${join ? 'join' : 'leave'}/',
+      jsonHeaders: authHeaders,
+      jsonPayload: const {},
+    );
+  }
+
   /// Adds a new comment with an optional single image (image) via multipart.
   Future<Comment> addCommentMultipart({
     required int postId,

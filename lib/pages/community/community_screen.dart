@@ -260,6 +260,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
             final otherGroups = groups
                 .where(
                   (g) =>
+                      // Regional and class groups have their own lists.
+                      !g.isRegional &&
+                      !g.isCohort &&
                       !isRegion(g) &&
                       !isGender(g) &&
                       !isLegal(g) &&
@@ -312,9 +315,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                     child: ListTile(
                       leading: const Icon(Icons.hub_outlined),
-                      title: const Text('Chapter spaces'),
+                      title: const Text('Regional groups'),
                       subtitle: const Text(
-                        'Coordinate with local and regional teams.',
+                        'Your region, plus any others you join.',
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () =>
@@ -328,9 +331,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     child: ListTile(
                       leading: const Icon(Icons.school_outlined),
                       title: const Text('Class chats'),
-                      subtitle: const Text(
-                        'One group per program year, 2010 to today.',
-                      ),
+                      subtitle: const Text('Your Emerge Kentucky class.'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () =>
                           GoRouter.of(context).push('/community/classes'),

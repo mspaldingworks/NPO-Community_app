@@ -5,11 +5,11 @@ import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/models/group.dart';
 
-/// One group chat per program cohort year.
+/// Class-year group chats.
 ///
-/// Every alum can browse any year, so this lists all cohorts rather than only
-/// the viewer's own. Their year is pinned to the top and marked, since that is
-/// the one they'll usually want.
+/// Members belong only to their own class's group, so they normally see one;
+/// staff and admins keep every class for moderation. The viewer's own year is
+/// pinned to the top and marked.
 class CohortChatsScreen extends StatefulWidget {
   const CohortChatsScreen({super.key});
 
@@ -32,9 +32,10 @@ class _CohortChatsScreenState extends State<CohortChatsScreen> {
     await future;
   }
 
-  /// Cohort groups are named "Class of <year>"; pull the year back out so the
-  /// list can be ordered and matched against the viewer's own cohort.
+  /// The group's class year, or null when it isn't a class group.
   static int? _yearOf(Group group) {
+    if (group.isCohort && group.programYear != null) return group.programYear;
+    // Older servers don't send kind; their class groups are "Class of <year>".
     final match = RegExp(r'Class of (\d{4})').firstMatch(group.name);
     return match == null ? null : int.tryParse(match.group(1)!);
   }
