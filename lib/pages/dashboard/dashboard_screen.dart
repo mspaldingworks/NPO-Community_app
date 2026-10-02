@@ -1316,9 +1316,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// The website's home quick-link touts (CALENDAR · RECENT NEWS · JOIN OUR
-  /// MOVEMENT · FOLLOW US), reproduced as a 2x2 tile grid. Calendar stays
-  /// in-app; the other three open the matching ky.emergeamerica.org pages.
+  /// The website's home quick-link touts reproduced as a 2x2 tile grid, with
+  /// the website's FOLLOW US tile swapped for the in-app Ballot page. Calendar
+  /// and Ballot stay in-app; News and Join open ky.emergeamerica.org.
   Widget _buildEmergeTouts(BuildContext context) {
     Future<void> open(String url) async {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
@@ -1362,11 +1362,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: 2),
             Expanded(
               child: EmergeActionTile(
-                label: 'Follow Us',
-                icon: Icons.thumb_up_alt_outlined,
+                key: const Key('ballot-tile'),
+                label: 'Ballot',
+                icon: Icons.how_to_vote_outlined,
                 background: AppColors.primaryDark,
                 foreground: AppColors.textWhite,
-                onTap: () => open('https://www.facebook.com/EmergeKentucky/'),
+                onTap: () => context.push('/alumni/running'),
               ),
             ),
           ],
@@ -1471,8 +1472,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _buildAlumniRunningButton(),
             const SizedBox(height: 24),
             _buildButterflyPerchSection(),
             Builder(
@@ -1505,21 +1504,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlumniRunningButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton.icon(
-        key: const Key('alumni-running-button'),
-        onPressed: () => context.push('/alumni/running'),
-        icon: const Icon(Icons.how_to_vote_outlined),
-        label: const Text('Alumni on the Ballot'),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );

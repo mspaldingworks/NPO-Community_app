@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
+import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
 import 'package:npo_community/widgets/emerge/emerge_components.dart';
 
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
@@ -37,6 +38,18 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
     super.dispose();
   }
 
+  /// Demo builds show this screen in a plain MaterialApp with no GoRouter,
+  /// so fall back to a Navigator push there.
+  void _openBallot() {
+    if (GoRouter.maybeOf(context) != null) {
+      context.push('/alumni/running');
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const AlumniRunningScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,9 +57,9 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
         title: const Text('Alumni Directory'),
         actions: [
           IconButton(
-            tooltip: 'Alumni on the Ballot',
+            tooltip: 'Ballot',
             icon: const Icon(Icons.how_to_vote_outlined),
-            onPressed: () => context.push('/alumni/running'),
+            onPressed: _openBallot,
           ),
         ],
       ),

@@ -1,0 +1,284 @@
+{
+  "_about": "Verified extras for Ballot cards, keyed by emerge_ky_seed.json seed_id. Photos come from each alumna's own ky.emergeamerica.org profile. Event times are the event's local wall-clock time (Bowling Green events are Central). Run `python3 tool/ballot/build_ballot.py` after editing this file or the seed.",
+  "candidates": {
+    "emky-lianna-nguyen": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2026/07/Lianna-1-scaled_400x400_acf_cropped.jpeg"
+    },
+    "emky-tina-bryson": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2026/07/Tina-Bryson_400x400_acf_cropped.jpg"
+    },
+    "emky-brenda-martin": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2024/01/Bren-Martin_400x400_acf_cropped.jpg"
+    },
+    "emky-kesia-hatcher": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2024/01/Kesia-Hatcher_400x400_acf_cropped.jpg",
+      "volunteer_opportunities": [
+        {
+          "title": "KFTC phone bank for New Power PAC candidates, incl. Kesia",
+          "starts_at": "2026-10-22T18:00",
+          "ends_at": "2026-10-22T20:00",
+          "location": "Virtual on Zoom (Shelby County)",
+          "signup_url": "https://www.mobilize.us/kftc/event/1038693/"
+        }
+      ]
+    },
+    "emky-ruth-gao": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2024/01/Ruth-Gao-1_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Ruth_Gao"
+    },
+    "emky-wilanne-stangel": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2024/01/emerge-photo-Wilanne-Stangel.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Wilanne_Stangel",
+      "volunteer_opportunities": [
+        {
+          "title": "Day of Action canvass for Wilanne Stangel (HD 69)",
+          "starts_at": "2026-10-11T16:00",
+          "ends_at": "2026-10-11T18:00",
+          "location": "Railroad Depot Park, 3313 Crescent Ave, Erlanger",
+          "signup_url": "https://www.mobilize.us/kydems/event/1016841/"
+        }
+      ]
+    },
+    "emky-almaria-baker": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2023/01/Almaria-Baker_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Almaria_Baker",
+      "volunteer_opportunities": [
+        {
+          "title": "Walk with Dr. Almaria Baker (HD 28)",
+          "starts_at": "2026-10-03T10:00",
+          "ends_at": "2026-10-03T12:00",
+          "location": "Panera Bread, 6900 Dixie Hwy, Louisville",
+          "signup_url": "https://www.mobilize.us/louisvilledemocrats/event/1001043/"
+        },
+        {
+          "title": "Walk with Dr. Almaria Baker (HD 28)",
+          "starts_at": "2026-10-10T10:00",
+          "ends_at": "2026-10-10T12:00",
+          "location": "Panera Bread, 6900 Dixie Hwy, Louisville",
+          "signup_url": "https://www.mobilize.us/louisvilledemocrats/event/1001043/"
+        },
+        {
+          "title": "Walk with Dr. Almaria Baker (HD 28)",
+          "starts_at": "2026-10-17T10:00",
+          "ends_at": "2026-10-17T12:00",
+          "location": "Panera Bread, 6900 Dixie Hwy, Louisville",
+          "signup_url": "https://www.mobilize.us/louisvilledemocrats/event/1001043/"
+        },
+        {
+          "title": "Walk with Dr. Almaria Baker (HD 28)",
+          "starts_at": "2026-10-24T10:00",
+          "ends_at": "2026-10-24T12:00",
+          "location": "Panera Bread, 6900 Dixie Hwy, Louisville",
+          "signup_url": "https://www.mobilize.us/louisvilledemocrats/event/1001043/"
+        },
+        {
+          "title": "Walk with Dr. Almaria Baker (HD 28)",
+          "starts_at": "2026-10-31T10:00",
+          "ends_at": "2026-10-31T12:00",
+          "location": "Panera Bread, 6900 Dixie Hwy, Louisville",
+          "signup_url": "https://www.mobilize.us/louisvilledemocrats/event/1001043/"
+        }
+      ]
+    },
+    "emky-anne-gay-donworth": {
+      "ballotpedia_url": "https://ballotpedia.org/Anne_Donworth",
+      "photo_url": "https://images.squarespace-cdn.com/content/v1/65c82a45a0fd0602278ceca4/642e0335-8b60-4c7c-b7ac-9070c75d905a/240121_Anne+Donworth_MM_0083-Edit-2.jpg?format=500w",
+      "_photo_source": "Campaign site annegaydonworth.com (no portrait on her Emerge profile)."
+    },
+    "emky-cherlyn-smith": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2023/01/Cherlyn-Smith_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Cherlyn_Smith"
+    },
+    "emky-renee-wilson": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2023/01/Renee-Wilson-2.jpg"
+    },
+    "emky-whitney-johns": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2023/01/Whitney-Johns_400x400_acf_cropped.jpg"
+    },
+    "emky-alison-brotzge-elder": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/01/Class-of-2022-Alison-Brotzge-Elder.png",
+      "ballotpedia_url": "https://ballotpedia.org/Alison_Brotzge-Elder",
+      "volunteer_opportunities": [
+        {
+          "title": "Talk to voters with Alison",
+          "starts_at": "2026-10-03T10:00",
+          "ends_at": "2026-10-03T12:00",
+          "location": "Heine Brothers Clifton, 2309 Frankfort Ave, Louisville",
+          "signup_url": "https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00"
+        },
+        {
+          "title": "Talk to voters with Alison",
+          "starts_at": "2026-10-10T10:00",
+          "ends_at": "2026-10-10T12:00",
+          "location": "Heine Brothers Clifton, 2309 Frankfort Ave, Louisville",
+          "signup_url": "https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00"
+        },
+        {
+          "title": "Talk to voters with Alison",
+          "starts_at": "2026-10-17T10:00",
+          "ends_at": "2026-10-17T12:00",
+          "location": "Heine Brothers Clifton, 2309 Frankfort Ave, Louisville",
+          "signup_url": "https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00"
+        },
+        {
+          "title": "Talk to voters with Alison",
+          "starts_at": "2026-10-24T10:00",
+          "ends_at": "2026-10-24T12:00",
+          "location": "Heine Brothers Clifton, 2309 Frankfort Ave, Louisville",
+          "signup_url": "https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00"
+        }
+      ]
+    },
+    "emky-shameka-parrish-wright": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/01/SPW-scaled_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Shameka_Parrish-Wright",
+      "volunteer_opportunities": [
+        {
+          "title": "Canvass for Shameka Parrish-Wright",
+          "starts_at": "2026-10-03T11:00",
+          "ends_at": "2026-10-03T14:00",
+          "location": "735 S Shelby St, Louisville",
+          "signup_url": "https://www.mobilize.us/kftc/event/1016220/"
+        }
+      ]
+    },
+    "emky-yolanda-buford-demaree": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/01/Yolanda-Emerge-Ky-Yolanda-Demaree_400x400_acf_cropped.jpg"
+    },
+    "emky-yvette-de-la-guardia": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/01/F7713BE6-FB1B-4E5A-A258-AF26887DA3D4_1_201_a-Yvette-De-La-Guardia_400x400_acf_cropped.jpeg",
+      "ballotpedia_url": "https://ballotpedia.org/Yvette_De_La_Guardia"
+    },
+    "emky-alexandria-hayes": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/rsz_alex_hayes_400x400_acf_cropped.jpg"
+    },
+    "emky-deja-jackson": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/rsz_2deja_jackson_400x400_acf_cropped_400x400_acf_cropped.jpg"
+    },
+    "emky-megan-bailey": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/Megan-Bailey_400x400_acf_cropped.jpg"
+    },
+    "emky-sarah-froelich": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/rsz_sarah_froelich.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Sarah_Froelich_(Park_Hills_City_Council_At-large,_Kentucky,_candidate_2024)"
+    },
+    "emky-eryn-pritchett": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Eryn-Pritchett.jpg"
+    },
+    "emky-leesa-unger": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Leesa-1917-ZF-5265-39177-1-001-096.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Leesa_Unger"
+    },
+    "emky-leticia-cline": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Leticia-Headshot.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Leticia_Cline_(Cave_City_City_Council_At-large,_Kentucky,_candidate_2024)"
+    },
+    "emky-lindsey-burke": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/FB_IMG_1623197235546-Lindsey-Burke_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Lindsey_Burke"
+    },
+    "emky-mera-kathryn-corlett": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Mera-Corlett.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Mera_Corlett"
+    },
+    "emky-claire-estill": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2019/01/IMG_0242-2_400x400_acf_cropped.jpg"
+    },
+    "emky-willow-hambrick": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/23DC49FB-0B30-429C-A43E-CFECDCB9046B-Willow-Hambrick_400x400_acf_cropped.jpeg"
+    },
+    "emky-dana-beasley-brown": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Daaa_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Dana_Beasley_Brown_(Bowling_Green_City_Commission_At-large,_Kentucky,_candidate_2024)",
+      "volunteer_opportunities": [
+        {
+          "title": "KFTC phone bank for New Power PAC candidates, incl. Dana",
+          "starts_at": "2026-10-26T18:00",
+          "ends_at": "2026-10-26T20:00",
+          "location": "Virtual (Bowling Green, Central time)",
+          "signup_url": "https://www.mobilize.us/kftc/event/1043123/"
+        },
+        {
+          "title": "KFTC phone bank for New Power PAC candidates, incl. Dana",
+          "starts_at": "2026-10-27T18:30",
+          "ends_at": "2026-10-27T20:00",
+          "location": "Virtual (Bowling Green, Central time)",
+          "signup_url": "https://www.mobilize.us/kftc/event/1043123/"
+        }
+      ]
+    },
+    "emky-julia-springsteen": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/JSpringsteen-Julia-Springsteen_400x400_acf_cropped.jpeg",
+      "ballotpedia_url": "https://ballotpedia.org/Julia_Springsteen_(Elizabethtown_City_Council_At-large,_Kentucky,_candidate_2024)"
+    },
+    "emky-karen-faulkner": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/36281878_2183484418540230_4487986480651698176_n_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Karen_Faulkner"
+    },
+    "emky-lt-col-terry-owens": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Terry_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Terry_Owens_(Radcliff_City_Council_At-large,_Kentucky,_candidate_2024)"
+    },
+    "emky-karen-berg": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Screen-Shot-2018-07-03-at-2.00.10-PM_400x400_acf_cropped.png",
+      "ballotpedia_url": "https://ballotpedia.org/Karen_Berg"
+    },
+    "emky-shayla-lynch": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/Bio-Pic-Shayla-Lynch_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Shayla_Lynch"
+    },
+    "emky-tanisha-hickerson": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/TAHheadshot-Tanisha-Hickerson_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Tanisha_Hickerson"
+    },
+    "emky-tina-bojanowski": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/27503429_506181686434964_6116258977002893573_o_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Tina_Bojanowski"
+    },
+    "emky-rene-heinrich": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Hein.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Rene_Heinrich_(Highland_Heights_City_Council_At-large,_Kentucky,_candidate_2024)"
+    },
+    "emky-rita-r-thomas": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/14955937_10101415929348540_829905949380760081_n_400x400_acf_cropped.jpg"
+    },
+    "emky-anne-delahanty": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/1655802_212082345657819_60731915_o_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Anne_Delahanty"
+    },
+    "emky-chrysanthia-carr-seals": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Screen-Shot-2018-07-03-at-12.12.47-PM_400x400_acf_cropped.png",
+      "ballotpedia_url": "https://ballotpedia.org/Chrysanthia_Carr-Seals"
+    },
+    "emky-jessica-moore": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/judge_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Jessica_Moore"
+    },
+    "emky-amy-beasley": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Amy-Beasley-Brown.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Amy_Beasley"
+    },
+    "emky-angela-evans": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/Princeton-announcement-photo-red_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Angela_Evans_(Kentucky)"
+    },
+    "emky-josephine-buckner": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Buckner_Josephine_092121_web.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Josephine_Layne_Buckner"
+    },
+    "emky-brenda-monarrez": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/BB_400x400_acf_cropped.png",
+      "ballotpedia_url": "https://ballotpedia.org/Brenda_Monarrez"
+    },
+    "emky-nima-kulkarni": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/31337813_199102104206995_3184542001706041344_o_400x400_acf_cropped.jpg",
+      "ballotpedia_url": "https://ballotpedia.org/Nima_Kulkarni",
+      "volunteer_url": null,
+      "_note": "Seed volunteer_url is an unpublished WordPress preview link; suppressed."
+    },
+    "emky-julie-smith-morrow": {
+      "photo_url": "https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/woo.jpeg",
+      "ballotpedia_url": "https://ballotpedia.org/Julie_Smith-Morrow_(Newport_City_Commission_At-large,_Kentucky,_candidate_2024)"
+    }
+  }
+}
