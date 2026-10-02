@@ -23,7 +23,8 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), '  volunteer  ');
     await tester.enterText(find.byType(TextFormField).at(1), '  Secret  ');
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
+    // The button label is uppercase, matching the website's button style.
+    await tester.tap(find.widgetWithText(ElevatedButton, 'SIGN IN'));
     await tester.pumpAndSettle();
 
     expect(receivedUsername, 'volunteer');

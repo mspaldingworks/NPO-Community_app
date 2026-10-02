@@ -31,7 +31,9 @@ import 'package:npo_community/widgets/report_dialog.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:npo_community/widgets/smart_link_body.dart';
+import 'package:npo_community/widgets/emerge/emerge_components.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class _PathPoint {
   final double t;
@@ -1314,6 +1316,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  /// The website's home quick-link touts (CALENDAR · RECENT NEWS · JOIN OUR
+  /// MOVEMENT · FOLLOW US), reproduced as a 2x2 tile grid. Calendar stays
+  /// in-app; the other three open the matching ky.emergeamerica.org pages.
+  Widget _buildEmergeTouts(BuildContext context) {
+    Future<void> open(String url) async {
+      await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Calendar',
+                icon: Icons.calendar_month_outlined,
+                onTap: () => context.push('/events/calendar'),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Recent News',
+                icon: Icons.article_outlined,
+                background: AppColors.primary,
+                foreground: AppColors.textWhite,
+                onTap: () => open('https://ky.emergeamerica.org/news/'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Join Our Movement',
+                icon: Icons.emoji_objects_outlined,
+                background: AppColors.primary,
+                foreground: AppColors.textWhite,
+                onTap: () =>
+                    open('https://ky.emergeamerica.org/get-involved/'),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Follow Us',
+                icon: Icons.thumb_up_alt_outlined,
+                background: AppColors.primaryDark,
+                foreground: AppColors.textWhite,
+                onTap: () =>
+                    open('https://www.facebook.com/EmergeKentucky/'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalNewMessages = _unreadReplyCount;
@@ -1345,6 +1411,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           children: [
             const EmergencyAlertBanner(),
+            _buildEmergeTouts(context),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [

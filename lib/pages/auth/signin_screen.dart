@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
+import 'package:npo_community/theme/app_theme.dart';
+import 'package:npo_community/widgets/emerge/emerge_components.dart';
 
 typedef SignInHandler =
     Future<void> Function({required String username, required String password});
@@ -58,25 +60,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final inputBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: const BorderSide(color: Colors.white70, width: 1.4),
-    );
-
-    InputDecoration themedInput(String label, IconData icon) => InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white, fontSize: 16),
-      prefixIcon: Icon(icon, color: Colors.white),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
-      enabledBorder: inputBorder,
-      focusedBorder: inputBorder.copyWith(
-        borderSide: const BorderSide(color: Colors.white, width: 1.6),
-      ),
-      border: inputBorder,
-    );
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -85,86 +70,71 @@ class _SignInScreenState extends State<SignInScreen> {
           onPressed: () => context.go('/onboarding'),
         ),
       ),
-      body: Container(
-        decoration: const BoxDecoration(color: Color(0xFF17324D)),
-        child: Container(
-          color: Colors.black.withValues(alpha: 0.55),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const TourAnchor(
-                  name: 'Sign In',
-                  child: Text(
-                    'Sign In',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Center(child: EmergeLogo(width: 240)),
+              const SizedBox(height: 32),
+              TourAnchor(
+                name: 'Sign In',
+                child: Text(
+                  'Sign In',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                keyboardType: TextInputType.text,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _usernameController,
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                  decoration: themedInput('Username', Icons.person),
-                  keyboardType: TextInputType.text,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                  decoration: themedInput('Password', Icons.lock).copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.white,
+                obscureText: _obscurePassword,
+              ),
+              const SizedBox(height: 24),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : TourAnchor(
+                      name: 'Sign In',
+                      child: ElevatedButton(
+                        onPressed: _signIn,
+                        child: const Text('SIGN IN'),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
                     ),
-                  ),
-                  obscureText: _obscurePassword,
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => context.go('/signup'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.periwinkle,
                 ),
-                const SizedBox(height: 24),
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : TourAnchor(
-                        name: 'Sign In',
-                        child: ElevatedButton(
-                          onPressed: _signIn,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Sign In',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ),
-                      ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => context.go('/signup'),
-                  child: const Text(
-                    "Don't have an account? Register",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+                child: const Text("Don't have an account? Register"),
+              ),
+            ],
           ),
         ),
       ),

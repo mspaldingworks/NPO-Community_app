@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Reads the Emerge KY alumni directory from the server-side NGP VAN proxy.
 ///
@@ -12,6 +15,7 @@ class AlumniDirectoryService {
   final ApiClient _client;
 
   static const String _alumniPath = '/api/crm/alumni/';
+  static const String _cacheKey = 'alumni_directory_cache';
 
   Future<List<AlumniProfile>> fetchAlumni({
     String? search,
@@ -35,10 +39,40 @@ class AlumniDirectoryService {
     );
 
     final results = _extractList(data);
+
+    // Keep an offline copy of the full directory (only the unfiltered
+    // response, so the cache is always the complete roster).
+    if (search == null && cohortYear == null) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_cacheKey, jsonEncode(results));
+      } catch (_) {
+        // Caching is best-effort; never fail the live fetch over it.
+      }
+    }
+
     return results
         .whereType<Map<String, dynamic>>()
         .map(AlumniProfile.fromJson)
         .toList();
+  }
+
+  /// The last successfully fetched full directory, or null when nothing is
+  /// stored. Used as an offline fallback when the live fetch fails.
+  Future<List<AlumniProfile>?> loadCached() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_cacheKey);
+      if (raw == null) return null;
+      final data = jsonDecode(raw);
+      if (data is! List) return null;
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(AlumniProfile.fromJson)
+          .toList();
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> addNote(int vanId, String note) async {

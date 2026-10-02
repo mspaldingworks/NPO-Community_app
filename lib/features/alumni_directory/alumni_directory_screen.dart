@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
+import 'package:npo_community/widgets/emerge/emerge_components.dart';
 
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
 /// backed by the server-side NGP VAN CRM.
@@ -110,7 +111,7 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               child: ChoiceChip(
-                label: Text("'${year % 100} cohort"),
+                label: Text("Class of '${year % 100}"),
                 selected: _controller.cohortYear == year,
                 onSelected: (_) => _controller.setCohortYear(year),
               ),
@@ -140,16 +141,62 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
             message: 'Try a different search or cohort filter.',
           );
         }
+        // Header + list, echoing the website's "All Alumnae: 334 Ready to
+        // Run" title block above the roster.
+        final count = _controller.alumni.length;
         return RefreshIndicator(
           onRefresh: _controller.load,
           child: ListView.separated(
-            itemCount: _controller.alumni.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) =>
-                _AlumniTile(profile: _controller.alumni[index]),
+            itemCount: count + 1,
+            separatorBuilder: (_, index) => index == 0
+                ? const SizedBox.shrink()
+                : const Divider(height: 1),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Column(
+                  children: [
+                    if (_controller.isOffline) const _OfflineNotice(),
+                    EmergeTitleBlock(
+                      title: '$count Ready to Run',
+                      showDots: true,
+                    ),
+                  ],
+                );
+              }
+              return _AlumniTile(profile: _controller.alumni[index - 1]);
+            },
           ),
         );
     }
+  }
+}
+
+class _OfflineNotice extends StatelessWidget {
+  const _OfflineNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      color: colorScheme.primaryContainer,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off, size: 18, color: colorScheme.onPrimaryContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Offline — showing the last saved directory.',
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -162,7 +209,7 @@ class _AlumniTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final subtitleParts = <String>[
-      if (profile.cohortYear != null) 'Cohort ${profile.cohortYear}',
+      if (profile.cohortYear != null) 'Class of ${profile.cohortYear}',
       if (profile.location != null) profile.location!,
       if (profile.officeSought != null) profile.officeSought!,
     ];
@@ -192,27 +239,25 @@ class _AlumniDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final detailParts = <String>[
+      'Emerge Kentucky',
+      if (profile.cohortYear != null) 'Class of ${profile.cohortYear}',
+      if (profile.location != null) profile.location!,
+    ];
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(profile.fullName, style: textTheme.titleLarge),
-            if (profile.cohortYear != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Emerge Kentucky · Cohort ${profile.cohortYear}',
-                style: textTheme.bodyMedium,
-              ),
-            ],
-            const SizedBox(height: 16),
-            if (profile.officeSought != null)
-              _DetailRow(icon: Icons.how_to_vote, text: profile.officeSought!),
-            if (profile.location != null)
-              _DetailRow(icon: Icons.place_outlined, text: profile.location!),
+            EmergeBioCard(
+              name: profile.fullName,
+              subtitle: profile.officeSought,
+              detail: detailParts.join(' · '),
+              initials: profile.initials,
+            ),
+            const SizedBox(height: 8),
             if (profile.email != null)
               _DetailRow(icon: Icons.email_outlined, text: profile.email!),
             if (profile.phone != null)
