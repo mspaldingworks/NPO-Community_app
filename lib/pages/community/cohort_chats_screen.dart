@@ -28,7 +28,9 @@ class _CohortChatsScreenState extends State<CohortChatsScreen> {
 
   Future<void> _refresh() async {
     final future = CommunityService().fetchGroups();
-    setState(() => _groupsFuture = future);
+    setState(() {
+      _groupsFuture = future;
+    });
     await future;
   }
 

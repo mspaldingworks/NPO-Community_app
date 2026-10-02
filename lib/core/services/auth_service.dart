@@ -52,6 +52,10 @@ class AuthService extends ApiClient with ChangeNotifier {
 
   bool get isTouring => _touringOriginalUser != null;
 
+  /// Whether the signed-in account may open the moderation panel. Judged on
+  /// [realUser], so a touring persona never grants or removes it.
+  bool get canModerate => realUser?.canModerate ?? false;
+
   /// Seeds the signed-in account without a network round trip. Tests only.
   @visibleForTesting
   void debugSetCurrentUser(User? user) {

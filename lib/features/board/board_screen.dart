@@ -23,7 +23,9 @@ class _BoardScreenState extends State<BoardScreen> {
 
   Future<void> _refresh() async {
     final future = BoardService().fetchBoardMembers();
-    setState(() => _future = future);
+    setState(() {
+      _future = future;
+    });
     await future;
   }
 

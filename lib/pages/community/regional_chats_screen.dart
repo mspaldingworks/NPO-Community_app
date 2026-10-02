@@ -37,7 +37,9 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
 
   Future<void> _refresh() async {
     final future = _load();
-    setState(() => _regionsFuture = future);
+    setState(() {
+      _regionsFuture = future;
+    });
     await future;
   }
 

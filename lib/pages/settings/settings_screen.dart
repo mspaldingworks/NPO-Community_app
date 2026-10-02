@@ -127,6 +127,21 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
             ),
+            Consumer<AuthService>(
+              builder: (context, auth, _) {
+                if (!auth.canModerate) return const SizedBox.shrink();
+                return ListTile(
+                  title: const Text('Moderation'),
+                  subtitle: const Text(
+                    'Reports, member actions and the audit log',
+                  ),
+                  leading: const Icon(Icons.shield_outlined),
+                  trailing: const Icon(Icons.chevron_right),
+                  minVerticalPadding: 16,
+                  onTap: () => context.push('/admin/moderation'),
+                );
+              },
+            ),
             ListTile(
               title: const Text('Open-source licenses'),
               subtitle: const Text('Fonts and software this app is built on'),

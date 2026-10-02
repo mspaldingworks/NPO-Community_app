@@ -13,6 +13,10 @@ class User {
   final String? userType;
   final bool isStaff;
   final bool isSuperuser;
+
+  /// Staff, superusers and moderator/staff/admin role holders, as decided by
+  /// the server (`can_moderate`); opens the moderation panel.
+  final bool canModerate;
   final int? programYear;
   final String? fullName;
 
@@ -29,6 +33,7 @@ class User {
     this.userType,
     this.isStaff = false,
     this.isSuperuser = false,
+    this.canModerate = false,
     this.programYear,
     this.fullName,
   });
@@ -83,6 +88,10 @@ class User {
       userType: json['user_type'] as String?,
       isStaff: json['is_staff'] as bool? ?? false,
       isSuperuser: json['is_superuser'] as bool? ?? false,
+      canModerate:
+          json['can_moderate'] as bool? ??
+          ((json['is_staff'] as bool? ?? false) ||
+              (json['is_superuser'] as bool? ?? false)),
       programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,
     );

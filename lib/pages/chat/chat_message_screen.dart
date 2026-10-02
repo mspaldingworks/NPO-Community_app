@@ -298,30 +298,27 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
     // ... (rest of _buildMessage remains the same, except for the removed showUsername logic in the Column)
 
     return GestureDetector(
-      onLongPress: () async {
-        final otherUserId = int.tryParse(widget.conversationId);
-        final targetUserId = isCurrentUser ? otherUserId : message.sender.id;
-        final targetUsername = isCurrentUser
-            ? _otherUsername
-            : message.sender.username;
-
-        await showReportDialog(
-          context: context,
-          baseRequest: ReportRequest(
-            type: (message.imageUrl != null && message.imageUrl!.isNotEmpty)
-                ? ReportTargetType.photo
-                : ReportTargetType.comment,
-            reason: '',
-            targetId: message.id,
-            targetUserId: targetUserId,
-            targetUsername: targetUsername,
-            targetUrl: message.imageUrl != null && message.imageUrl!.isNotEmpty
-                ? _fullUrl(message.imageUrl)
-                : null,
-            details: message.content,
-          ),
-        );
-      },
+      // Report the other person's message (text or photo); there's nothing to
+      // report about your own.
+      onLongPress: isCurrentUser
+          ? null
+          : () async {
+              await showReportDialog(
+                context: context,
+                baseRequest: ReportRequest(
+                  type: ReportTargetType.message,
+                  reason: '',
+                  targetId: message.id,
+                  targetUserId: message.sender.id,
+                  targetUsername: message.sender.username,
+                  targetUrl:
+                      message.imageUrl != null && message.imageUrl!.isNotEmpty
+                      ? _fullUrl(message.imageUrl)
+                      : null,
+                  details: message.content,
+                ),
+              );
+            },
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         child: Row(

@@ -38,7 +38,7 @@ import 'package:npo_community/pages/settings/settings_screen.dart';
 import 'package:npo_community/models/resource.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
-import 'package:npo_community/pages/admin/moderation_screen.dart';
+import 'package:npo_community/features/moderation/moderation_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -291,7 +291,10 @@ class AppRouter {
       GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
       GoRoute(
         path: '/admin/moderation',
-        builder: (context, state) => const ModerationScreen(),
+        builder: (context, state) => ModerationScreen(
+          isSuperuser: authService.realUser?.isSuperuser ?? false,
+          viewerId: authService.realUser?.id,
+        ),
       ),
 
       // Development-only routes
@@ -315,8 +318,7 @@ class AppRouter {
         return '/home';
       }
 
-      if (location.startsWith('/admin') &&
-          authService.currentUser?.isStaff != true) {
+      if (location.startsWith('/admin') && !authService.canModerate) {
         return '/home';
       }
 
