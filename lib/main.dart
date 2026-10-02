@@ -13,11 +13,13 @@ import 'package:npo_community/features/onboarding_tour/controllers/onboarding_to
 import 'package:npo_community/navigation/app_router.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/theme/app_theme.dart';
+import 'package:npo_community/theme/font_licenses.dart';
 import 'package:npo_community/widgets/dev/dev_menu.dart';
 import 'package:npo_community/widgets/dev/touring_overlay.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  registerFontLicenses();
   await SharedPreferencesService().init();
   runApp(NpoCommunityApp(config: AppConfig.current));
 }

@@ -51,6 +51,8 @@ flutter:
 
   assets:
     - assets/branding/
+    - assets/fonts/Montserrat-OFL.txt
+    - assets/fonts/OpenSans-OFL.txt
 
   # Website parity: ky.emergeamerica.org sets headings/buttons in Montserrat
   # and body copy in Open Sans (see docs/design-system.md).

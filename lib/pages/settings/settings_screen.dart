@@ -127,6 +127,17 @@ class SettingsScreen extends StatelessWidget {
                 );
               },
             ),
+            ListTile(
+              title: const Text('Open-source licenses'),
+              subtitle: const Text('Fonts and software this app is built on'),
+              leading: const Icon(Icons.description_outlined),
+              trailing: const Icon(Icons.chevron_right),
+              minVerticalPadding: 16,
+              onTap: () => showLicensePage(
+                context: context,
+                applicationName: 'Emerge Kentucky Alumni',
+              ),
+            ),
             Semantics(
               button: true,
               label: 'Log out',
