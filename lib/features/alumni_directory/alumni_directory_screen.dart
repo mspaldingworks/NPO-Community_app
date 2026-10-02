@@ -148,9 +148,8 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
           onRefresh: _controller.load,
           child: ListView.separated(
             itemCount: count + 1,
-            separatorBuilder: (_, index) => index == 0
-                ? const SizedBox.shrink()
-                : const Divider(height: 1),
+            separatorBuilder: (_, index) =>
+                index == 0 ? const SizedBox.shrink() : const Divider(height: 1),
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Column(
@@ -183,7 +182,11 @@ class _OfflineNotice extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Icon(Icons.cloud_off, size: 18, color: colorScheme.onPrimaryContainer),
+          Icon(
+            Icons.cloud_off,
+            size: 18,
+            color: colorScheme.onPrimaryContainer,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

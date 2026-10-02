@@ -1321,10 +1321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// in-app; the other three open the matching ky.emergeamerica.org pages.
   Widget _buildEmergeTouts(BuildContext context) {
     Future<void> open(String url) async {
-      await launchUrl(
-        Uri.parse(url),
-        mode: LaunchMode.externalApplication,
-      );
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     }
 
     return Column(
@@ -1359,8 +1356,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: Icons.emoji_objects_outlined,
                 background: AppColors.primary,
                 foreground: AppColors.textWhite,
-                onTap: () =>
-                    open('https://ky.emergeamerica.org/get-involved/'),
+                onTap: () => open('https://ky.emergeamerica.org/get-involved/'),
               ),
             ),
             const SizedBox(width: 2),
@@ -1370,8 +1366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 icon: Icons.thumb_up_alt_outlined,
                 background: AppColors.primaryDark,
                 foreground: AppColors.textWhite,
-                onTap: () =>
-                    open('https://www.facebook.com/EmergeKentucky/'),
+                onTap: () => open('https://www.facebook.com/EmergeKentucky/'),
               ),
             ),
           ],
