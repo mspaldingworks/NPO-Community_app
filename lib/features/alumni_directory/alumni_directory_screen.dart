@@ -225,6 +225,7 @@ class _AlumniTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final subtitleParts = <String>[
+      if (profile.isMemorial) 'In memoriam',
       if (profile.cohortYear != null) 'Class of ${profile.cohortYear}',
       if (profile.location != null) profile.location!,
       if (profile.officeSought != null) profile.officeSought!,
@@ -237,8 +238,10 @@ class _AlumniTile extends StatelessWidget {
       ),
       title: Text(profile.fullName),
       subtitle: subtitleParts.isEmpty ? null : Text(subtitleParts.join(' · ')),
-      trailing: profile.email == null ? null : const Icon(Icons.chevron_right),
-      onTap: profile.email == null
+      trailing: profile.email == null || profile.isMemorial
+          ? null
+          : const Icon(Icons.chevron_right),
+      onTap: profile.email == null || profile.isMemorial
           ? null
           : () => showModalBottomSheet<void>(
               context: context,

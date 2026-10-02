@@ -12,6 +12,9 @@ class AlumniProfile {
     this.state,
     this.cohortYear,
     this.officeSought,
+    this.accountId,
+    this.isMemorial = false,
+    this.claimed = true,
   });
 
   final int vanId;
@@ -25,6 +28,16 @@ class AlumniProfile {
   /// Emerge KY cohort/program year, from the VAN cohort custom field.
   final int? cohortYear;
   final String? officeSought;
+
+  /// Platform account id; unlike [vanId] it is set for every row, including
+  /// seeded alumnae who haven't been synced to VAN.
+  final int? accountId;
+
+  /// Deceased alumna, shown with a memorial label and no contact details.
+  final bool isMemorial;
+
+  /// False for seeded alumnae who haven't claimed their account yet.
+  final bool claimed;
 
   String get fullName {
     final name = [
@@ -75,6 +88,9 @@ class AlumniProfile {
       state: asString(json['state']),
       cohortYear: asInt(json['cohort_year']),
       officeSought: asString(json['office_sought']),
+      accountId: asInt(json['account_id']),
+      isMemorial: json['is_memorial'] == true,
+      claimed: json['claimed'] != false,
     );
   }
 }
