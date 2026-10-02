@@ -17,6 +17,9 @@ class User {
   /// Staff, superusers and moderator/staff/admin role holders, as decided by
   /// the server (`can_moderate`); opens the moderation panel.
   final bool canModerate;
+
+  /// The server's verification tier key, e.g. 'unverified' or 'verified'.
+  final String? verificationTier;
   final int? programYear;
   final String? fullName;
 
@@ -34,6 +37,7 @@ class User {
     this.isStaff = false,
     this.isSuperuser = false,
     this.canModerate = false,
+    this.verificationTier,
     this.programYear,
     this.fullName,
   });
@@ -92,10 +96,16 @@ class User {
           json['can_moderate'] as bool? ??
           ((json['is_staff'] as bool? ?? false) ||
               (json['is_superuser'] as bool? ?? false)),
+      verificationTier: json['verification_tier'] as String?,
       programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,
     );
   }
+
+  /// A self-signup still waiting for a moderator to verify her (or link her
+  /// to her alumnae roster record). Staff and superusers never wait.
+  bool get isAwaitingVerification =>
+      verificationTier == 'unverified' && !isStaff && !isSuperuser;
 
   String? get fullProfilePicUrl {
     if (profilePic == null) return null;

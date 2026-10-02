@@ -134,6 +134,16 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 child: const Text("Don't have an account? Register"),
               ),
+              TextButton(
+                key: const Key('claim-profile-link'),
+                onPressed: () => context.go('/claim'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.periwinkle,
+                ),
+                child: const Text(
+                  'Emerge KY alum with a claim code? Claim your profile',
+                ),
+              ),
             ],
           ),
         ),

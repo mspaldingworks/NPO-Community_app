@@ -393,6 +393,62 @@ class AuthService extends ApiClient with ChangeNotifier {
     }
   }
 
+  /// Checks a claim code + email; returns who the invite is for
+  /// (`display_name`, `username`, `program_year`).
+  Future<Map<String, dynamic>> checkClaim({
+    required String code,
+    required String email,
+  }) async {
+    final data = await post(
+      urlPath: '/api/claims/check/',
+      jsonHeaders: const {'Content-Type': 'application/json'},
+      jsonPayload: {'code': code, 'email': email},
+    );
+    return Map<String, dynamic>.from(data as Map);
+  }
+
+  /// Claims a seeded alumna profile and signs her in.
+  Future<void> signInWithClaim({
+    required String code,
+    required String email,
+    required String password,
+    required bool adultAttestation,
+    required bool conductPolicyAccepted,
+  }) async {
+    final data = await post(
+      urlPath: '/api/claims/redeem/',
+      jsonHeaders: const {'Content-Type': 'application/json'},
+      jsonPayload: {
+        'code': code,
+        'email': email,
+        'password': password,
+        'adult_attestation': adultAttestation,
+        'conduct_policy_accepted': conductPolicyAccepted,
+      },
+    );
+    final userData = data is Map ? data['user'] : null;
+    final token = data is Map ? data['token'] : null;
+    if (userData is! Map<String, dynamic> ||
+        token is! String ||
+        token.isEmpty) {
+      throw const AuthException(
+        'Your profile was claimed, but the server returned an invalid response. '
+        'Try signing in.',
+      );
+    }
+    await _saveUser(User.fromJson(userData), token, setTourPending: true);
+  }
+
+  /// Re-reads the signed-in account (e.g. to see if it has been verified).
+  Future<void> refreshCurrentUser() async {
+    final token = await getToken();
+    if (token == null) return;
+    final userData =
+        await read(urlPath: 'api/user/me/', jsonHeaders: authHeaders)
+            as Map<String, dynamic>;
+    await _saveUser(User.fromJson(userData), token);
+  }
+
   Future<User> getProfile() async {
     final userData =
         await read(urlPath: '/api/profile/', jsonHeaders: authHeaders)

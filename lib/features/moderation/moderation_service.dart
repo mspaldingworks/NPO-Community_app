@@ -183,6 +183,101 @@ class AuditEntry {
   );
 }
 
+class ClaimSuggestion {
+  const ClaimSuggestion({required this.ref, this.programYear});
+
+  final ModerationUserRef ref;
+  final int? programYear;
+}
+
+class PendingSignup {
+  const PendingSignup({
+    required this.id,
+    required this.username,
+    required this.displayName,
+    this.email,
+    this.programYear,
+    this.dateJoined,
+    this.suggestions = const [],
+  });
+
+  final int id;
+  final String username;
+  final String displayName;
+  final String? email;
+  final int? programYear;
+  final DateTime? dateJoined;
+  final List<ClaimSuggestion> suggestions;
+
+  factory PendingSignup.fromJson(Map<String, dynamic> json) => PendingSignup(
+    id: json['id'] as int,
+    username: json['username'] as String? ?? '',
+    displayName: json['display_name'] as String? ?? '',
+    email: json['email'] as String?,
+    programYear: json['program_year'] as int?,
+    dateJoined: _date(json['date_joined']),
+    suggestions: [
+      for (final row in (json['suggestions'] as List? ?? const []))
+        ClaimSuggestion(
+          ref: ModerationUserRef.fromJson(row)!,
+          programYear: (row as Map)['program_year'] as int?,
+        ),
+    ],
+  );
+}
+
+class ClaimRecord {
+  const ClaimRecord({
+    required this.id,
+    required this.username,
+    required this.displayName,
+    required this.status,
+    this.programYear,
+    this.email,
+    this.invitedAt,
+    this.openedAt,
+    this.claimedAt,
+    this.codeExpiresAt,
+  });
+
+  final int id;
+  final String username;
+  final String displayName;
+
+  /// unclaimed, invited, claimed or memorial.
+  final String status;
+  final int? programYear;
+  final String? email;
+  final DateTime? invitedAt;
+  final DateTime? openedAt;
+  final DateTime? claimedAt;
+  final DateTime? codeExpiresAt;
+
+  bool get canInvite => status == 'unclaimed' || status == 'invited';
+
+  factory ClaimRecord.fromJson(Map<String, dynamic> json) => ClaimRecord(
+    id: json['id'] as int,
+    username: json['username'] as String? ?? '',
+    displayName: json['display_name'] as String? ?? '',
+    status: json['status'] as String? ?? 'unclaimed',
+    programYear: json['program_year'] as int?,
+    email: json['email'] as String?,
+    invitedAt: _date(json['invited_at']),
+    openedAt: _date(json['opened_at']),
+    claimedAt: _date(json['claimed_at']),
+    codeExpiresAt: _date(json['code_expires_at']),
+  );
+}
+
+class ClaimInvite {
+  const ClaimInvite({required this.code, required this.message});
+
+  final String code;
+
+  /// Ready-to-send text containing the code and how to use it.
+  final String message;
+}
+
 /// The moderation control panel API (`/api/moderation/`).
 class ModerationService extends ApiClient {
   ModerationService();
@@ -287,6 +382,57 @@ class ModerationService extends ApiClient {
         if (suspensionUntil != null)
           'suspension_until': suspensionUntil.toUtc().toIso8601String(),
       },
+    );
+  }
+
+  Future<ModerationPage<PendingSignup>> fetchSignups({int page = 1}) => _page(
+    '/api/moderation/signups/',
+    {'page': '$page'},
+    PendingSignup.fromJson,
+  );
+
+  /// [decision] is link (needs [seedAccountId]), verify or reject.
+  Future<void> decideSignup(
+    int accountId,
+    String decision, {
+    required String reason,
+    int? seedAccountId,
+  }) async {
+    await post(
+      urlPath: '/api/moderation/signups/$accountId/$decision/',
+      jsonHeaders: authHeaders,
+      jsonPayload: {
+        'reason': reason,
+        if (seedAccountId != null) 'seed_account_id': seedAccountId,
+      },
+    );
+  }
+
+  Future<ModerationPage<ClaimRecord>> fetchClaims({
+    String status = '',
+    String search = '',
+    int page = 1,
+  }) => _page('/api/moderation/claims/', {
+    'status': status,
+    'search': search,
+    'page': '$page',
+  }, ClaimRecord.fromJson);
+
+  /// Issues (or reissues) a claim code; the code is only ever shown here.
+  Future<ClaimInvite> inviteClaim(
+    int accountId, {
+    required String email,
+  }) async {
+    final data =
+        await post(
+              urlPath: '/api/moderation/claims/$accountId/invite/',
+              jsonHeaders: authHeaders,
+              jsonPayload: {'email': email},
+            )
+            as Map;
+    return ClaimInvite(
+      code: data['code'] as String,
+      message: data['message'] as String? ?? '',
     );
   }
 

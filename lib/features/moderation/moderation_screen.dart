@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:npo_community/features/moderation/moderation_service.dart';
 
@@ -25,13 +26,16 @@ class ModerationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = service ?? ModerationService();
     return DefaultTabController(
-      length: 3,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Moderation'),
           bottom: const TabBar(
+            isScrollable: true,
             tabs: [
               Tab(text: 'Reports'),
+              Tab(text: 'Signups'),
+              Tab(text: 'Claims'),
               Tab(text: 'Members'),
               Tab(text: 'Audit log'),
             ],
@@ -40,6 +44,8 @@ class ModerationScreen extends StatelessWidget {
         body: TabBarView(
           children: [
             _ReportsTab(service: api),
+            _SignupsTab(service: api, isSuperuser: isSuperuser),
+            _ClaimsTab(service: api),
             _MembersTab(
               service: api,
               isSuperuser: isSuperuser,
@@ -446,6 +452,452 @@ class _ReportCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// -- signups -----------------------------------------------------------------
+
+class _SignupsTab extends StatefulWidget {
+  const _SignupsTab({required this.service, required this.isSuperuser});
+
+  final ModerationService service;
+  final bool isSuperuser;
+
+  @override
+  State<_SignupsTab> createState() => _SignupsTabState();
+}
+
+class _SignupsTabState extends State<_SignupsTab>
+    with AutomaticKeepAliveClientMixin {
+  late Future<ModerationPage<PendingSignup>> _future = widget.service
+      .fetchSignups();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  Future<void> _refresh() async {
+    final future = widget.service.fetchSignups();
+    setState(() {
+      _future = future;
+    });
+    await future;
+  }
+
+  Future<void> _decide(
+    PendingSignup signup,
+    String decision, {
+    ClaimRecord? record,
+    ClaimSuggestion? suggestion,
+  }) async {
+    final target = record?.displayName ?? suggestion?.ref.displayName;
+    final title = switch (decision) {
+      'link' => 'Link ${signup.username} to $target',
+      'verify' => 'Verify ${signup.username} (not on the roster)',
+      _ => 'Reject ${signup.username}',
+    };
+    final input = await _askReason(context, title: title);
+    if (input == null) return;
+    try {
+      await widget.service.decideSignup(
+        signup.id,
+        decision,
+        reason: input.reason,
+        seedAccountId: record?.id ?? suggestion?.ref.id,
+      );
+      if (mounted) _snack(context, 'Done.');
+      await _refresh();
+    } catch (e) {
+      if (mounted) _snack(context, '$e');
+    }
+  }
+
+  Future<void> _pickRecord(PendingSignup signup) async {
+    final record = await showModalBottomSheet<ClaimRecord>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.8,
+        child: _RosterPicker(service: widget.service),
+      ),
+    );
+    if (record != null && mounted) {
+      await _decide(signup, 'link', record: record);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<ModerationPage<PendingSignup>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData && !snapshot.hasError) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return _Message('Signups are unavailable: ${snapshot.error}');
+          }
+          final signups = snapshot.data!.results;
+          if (signups.isEmpty) {
+            return const _Message('No signups are waiting for verification.');
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: signups.length,
+            itemBuilder: (context, index) {
+              final signup = signups[index];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '@${signup.username}',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      Text(
+                        [
+                          if (signup.email != null) signup.email!,
+                          if (signup.programYear != null)
+                            'says Class of ${signup.programYear}',
+                          if (signup.dateJoined != null)
+                            'joined ${_when(signup.dateJoined)}',
+                        ].join(' · '),
+                      ),
+                      if (signup.suggestions.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        const Text('Possible roster matches:'),
+                        Wrap(
+                          spacing: 6,
+                          children: [
+                            for (final match in signup.suggestions)
+                              ActionChip(
+                                label: Text(
+                                  '${match.ref.displayName}'
+                                  '${match.programYear != null ? ' (${match.programYear})' : ''}',
+                                ),
+                                onPressed: () =>
+                                    _decide(signup, 'link', suggestion: match),
+                              ),
+                          ],
+                        ),
+                      ],
+                      Wrap(
+                        spacing: 8,
+                        children: [
+                          TextButton(
+                            onPressed: () => _pickRecord(signup),
+                            child: const Text('Link to…'),
+                          ),
+                          TextButton(
+                            onPressed: () => _decide(signup, 'verify'),
+                            child: const Text('Verify (not on roster)'),
+                          ),
+                          TextButton(
+                            onPressed: () => _decide(signup, 'reject'),
+                            child: const Text('Reject'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Search unclaimed roster records to link a signup to.
+class _RosterPicker extends StatefulWidget {
+  const _RosterPicker({required this.service});
+
+  final ModerationService service;
+
+  @override
+  State<_RosterPicker> createState() => _RosterPickerState();
+}
+
+class _RosterPickerState extends State<_RosterPicker> {
+  final _search = TextEditingController();
+  late Future<ModerationPage<ClaimRecord>> _future = _load();
+
+  Future<ModerationPage<ClaimRecord>> _load() =>
+      widget.service.fetchClaims(search: _search.text.trim());
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: TextField(
+            controller: _search,
+            autofocus: true,
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.search),
+              hintText: 'Search the alumnae roster',
+            ),
+            onSubmitted: (_) => setState(() {
+              _future = _load();
+            }),
+          ),
+        ),
+        Expanded(
+          child: FutureBuilder<ModerationPage<ClaimRecord>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return snapshot.hasError
+                    ? _Message('${snapshot.error}')
+                    : const Center(child: CircularProgressIndicator());
+              }
+              final records = snapshot.data!.results
+                  .where((r) => r.canInvite)
+                  .toList();
+              if (records.isEmpty) return const _Message('No unclaimed match.');
+              return ListView(
+                children: [
+                  for (final record in records)
+                    ListTile(
+                      title: Text(record.displayName),
+                      subtitle: Text(
+                        '@${record.username}'
+                        '${record.programYear != null ? ' · Class of ${record.programYear}' : ''}',
+                      ),
+                      onTap: () => Navigator.pop(context, record),
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// -- claims ------------------------------------------------------------------
+
+const _claimLabels = {
+  'unclaimed': 'Unclaimed',
+  'invited': 'Invited',
+  'claimed': 'Claimed',
+  'memorial': 'Memorial',
+};
+
+class _ClaimsTab extends StatefulWidget {
+  const _ClaimsTab({required this.service});
+
+  final ModerationService service;
+
+  @override
+  State<_ClaimsTab> createState() => _ClaimsTabState();
+}
+
+class _ClaimsTabState extends State<_ClaimsTab>
+    with AutomaticKeepAliveClientMixin {
+  final _search = TextEditingController();
+  String _status = 'unclaimed';
+  late Future<ModerationPage<ClaimRecord>> _future = _load();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<ModerationPage<ClaimRecord>> _load() =>
+      widget.service.fetchClaims(status: _status, search: _search.text.trim());
+
+  Future<void> _refresh() async {
+    final future = _load();
+    setState(() {
+      _future = future;
+    });
+    await future;
+  }
+
+  Future<void> _invite(ClaimRecord record) async {
+    final controller = TextEditingController(text: record.email ?? '');
+    final email = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Invite ${record.displayName}'),
+        content: TextField(
+          key: const Key('claim-invite-email'),
+          controller: controller,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email from Emerge records',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(
+              record.status == 'invited' ? 'New code' : 'Create code',
+            ),
+          ),
+        ],
+      ),
+    );
+    if (email == null || email.isEmpty || !mounted) return;
+    try {
+      final invite = await widget.service.inviteClaim(record.id, email: email);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text('Claim code: ${invite.code}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Send this to her now; the code is not shown again. Any '
+                'earlier code for this profile no longer works.',
+              ),
+              const SizedBox(height: 12),
+              SelectableText(invite.message),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: invite.message));
+                if (dialogContext.mounted) {
+                  _snack(dialogContext, 'Copied.');
+                }
+              },
+              child: const Text('Copy message'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
+      await _refresh();
+    } catch (e) {
+      if (mounted) _snack(context, '$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Search the roster',
+                  ),
+                  onSubmitted: (_) => _refresh(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              DropdownButton<String>(
+                value: _status,
+                items: [
+                  for (final entry in _claimLabels.entries)
+                    DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    ),
+                ],
+                onChanged: (value) {
+                  _status = value ?? 'unclaimed';
+                  _refresh();
+                },
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _refresh,
+            child: FutureBuilder<ModerationPage<ClaimRecord>>(
+              future: _future,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData && !snapshot.hasError) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return _Message('Claims are unavailable: ${snapshot.error}');
+                }
+                final page = snapshot.data!;
+                if (page.results.isEmpty) {
+                  return const _Message('Nobody here.');
+                }
+                return ListView.separated(
+                  itemCount: page.results.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final record = page.results[index];
+                    return ListTile(
+                      title: Text(record.displayName),
+                      subtitle: Text(
+                        [
+                          if (record.programYear != null)
+                            'Class of ${record.programYear}',
+                          _claimLabels[record.status] ?? record.status,
+                          if (record.email != null) record.email!,
+                          if (record.invitedAt != null)
+                            'invited ${_when(record.invitedAt)}',
+                          if (record.openedAt != null)
+                            'opened ${_when(record.openedAt)}',
+                          if (record.claimedAt != null)
+                            'claimed ${_when(record.claimedAt)}',
+                        ].join(' · '),
+                      ),
+                      trailing: record.canInvite
+                          ? TextButton(
+                              onPressed: () => _invite(record),
+                              child: Text(
+                                record.status == 'invited'
+                                    ? 'Resend'
+                                    : 'Invite',
+                              ),
+                            )
+                          : null,
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

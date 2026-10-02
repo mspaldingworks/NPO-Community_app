@@ -39,6 +39,8 @@ import 'package:npo_community/models/resource.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
+import 'package:npo_community/pages/auth/claim_profile_screen.dart';
+import 'package:npo_community/pages/auth/pending_verification_screen.dart';
 
 class AppRouter {
   final AuthService authService;
@@ -68,6 +70,14 @@ class AppRouter {
       GoRoute(
         path: '/signup',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/claim',
+        builder: (context, state) => const ClaimProfileScreen(),
+      ),
+      GoRoute(
+        path: '/pending',
+        builder: (context, state) => const PendingVerificationScreen(),
       ),
       GoRoute(
         path: '/user-search',
@@ -307,12 +317,22 @@ class AppRouter {
     redirect: (BuildContext context, GoRouterState state) {
       final bool loggedIn = authService.currentUser != null;
       final String location = state.matchedLocation;
-      final bool onAuthRoute = location == '/login' || location == '/signup';
+      final bool onAuthRoute =
+          location == '/login' || location == '/signup' || location == '/claim';
       final bool onSplashOrOnboarding =
           location == '/splash' || location == '/onboarding';
 
       if (!loggedIn && !onAuthRoute && !onSplashOrOnboarding) {
         return '/splash';
+      }
+      // Unverified self-signups wait on one screen until a moderator acts.
+      final bool awaiting =
+          authService.realUser?.isAwaitingVerification ?? false;
+      if (loggedIn && awaiting) {
+        return location == '/pending' ? null : '/pending';
+      }
+      if (loggedIn && location == '/pending') {
+        return '/home';
       }
       if (loggedIn && (onAuthRoute || onSplashOrOnboarding)) {
         return '/home';

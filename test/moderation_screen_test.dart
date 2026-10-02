@@ -6,10 +6,17 @@ import 'package:npo_community/features/moderation/moderation_service.dart';
 import 'package:npo_community/models/user.dart';
 
 class _FakeModerationService extends ModerationService {
-  _FakeModerationService({this.reports = const [], this.members = const []});
+  _FakeModerationService({
+    this.reports = const [],
+    this.members = const [],
+    this.signups = const [],
+    this.claims = const [],
+  });
 
   final List<ModerationReport> reports;
   final List<ModerationMember> members;
+  final List<PendingSignup> signups;
+  final List<ClaimRecord> claims;
   final calls = <String>[];
 
   @override
@@ -24,6 +31,37 @@ class _FakeModerationService extends ModerationService {
     String status = '',
     int page = 1,
   }) async => ModerationPage(count: members.length, results: members);
+
+  @override
+  Future<ModerationPage<PendingSignup>> fetchSignups({int page = 1}) async =>
+      ModerationPage(count: signups.length, results: signups);
+
+  @override
+  Future<ModerationPage<ClaimRecord>> fetchClaims({
+    String status = '',
+    String search = '',
+    int page = 1,
+  }) async => ModerationPage(count: claims.length, results: claims);
+
+  @override
+  Future<void> decideSignup(
+    int accountId,
+    String decision, {
+    required String reason,
+    int? seedAccountId,
+  }) async => calls.add('$decision $accountId $seedAccountId $reason');
+
+  @override
+  Future<ClaimInvite> inviteClaim(
+    int accountId, {
+    required String email,
+  }) async {
+    calls.add('invite $accountId $email');
+    return const ClaimInvite(
+      code: 'ABCD-2345',
+      message: 'Claim your profile with ABCD-2345.',
+    );
+  }
 
   @override
   Future<ModerationPage<AuditEntry>> fetchAudit({
@@ -192,5 +230,69 @@ void main() {
     expect(find.text('Lift restriction'), findsOneWidget);
     expect(find.text('Remove moderator'), findsOneWidget);
     expect(find.text('Make admin'), findsOneWidget);
+  });
+
+  testWidgets('signups link to a suggested roster match', (tester) async {
+    final service = _FakeModerationService(
+      signups: [
+        PendingSignup.fromJson({
+          'id': 5,
+          'username': 'ada_example',
+          'display_name': 'ada_example',
+          'program_year': 2020,
+          'suggestions': [
+            {
+              'id': 9,
+              'username': 'ada-example',
+              'display_name': 'Ada Example',
+              'program_year': 2020,
+            },
+          ],
+        }),
+      ],
+    );
+    await _pump(tester, ModerationScreen(service: service));
+    await tester.tap(find.text('Signups'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ada Example (2020)'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('moderation-reason')),
+      'Matches roster',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(service.calls, ['link 5 9 Matches roster']);
+  });
+
+  testWidgets('claim invites show the code once', (tester) async {
+    final service = _FakeModerationService(
+      claims: [
+        ClaimRecord.fromJson({
+          'id': 9,
+          'username': 'ada-example',
+          'display_name': 'Ada Example',
+          'status': 'unclaimed',
+          'program_year': 2020,
+        }),
+      ],
+    );
+    await _pump(tester, ModerationScreen(service: service));
+    await tester.tap(find.text('Claims'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Invite'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('claim-invite-email')),
+      'ada@example.org',
+    );
+    await tester.tap(find.text('Create code'));
+    await tester.pumpAndSettle();
+    expect(service.calls, ['invite 9 ada@example.org']);
+    expect(find.text('Claim code: ABCD-2345'), findsOneWidget);
+    expect(find.text('Claim your profile with ABCD-2345.'), findsOneWidget);
   });
 }
