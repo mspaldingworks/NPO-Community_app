@@ -36,13 +36,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow NPO Community to access your camera to take a profile picture.</string>
+	<string>Allow Emerge KY Alumni to access your camera to take a profile picture.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Allow NPO Community to access your location to help you find nearby activities.</string>
+	<string>Allow Emerge KY Alumni to access your location to help you find nearby activities.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Allow NPO Community to access your location to help you find nearby activities.</string>
+	<string>Allow Emerge KY Alumni to access your location to help you find nearby activities.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Allow NPO Community to access your photo library to update your profile picture.</string>
+	<string>Allow Emerge KY Alumni to access your photo library to update your profile picture.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
