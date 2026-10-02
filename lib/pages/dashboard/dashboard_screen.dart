@@ -1408,6 +1408,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _buildAlumniRunningButton(),
             const SizedBox(height: 24),
             _buildButterflyPerchSection(),
             Builder(
@@ -1440,6 +1442,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 24),
             _buildFriendsStatusUpdates(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlumniRunningButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.icon(
+        key: const Key('alumni-running-button'),
+        onPressed: () => context.push('/alumni/running'),
+        icon: const Icon(Icons.how_to_vote_outlined),
+        label: const Text('Alumni on the Ballot'),
+        style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
         ),
       ),
     );
