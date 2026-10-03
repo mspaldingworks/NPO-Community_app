@@ -131,7 +131,19 @@ class _PostListScreenState extends State<PostListScreen> {
     ).currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.groupName)),
+      appBar: AppBar(
+        title: Text(widget.groupName),
+        actions: [
+          IconButton(
+            tooltip: 'Group info, events and polls',
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => context.push(
+              '/community/group/${widget.groupId}/console',
+              extra: widget.groupName,
+            ),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _refreshPosts,
         child: FutureBuilder<List<Post>>(

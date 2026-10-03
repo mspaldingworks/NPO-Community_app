@@ -38,6 +38,7 @@ import 'package:npo_community/pages/settings/settings_screen.dart';
 import 'package:npo_community/models/resource.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
+import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 import 'package:npo_community/pages/auth/claim_profile_screen.dart';
 import 'package:npo_community/pages/auth/pending_verification_screen.dart';
@@ -171,6 +172,13 @@ class AppRouter {
                       return PostListScreen(groupId: id, groupName: groupName);
                     },
                     routes: [
+                      GoRoute(
+                        path: 'console',
+                        builder: (context, state) => GroupConsoleScreen(
+                          groupId: int.parse(state.pathParameters['id']!),
+                          groupName: state.extra as String? ?? 'Group',
+                        ),
+                      ),
                       GoRoute(
                         path: 'create-post',
                         builder: (context, state) {
