@@ -18,24 +18,16 @@ import 'package:npo_community/pages/community/edit_post_screen.dart';
 import 'package:npo_community/pages/community/regional_chats_screen.dart';
 import 'package:npo_community/pages/community/cohort_chats_screen.dart';
 import 'package:npo_community/features/board/board_screen.dart';
-import 'package:npo_community/pages/community/gender_chats_screen.dart';
-import 'package:npo_community/pages/community/wellness_screen.dart';
-import 'package:npo_community/pages/community/photo_album_screen.dart';
-import 'package:npo_community/pages/community/politics_screen.dart';
 import 'package:npo_community/pages/friends/user_search_screen.dart';
 import 'package:npo_community/pages/dev/chat_test_screen.dart';
 import 'package:npo_community/navigation/scaffold_with_nav_bar.dart';
 import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
 import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
-import 'package:npo_community/pages/resources/create_resource_screen.dart';
-import 'package:npo_community/pages/resources/edit_resource_screen.dart';
-import 'package:npo_community/pages/resources/resources_screen.dart';
 import 'package:npo_community/pages/profile/profile_screen.dart';
 import 'package:npo_community/pages/profile/public_user_profile_screen.dart';
 import 'package:npo_community/pages/settings/app_info_screen.dart';
 import 'package:npo_community/pages/settings/settings_screen.dart';
-import 'package:npo_community/models/resource.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
@@ -127,44 +119,6 @@ class AppRouter {
                     builder: (context, state) => const CohortChatsScreen(),
                   ),
                   GoRoute(
-                    path: 'gender',
-                    redirect: (context, state) => '/community/identity',
-                  ),
-                  GoRoute(
-                    path: 'identity',
-                    builder: (context, state) => const GenderChatsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'general',
-                        builder: (context, state) => const GeneralChatsScreen(),
-                      ),
-                    ],
-                  ),
-                  GoRoute(
-                    path: 'legal',
-                    builder: (context, state) => const LegalChatsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'sexual-health',
-                    redirect: (context, state) => '/community/wellness',
-                  ),
-                  GoRoute(
-                    path: 'wellness',
-                    builder: (context, state) => const WellnessScreen(),
-                  ),
-                  GoRoute(
-                    path: 'photo-album',
-                    builder: (context, state) => const PhotoAlbumScreen(),
-                  ),
-                  GoRoute(
-                    path: 'politics',
-                    builder: (context, state) => const PoliticsScreen(),
-                  ),
-                  GoRoute(
-                    path: 'mutual-aid',
-                    redirect: (context, state) => '/community',
-                  ),
-                  GoRoute(
                     path: 'group/:id',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
@@ -239,29 +193,6 @@ class AppRouter {
                   GoRoute(
                     path: 'feed',
                     redirect: (context, state) => '/community',
-                  ),
-                ],
-              ),
-            ],
-          ),
-          // Resources
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/resources',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: ResourcesScreen()),
-                routes: [
-                  GoRoute(
-                    path: 'create',
-                    builder: (context, state) => const CreateResourceScreen(),
-                  ),
-                  GoRoute(
-                    path: 'edit',
-                    builder: (context, state) {
-                      final resource = state.extra as Resource;
-                      return EditResourceScreen(resource: resource);
-                    },
                   ),
                 ],
               ),

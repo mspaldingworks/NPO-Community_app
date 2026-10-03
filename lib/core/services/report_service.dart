@@ -12,8 +12,6 @@ enum ReportTargetType {
   chatMessage,
   status,
   statusComment,
-  resource,
-  resourceReview,
   photo,
   user,
 }

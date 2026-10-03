@@ -82,8 +82,6 @@ const _targetLabels = {
   'photo': 'Photo',
   'status': 'Status',
   'statusComment': 'Status comment',
-  'resource': 'Resource',
-  'resourceReview': 'Resource review',
   'user': 'Member',
   'other': 'Other',
 };

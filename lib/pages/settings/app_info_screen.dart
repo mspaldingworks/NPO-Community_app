@@ -22,7 +22,7 @@ class AppInfoScreen extends StatelessWidget {
             Text(
               'Emerge Kentucky Alumni is a private workspace for graduates of the Emerge Kentucky program, '
               'along with staff, board members, and program partners. '
-              'It brings the alumni directory, cohort community, events, and resources into one place.',
+              'It brings the alumni directory, class and regional groups, and events into one place.',
               style: textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),
@@ -30,7 +30,7 @@ class AppInfoScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Use the bottom tabs to move between Community conversations, the Alumni Directory, your Home dashboard, '
-              'Resources, and Events. Your Home dashboard is the command center for quick actions, updates, and cards that take '
+              'and Events. Your Home dashboard is the command center for quick actions, updates, and cards that take '
               'you deeper into the app.',
               style: textTheme.bodyMedium,
             ),

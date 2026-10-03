@@ -70,8 +70,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
 
           final isPrivate = FlairUtils.isProfilePrivate(user.flair);
           final pronouns = FlairUtils.extractPronouns(user.flair) ?? '';
-          final mutualAid =
-              (FlairUtils.extractMutualAidEmojis(user.flair) ?? '').trim();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -98,16 +96,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     child: Text(
                       pronouns.trim(),
                       style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-                if (!isPrivate && mutualAid.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      mutualAid,
-                      style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
                   ),

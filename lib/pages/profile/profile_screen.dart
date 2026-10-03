@@ -9,20 +9,12 @@ import 'package:npo_community/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
-import 'package:npo_community/widgets/pronoun_butterfly.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _MutualAidOption {
-  final String emoji;
-  final String label;
-
-  const _MutualAidOption({required this.emoji, required this.label});
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
@@ -79,20 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'Thon/Thons',
   ];
 
-  static const List<_MutualAidOption> _mutualAidOptions = <_MutualAidOption>[
-    _MutualAidOption(emoji: '🛻', label: 'Moving / transport help'),
-    _MutualAidOption(emoji: '🚗', label: 'Rides / appointments'),
-    _MutualAidOption(emoji: '🍲', label: 'Meals / groceries'),
-    _MutualAidOption(emoji: '🏠', label: 'Housing navigation'),
-    _MutualAidOption(emoji: '💸', label: 'Emergency funds / microgrants'),
-    _MutualAidOption(emoji: '🧾', label: 'Paperwork / forms'),
-    _MutualAidOption(emoji: '💻', label: 'Tech help'),
-    _MutualAidOption(emoji: '👕', label: 'Clothes / supplies'),
-    _MutualAidOption(emoji: '🤝', label: 'Peer support'),
-    _MutualAidOption(emoji: '📣', label: 'Amplify / share requests'),
-  ];
-
-  final Set<String> _selectedMutualAidEmojis = <String>{};
   final Set<String> _selectedPronouns = <String>{};
   final List<String> _customPronouns = <String>[];
 
@@ -474,14 +452,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  String get _mutualAidEmojiString {
-    return _mutualAidOptions
-        .where((o) => _selectedMutualAidEmojis.contains(o.emoji))
-        .map((o) => o.emoji)
-        .join(' ')
-        .trim();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -506,12 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final flair = user?.flair;
     final pronouns = FlairUtils.extractPronouns(flair) ?? '';
-    final mutualAidLine = FlairUtils.extractMutualAidEmojis(flair) ?? '';
     final isPrivateProfile = FlairUtils.isProfilePrivate(flair);
-    final selectedMutualAidEmojis = _mutualAidOptions
-        .where((o) => mutualAidLine.contains(o.emoji))
-        .map((o) => o.emoji)
-        .toSet();
 
     setState(() {
       if (status != null) {
@@ -553,10 +518,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _pronounsController.text = _selectedPronouns.join(', ');
         _updatingPronounsText = false;
         _isProfilePrivate = isPrivateProfile;
-
-        _selectedMutualAidEmojis
-          ..clear()
-          ..addAll(selectedMutualAidEmojis);
       }
     });
   }
@@ -603,7 +564,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final flair = FlairUtils.buildFlair(
       pronouns: pronounsToSave,
-      mutualAidEmojis: _mutualAidEmojiString,
       isPrivateProfile: _isProfilePrivate,
     );
 
@@ -753,13 +713,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   currentUser.username,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-              if (_mutualAidEmojiString.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                Text(
-                  _mutualAidEmojiString,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _fullNameController,
@@ -785,15 +738,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   labelText: 'Pronouns',
                   hintText: 'Comma-separated (up to 5) — or tap chips below',
                   border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: ButterflyViewerWindow(
-                  child: PronounButterfly(
-                    pronouns: _selectedPronouns.toList(),
-                    size: 260,
-                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -853,41 +797,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }).toList(),
                 ),
               ],
-              const SizedBox(height: 16),
-              Text(
-                'Mutual aid I can help with',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    children: _mutualAidOptions.map((o) {
-                      final selected = _selectedMutualAidEmojis.contains(
-                        o.emoji,
-                      );
-                      return CheckboxListTile(
-                        value: selected,
-                        dense: true,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text('${o.emoji}  ${o.label}'),
-                        onChanged: _saving
-                            ? null
-                            : (v) {
-                                setState(() {
-                                  if (v == true) {
-                                    _selectedMutualAidEmojis.add(o.emoji);
-                                  } else {
-                                    _selectedMutualAidEmojis.remove(o.emoji);
-                                  }
-                                });
-                              },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {

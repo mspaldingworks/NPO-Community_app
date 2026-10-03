@@ -51,10 +51,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
             ),
           ),
           const NavigationDestination(
-            label: 'Resources',
-            icon: TourAnchor(name: 'Resources', child: Icon(Icons.book)),
-          ),
-          const NavigationDestination(
             label: 'Events',
             icon: TourAnchor(name: 'Events', child: Icon(Icons.calendar_today)),
           ),
@@ -94,7 +90,7 @@ class _NavGlow extends StatelessWidget {
 class _NavLogoMark extends StatelessWidget {
   const _NavLogoMark();
 
-  static const String _assetPath = 'assets/media/Icon-maskable-512.png';
+  static const String _assetPath = 'assets/branding/emerge_ky_logo.png';
 
   @override
   Widget build(BuildContext context) {

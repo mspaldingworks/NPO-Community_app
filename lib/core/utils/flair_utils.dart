@@ -1,3 +1,6 @@
+/// The `flair` profile field carries the member's pronouns (first line) and
+/// a private-profile flag. Older accounts may have extra lines from a feature
+/// that no longer exists; they are ignored.
 class FlairUtils {
   static const String _privateProfileFlag = 'tc:private_profile=true';
 
@@ -31,41 +34,14 @@ class FlairUtils {
     return first;
   }
 
-  static String? extractMutualAidEmojis(String? flair) {
-    final lines = _userLines(flair);
-    if (lines.isEmpty) return null;
-
-    if (lines.length == 1) {
-      final only = lines.first;
-      return _looksLikePronouns(only) ? null : only;
-    }
-
-    final first = lines.first;
-    if (_looksLikePronouns(first)) {
-      return lines[1].trim().isEmpty ? null : lines[1].trim();
-    }
-    return first.trim().isEmpty ? null : first.trim();
-  }
-
   static String? buildFlair({
     required String pronouns,
-    required String mutualAidEmojis,
     required bool isPrivateProfile,
   }) {
-    final p = pronouns.trim();
-    final e = mutualAidEmojis.trim();
-    final lines = <String>[];
-
-    if (p.isNotEmpty) {
-      lines.add(p);
-    }
-    if (e.isNotEmpty) {
-      lines.add(e);
-    }
-    if (isPrivateProfile) {
-      lines.add(_privateProfileFlag);
-    }
-
+    final lines = <String>[
+      if (pronouns.trim().isNotEmpty) pronouns.trim(),
+      if (isPrivateProfile) _privateProfileFlag,
+    ];
     if (lines.isEmpty) return null;
     return lines.join('\n');
   }

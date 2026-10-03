@@ -18,11 +18,9 @@ class OnboardingTourOverlay extends StatefulWidget {
 class _OnboardingTourOverlayState extends State<OnboardingTourOverlay> {
   Rect? _cachedRect;
 
-  static const String _pointerAssetPath = 'assets/tour/tour_butterfly.gif';
   static const Set<String> _bottomNavStepIds = <String>{
     'community-tab',
     'directory-tab',
-    'resources-tab',
     'events-tab',
   };
 
@@ -138,11 +136,10 @@ class _OnboardingTourOverlayState extends State<OnboardingTourOverlay> {
         ignoring: true,
         child: Transform.rotate(
           angle: rotation,
-          child: Image.asset(
-            _pointerAssetPath,
-            width: pointerSize,
-            height: pointerSize,
-            fit: BoxFit.contain,
+          child: Icon(
+            Icons.touch_app,
+            size: pointerSize,
+            color: Theme.of(context).colorScheme.primary,
           ),
         ),
       ),

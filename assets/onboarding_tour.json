@@ -14,7 +14,7 @@
       },
       "title": "Home dashboard",
       "body": "Your Home tab is the command center for quick actions and updates.",
-      "progress": "Step 1 of 9"
+      "progress": "Step 1 of 8"
     },
     {
       "id": "community-tab",
@@ -26,7 +26,7 @@
       },
       "title": "Community",
       "body": "Visit group spaces and discussions in Community.",
-      "progress": "Step 2 of 9"
+      "progress": "Step 2 of 8"
     },
     {
       "id": "directory-tab",
@@ -38,19 +38,7 @@
       },
       "title": "Alumni Directory",
       "body": "Find and connect with Emerge Kentucky alumni by cohort in the Alumni Directory.",
-      "progress": "Step 3 of 9"
-    },
-    {
-      "id": "resources-tab",
-      "screen": "home",
-      "spotlight": {
-        "target_element_name": "Resources",
-        "padding_px": 12,
-        "shroud_opacity": 0.6
-      },
-      "title": "Resources",
-      "body": "Find curated guides and resources here.",
-      "progress": "Step 4 of 9"
+      "progress": "Step 3 of 8"
     },
     {
       "id": "events-tab",
@@ -62,7 +50,7 @@
       },
       "title": "Events",
       "body": "Browse upcoming events and add them to your calendar.",
-      "progress": "Step 5 of 9"
+      "progress": "Step 4 of 8"
     },
     {
       "id": "events-card",
@@ -75,20 +63,20 @@
       },
       "title": "Upcoming events",
       "body": "See and jump into upcoming events from your dashboard.",
-      "progress": "Step 6 of 9"
+      "progress": "Step 5 of 8"
     },
     {
       "id": "replies",
       "screen": "home",
       "spotlight": {
-        "target_element_name": "No new replies",
+        "target_element_name": "Messages",
         "padding_px": 12,
         "shroud_opacity": 0.6,
         "radius_multiplier": 0.85
       },
       "title": "Replies",
       "body": "This card keeps you updated on new replies and notifications.",
-      "progress": "Step 7 of 9"
+      "progress": "Step 6 of 8"
     },
     {
       "id": "friends",
@@ -101,7 +89,7 @@
       },
       "title": "Friends",
       "body": "Jump into your friend chats and messages from here.",
-      "progress": "Step 8 of 9"
+      "progress": "Step 7 of 8"
     },
     {
       "id": "edit-profile",
@@ -114,7 +102,7 @@
       },
       "title": "Edit profile",
       "body": "Update your profile details anytime.",
-      "progress": "Step 9 of 9"
+      "progress": "Step 8 of 8"
     }
   ],
   "post_tour_tip": "You can replay this tour anytime from Settings > Info & tour.",
