@@ -135,6 +135,14 @@ class _SignInScreenState extends State<SignInScreen> {
                 child: const Text("Don't have an account? Register"),
               ),
               TextButton(
+                key: const Key('forgot-password-link'),
+                onPressed: () => context.go('/forgot-password'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.periwinkle,
+                ),
+                child: const Text('Forgot your password?'),
+              ),
+              TextButton(
                 key: const Key('claim-profile-link'),
                 onPressed: () => context.go('/claim'),
                 style: TextButton.styleFrom(

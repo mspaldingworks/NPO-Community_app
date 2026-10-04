@@ -6,6 +6,8 @@ import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/core/services/block_service.dart';
+import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
@@ -18,8 +20,19 @@ class PublicUserProfileScreen extends StatefulWidget {
 }
 
 class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
+  bool _isBlocked = false;
+
+  /// Blocked members are hidden by the server, so check the block list
+  /// first and show a plain "blocked" state instead of "not found".
   Future<User?> _loadUser() async {
     final auth = Provider.of<AuthService>(context, listen: false);
+    try {
+      final blocked = await BlockService().fetchBlocked();
+      _isBlocked = blocked.any((b) => b.id == widget.userId);
+    } catch (_) {
+      _isBlocked = false;
+    }
+    if (_isBlocked) return null;
     final users = await auth.getAllUsers();
     try {
       return users.firstWhere((u) => u.id == widget.userId);
@@ -34,23 +47,43 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
-          IconButton(
-            tooltip: 'Report user',
-            icon: const Icon(Icons.flag_outlined),
-            onPressed: () async {
-              final user = await _loadUser();
-              if (!context.mounted || user == null) return;
-              await showReportDialog(
-                context: context,
-                baseRequest: ReportRequest(
-                  type: ReportTargetType.user,
-                  reason: '',
-                  targetUserId: user.id,
-                  targetUsername: user.username,
-                  details: user.statusMessage,
-                ),
-              );
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            onSelected: (value) async {
+              if (value == 'report') {
+                final user = await _loadUser();
+                if (!context.mounted || user == null) return;
+                await showReportDialog(
+                  context: context,
+                  baseRequest: ReportRequest(
+                    type: ReportTargetType.user,
+                    reason: '',
+                    targetUserId: user.id,
+                    targetUsername: user.username,
+                    details: user.statusMessage,
+                  ),
+                );
+              } else if (value == 'block') {
+                final user = await _loadUser();
+                if (!context.mounted) return;
+                final done = await confirmAndBlock(
+                  context,
+                  userId: widget.userId,
+                  name: user?.username ?? 'this member',
+                );
+                if (done && mounted) setState(() {});
+              } else if (value == 'unblock') {
+                await BlockService().unblock(widget.userId);
+                if (mounted) setState(() {});
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'report', child: Text('Report')),
+              PopupMenuItem(
+                value: _isBlocked ? 'unblock' : 'block',
+                child: Text(_isBlocked ? 'Unblock' : 'Block'),
+              ),
+            ],
           ),
         ],
       ),
@@ -65,7 +98,15 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
           }
           final user = snapshot.data;
           if (user == null) {
-            return const Center(child: Text('User not found.'));
+            return Center(
+              child: Text(
+                _isBlocked
+                    ? 'You have blocked this member. Unblock from the menu '
+                          'or Settings to see their profile again.'
+                    : 'User not found.',
+                textAlign: TextAlign.center,
+              ),
+            );
           }
 
           final isPrivate = FlairUtils.isProfilePrivate(user.flair);

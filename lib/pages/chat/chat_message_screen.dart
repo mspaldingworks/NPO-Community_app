@@ -12,6 +12,7 @@ import 'package:npo_community/theme/app_theme.dart';
 import 'package:npo_community/widgets/loading_indicator.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
+import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:npo_community/widgets/smart_link_body.dart';
 
 class ChatMessageScreen extends StatefulWidget {
@@ -643,6 +644,23 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
               color: _isFavoriteChat ? Colors.amber : null,
             ),
             onPressed: _toggleFavorite,
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            onSelected: (value) async {
+              if (value != 'block') return;
+              final otherUserId = int.tryParse(widget.conversationId);
+              if (otherUserId == null) return;
+              final done = await confirmAndBlock(
+                context,
+                userId: otherUserId,
+                name: _otherUsername,
+              );
+              if (done && context.mounted) Navigator.of(context).pop();
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'block', child: Text('Block this member')),
+            ],
           ),
         ],
       ),

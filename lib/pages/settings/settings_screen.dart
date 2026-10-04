@@ -143,6 +143,14 @@ class SettingsScreen extends StatelessWidget {
               },
             ),
             ListTile(
+              title: const Text('Blocked members'),
+              subtitle: const Text('Members you have blocked; unblock here'),
+              leading: const Icon(Icons.block),
+              trailing: const Icon(Icons.chevron_right),
+              minVerticalPadding: 16,
+              onTap: () => context.push('/profile/blocked'),
+            ),
+            ListTile(
               title: const Text('Open-source licenses'),
               subtitle: const Text('Fonts and software this app is built on'),
               leading: const Icon(Icons.description_outlined),

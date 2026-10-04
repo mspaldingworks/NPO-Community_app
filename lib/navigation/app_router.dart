@@ -27,12 +27,14 @@ import 'package:npo_community/features/alumni_running/alumni_running_screen.dart
 import 'package:npo_community/pages/profile/profile_screen.dart';
 import 'package:npo_community/pages/profile/public_user_profile_screen.dart';
 import 'package:npo_community/pages/settings/app_info_screen.dart';
+import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:npo_community/pages/settings/settings_screen.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/events/calendar_screen.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 import 'package:npo_community/pages/auth/claim_profile_screen.dart';
+import 'package:npo_community/pages/auth/forgot_password_screen.dart';
 import 'package:npo_community/pages/auth/pending_verification_screen.dart';
 
 class AppRouter {
@@ -67,6 +69,10 @@ class AppRouter {
       GoRoute(
         path: '/claim',
         builder: (context, state) => const ClaimProfileScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/pending',
@@ -220,6 +226,10 @@ class AppRouter {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
+        path: '/profile/blocked',
+        builder: (context, state) => const BlockedMembersScreen(),
+      ),
+      GoRoute(
         path: '/profile/info',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AppInfoScreen(),
@@ -256,8 +266,12 @@ class AppRouter {
     redirect: (BuildContext context, GoRouterState state) {
       final bool loggedIn = authService.currentUser != null;
       final String location = state.matchedLocation;
-      final bool onAuthRoute =
-          location == '/login' || location == '/signup' || location == '/claim';
+      final bool onAuthRoute = const {
+        '/login',
+        '/signup',
+        '/claim',
+        '/forgot-password',
+      }.contains(location);
       final bool onSplashOrOnboarding =
           location == '/splash' || location == '/onboarding';
 

@@ -773,9 +773,13 @@ class _ClaimsTabState extends State<_ClaimsTab>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Send this to her now; the code is not shown again. Any '
-                'earlier code for this profile no longer works.',
+              Text(
+                invite.emailed
+                    ? 'An email with this code went to $email. It is also '
+                          'here in case she needs it. Any earlier code no '
+                          'longer works.'
+                    : 'Send this to her now; the code is not shown again. '
+                          'Any earlier code for this profile no longer works.',
               ),
               const SizedBox(height: 12),
               SelectableText(invite.message),

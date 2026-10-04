@@ -270,9 +270,16 @@ class ClaimRecord {
 }
 
 class ClaimInvite {
-  const ClaimInvite({required this.code, required this.message});
+  const ClaimInvite({
+    required this.code,
+    required this.message,
+    this.emailed = false,
+  });
 
   final String code;
+
+  /// True when the server emailed the code to the alumna itself.
+  final bool emailed;
 
   /// Ready-to-send text containing the code and how to use it.
   final String message;
@@ -433,6 +440,7 @@ class ModerationService extends ApiClient {
     return ClaimInvite(
       code: data['code'] as String,
       message: data['message'] as String? ?? '',
+      emailed: data['emailed'] == true,
     );
   }
 

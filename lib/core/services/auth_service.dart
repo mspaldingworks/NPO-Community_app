@@ -449,6 +449,27 @@ class AuthService extends ApiClient with ChangeNotifier {
     await _saveUser(User.fromJson(userData), token);
   }
 
+  /// Asks for a reset code; the server never says whether the email exists.
+  Future<void> requestPasswordReset(String email) async {
+    await post(
+      urlPath: '/api/password-reset/',
+      jsonHeaders: const {'Content-Type': 'application/json'},
+      jsonPayload: {'email': email},
+    );
+  }
+
+  Future<void> confirmPasswordReset({
+    required String email,
+    required String code,
+    required String password,
+  }) async {
+    await post(
+      urlPath: '/api/password-reset/confirm/',
+      jsonHeaders: const {'Content-Type': 'application/json'},
+      jsonPayload: {'email': email, 'code': code, 'password': password},
+    );
+  }
+
   Future<User> getProfile() async {
     final userData =
         await read(urlPath: '/api/profile/', jsonHeaders: authHeaders)
