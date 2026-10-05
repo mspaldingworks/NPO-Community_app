@@ -25,16 +25,16 @@ class ScaffoldWithNavBar extends StatelessWidget {
         // Home (the Emerge mark) sits in the middle; Events is reached from
         // Home rather than from a tab.
         destinations: const [
-          const NavigationDestination(
+          NavigationDestination(
             label: 'Community',
             icon: TourAnchor(name: 'Community', child: Icon(Icons.group)),
           ),
-          const NavigationDestination(
+          NavigationDestination(
             label: 'Home',
             icon: TourAnchor(name: 'Home', child: _NavLogoMark()),
             selectedIcon: TourAnchor(name: 'Home', child: _NavLogoMark()),
           ),
-          const NavigationDestination(
+          NavigationDestination(
             label: 'Alumni Directory',
             icon: TourAnchor(
               name: 'Alumni Directory',
