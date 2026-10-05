@@ -150,7 +150,11 @@ class _OverviewTab extends StatelessWidget {
               _Stat(
                 keyName: 'members-total',
                 value: '${o.count('members', 'total')}',
-                label: 'members',
+                label: 'on the roster',
+              ),
+              _Stat(
+                value: '${o.count('members', 'active')}',
+                label: 'active accounts',
               ),
               _Stat(
                 value: '${o.count('members', 'claimed')}',

@@ -10,6 +10,7 @@ const _overviewJson = {
   'generated_at': '2026-10-05T18:00:00Z',
   'members': {
     'total': 385,
+    'active': 2,
     'claimed': 2,
     'unclaimed': 379,
     'invited': 0,
