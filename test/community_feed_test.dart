@@ -21,10 +21,14 @@ Post _post(int id, String title, DateTime when, {int author = 1}) => Post(
 );
 
 class _FakeCommunity extends CommunityService {
-  _FakeCommunity({required this.groups, required List<Post> posts})
-    : posts = [...posts];
+  _FakeCommunity({
+    required this.groups,
+    required List<Post> posts,
+    this.classes = const [],
+  }) : posts = [...posts];
 
   final List<Group> groups;
+  final List<ClassGroup> classes;
   List<Post> posts;
   final calls = <String>[];
 
@@ -32,8 +36,13 @@ class _FakeCommunity extends CommunityService {
   Future<List<Group>> fetchGroups() async => groups;
 
   @override
-  Future<Group> fetchGroupById(int groupId) async =>
-      groups.firstWhere((g) => g.id == groupId);
+  Future<List<ClassGroup>> fetchClasses() async => classes;
+
+  @override
+  Future<Group> fetchGroupById(int groupId) async => [
+    ...groups,
+    ...classes.map((c) => c.group),
+  ].firstWhere((g) => g.id == groupId);
 
   @override
   Future<List<Post>> fetchPostsForGroup(int groupId, {DateTime? since}) async {
@@ -98,7 +107,6 @@ void main() {
 
     // The other groups are one tap away; the statewide one is not repeated.
     expect(find.byKey(const Key('chip-regional')), findsOneWidget);
-    expect(find.byKey(const Key('chip-classes')), findsOneWidget);
     expect(find.byKey(const Key('chip-group-4')), findsOneWidget);
     expect(find.byKey(const Key('chip-group-1')), findsNothing);
     expect(find.byTooltip('Add Post'), findsOneWidget);
@@ -132,6 +140,67 @@ void main() {
     final breaking = tester.getTopLeft(find.text('Breaking'));
     final first = tester.getTopLeft(find.text('First'));
     expect(breaking.dy, lessThan(first.dy));
+  });
+
+  testWidgets('the class-year dropdown opens a class chat', (tester) async {
+    final service = _FakeCommunity(
+      groups: [_statewide],
+      posts: [_post(1, 'Statewide hello', t0)],
+      classes: [
+        ClassGroup(
+          group: Group(
+            id: 30,
+            name: 'Class of 2020',
+            kind: 'cohort',
+            programYear: 2020,
+          ),
+          isMember: false,
+          isOwnClass: false,
+          memberCount: 20,
+        ),
+        ClassGroup(
+          group: Group(
+            id: 29,
+            name: 'Class of 2019',
+            kind: 'cohort',
+            programYear: 2019,
+          ),
+          isMember: true,
+          isOwnClass: true,
+          memberCount: 24,
+        ),
+      ],
+    );
+    await _pump(
+      tester,
+      CommunityScreen(
+        service: service,
+        userDirectory: () async => [],
+        currentUserId: 1,
+        pollInterval: const Duration(minutes: 5),
+      ),
+    );
+    expect(find.byKey(const Key('class-picker')), findsOneWidget);
+    expect(find.byKey(const Key('chip-classes')), findsNothing);
+
+    // A class the member is not in explains itself instead of opening.
+    await tester.tap(find.byKey(const Key('class-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Class of 2020').last);
+    await tester.pumpAndSettle();
+    expect(
+      find.text('The Class of 2020 chat is for members of that class.'),
+      findsOneWidget,
+    );
+    expect(find.text('Statewide hello'), findsOneWidget);
+
+    // Her own class opens its chat.
+    await tester.tap(find.byKey(const Key('class-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Class of 2019').last);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Group info, events and polls'), findsOneWidget);
+    expect(find.text('Statewide hello'), findsNothing);
   });
 
   testWidgets('without a statewide group the tab lists groups instead', (

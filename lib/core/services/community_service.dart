@@ -32,6 +32,17 @@ class CommunityService extends ApiClient {
         .toList();
   }
 
+  /// Every class year's chat, newest first, with whether the member is in it.
+  Future<List<ClassGroup>> fetchClasses() async {
+    final result = await read(
+      urlPath: '/api/groups/classes/',
+      jsonHeaders: authHeaders,
+    );
+    return (result as List<dynamic>)
+        .map((json) => ClassGroup.fromJson(json as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Joins or leaves a regional group. Leaving the home region sticks.
   Future<void> setRegionMembership(int groupId, {required bool join}) async {
     await post(

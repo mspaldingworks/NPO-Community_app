@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/features/community/group_feed.dart';
+import 'package:npo_community/pages/community/post_list_screen.dart';
 import 'package:npo_community/models/group.dart';
 import 'package:npo_community/models/user.dart';
 
@@ -29,13 +30,47 @@ class CommunityScreen extends StatefulWidget {
 class _CommunityScreenState extends State<CommunityScreen> {
   late final CommunityService _service = widget.service ?? CommunityService();
   late Future<List<Group>> _groups = _service.fetchGroups();
+  late Future<List<ClassGroup>> _classes = _service.fetchClasses();
 
   Future<void> _reloadGroups() async {
     final groups = _service.fetchGroups();
+    final classes = _service.fetchClasses();
     setState(() {
       _groups = groups;
+      _classes = classes;
     });
     await groups;
+  }
+
+  /// Opens a class chat: by route under the app's router, else by a plain
+  /// push (demo builds and tests).
+  void _openClass(ClassGroup entry) {
+    if (!entry.isMember) {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(
+            'The ${entry.group.name} chat is for members of that class.',
+          ),
+        ),
+      );
+      return;
+    }
+    if (GoRouter.maybeOf(context) != null) {
+      context.push(
+        '/community/group/${entry.group.id}',
+        extra: entry.group.name,
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PostListScreen(
+            groupId: entry.group.id,
+            groupName: entry.group.name,
+            service: _service,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -93,6 +128,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           body: Column(
             children: [
               _GroupSwitcher(others: others),
+              _ClassPicker(future: _classes, onOpen: _openClass),
               const Divider(height: 1),
               Expanded(
                 child: GroupFeed(
@@ -134,13 +170,6 @@ class _GroupSwitcher extends StatelessWidget {
             label: const Text('Regional groups'),
             onPressed: () => context.push('/community/regional'),
           ),
-          const SizedBox(width: 8),
-          ActionChip(
-            key: const Key('chip-classes'),
-            avatar: const Icon(Icons.school_outlined, size: 18),
-            label: const Text('Class chats'),
-            onPressed: () => context.push('/community/classes'),
-          ),
           for (final group in others) ...[
             const SizedBox(width: 8),
             ActionChip(
@@ -158,6 +187,64 @@ class _GroupSwitcher extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Every year Emerge Kentucky had a class, as a dropdown. Picking a year
+/// opens that class's chat; years the member isn't in are marked.
+class _ClassPicker extends StatelessWidget {
+  const _ClassPicker({required this.future, required this.onOpen});
+
+  final Future<List<ClassGroup>> future;
+  final void Function(ClassGroup entry) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<ClassGroup>>(
+      future: future,
+      builder: (context, snapshot) {
+        final classes = snapshot.data ?? const <ClassGroup>[];
+        if (classes.isEmpty) return const SizedBox.shrink();
+        final own = classes.where((c) => c.isOwnClass).firstOrNull;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          child: DropdownMenu<int>(
+            key: const Key('class-picker'),
+            width: MediaQuery.sizeOf(context).width - 24,
+            leadingIcon: const Icon(Icons.school_outlined),
+            label: const Text('Class chats'),
+            hintText: 'Pick a class year',
+            initialSelection: own?.group.id,
+            requestFocusOnTap: false,
+            inputDecorationTheme: const InputDecorationTheme(
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 12),
+            ),
+            dropdownMenuEntries: [
+              for (final entry in classes)
+                DropdownMenuEntry<int>(
+                  value: entry.group.id,
+                  label: entry.group.name,
+                  leadingIcon: Icon(
+                    entry.isMember ? Icons.forum_outlined : Icons.lock_outline,
+                    size: 18,
+                  ),
+                  trailingIcon: entry.isOwnClass
+                      ? const Text('yours')
+                      : entry.memberCount > 0
+                      ? Text('${entry.memberCount}')
+                      : null,
+                ),
+            ],
+            onSelected: (id) {
+              if (id == null) return;
+              final entry = classes.firstWhere((c) => c.group.id == id);
+              onOpen(entry);
+            },
+          ),
+        );
+      },
     );
   }
 }

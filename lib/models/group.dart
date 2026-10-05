@@ -62,6 +62,33 @@ class Group {
   }
 }
 
+/// One class year's chat as listed by `/api/groups/classes/`: every year
+/// Emerge Kentucky had a class, whether or not the viewer belongs to it.
+class ClassGroup {
+  ClassGroup({
+    required this.group,
+    required this.isMember,
+    required this.isOwnClass,
+    this.memberCount = 0,
+  });
+
+  final Group group;
+  final bool isMember;
+
+  /// The viewer's own Emerge class.
+  final bool isOwnClass;
+  final int memberCount;
+
+  int? get year => group.programYear;
+
+  factory ClassGroup.fromJson(Map<String, dynamic> json) => ClassGroup(
+    group: Group.fromJson(json),
+    isMember: json['is_member'] == true,
+    isOwnClass: json['is_own_class'] == true,
+    memberCount: json['member_count'] as int? ?? 0,
+  );
+}
+
 /// A regional group as listed by `/api/groups/regions/`.
 class RegionalGroup {
   RegionalGroup({
