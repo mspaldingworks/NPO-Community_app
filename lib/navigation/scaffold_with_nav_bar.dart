@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class ScaffoldWithNavBar extends StatelessWidget {
@@ -18,10 +16,6 @@ class ScaffoldWithNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasHomeAlerts = Provider.of<HomeAlertService>(
-      context,
-      listen: true,
-    ).hasAlerts;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
@@ -30,21 +24,15 @@ class ScaffoldWithNavBar extends StatelessWidget {
         // Order must match the StatefulShellRoute branches in app_router.
         // Home (the Emerge mark) sits in the middle; Events is reached from
         // Home rather than from a tab.
-        destinations: [
+        destinations: const [
           const NavigationDestination(
             label: 'Community',
             icon: TourAnchor(name: 'Community', child: Icon(Icons.group)),
           ),
-          NavigationDestination(
+          const NavigationDestination(
             label: 'Home',
-            icon: TourAnchor(
-              name: 'Home',
-              child: _NavGlow(glow: hasHomeAlerts, child: const _NavLogoMark()),
-            ),
-            selectedIcon: TourAnchor(
-              name: 'Home',
-              child: _NavGlow(glow: hasHomeAlerts, child: const _NavLogoMark()),
-            ),
+            icon: TourAnchor(name: 'Home', child: _NavLogoMark()),
+            selectedIcon: TourAnchor(name: 'Home', child: _NavLogoMark()),
           ),
           const NavigationDestination(
             label: 'Alumni Directory',
@@ -60,42 +48,22 @@ class ScaffoldWithNavBar extends StatelessWidget {
   }
 }
 
-class _NavGlow extends StatelessWidget {
-  const _NavGlow({required this.child, required this.glow});
-
-  final Widget child;
-  final bool glow;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: glow
-            ? [
-                BoxShadow(
-                  color: Colors.redAccent.withAlpha(179),
-                  blurRadius: 12,
-                  spreadRadius: 2,
-                ),
-              ]
-            : const [],
-      ),
-      child: child,
-    );
-  }
-}
-
 class _NavLogoMark extends StatelessWidget {
   const _NavLogoMark();
 
   static const String _assetPath = 'assets/branding/emerge_ky_logo.png';
 
+  /// The Emerge Kentucky wordmark is wide (600×215), so it gets the width of
+  /// the tab's indicator pill rather than an icon's square: readable, and it
+  /// still sits inside the pill when selected.
+  static const double _width = 64;
+  static const double _height = 26;
+
   @override
   Widget build(BuildContext context) {
-    final size = IconTheme.of(context).size ?? 24;
-    return SizedBox.square(
-      dimension: size,
+    return SizedBox(
+      width: _width,
+      height: _height,
       child: Image.asset(
         _assetPath,
         fit: BoxFit.contain,

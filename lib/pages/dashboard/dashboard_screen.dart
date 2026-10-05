@@ -295,15 +295,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 TourAnchor(
-                  name: 'Friends',
+                  name: 'Messages',
                   child: _buildInfoCard(
                     Icons.chat,
-                    'Friends',
+                    'Messages',
                     onTap: () => context.push('/chat'),
                   ),
                 ),
                 TourAnchor(
-                  name: 'Messages',
+                  name: 'Replies',
                   child: _buildInfoCard(
                     Icons.mark_email_unread_outlined,
                     repliesText,
@@ -315,7 +315,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       context.push('/community');
                     },
                     isHighlighted: replies > 0,
-                    highlightColor: Colors.redAccent,
                   ),
                 ),
                 TourAnchor(
@@ -344,7 +343,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String text, {
     VoidCallback? onTap,
     bool isHighlighted = false,
-    Color highlightColor = AppColors.tertiary,
+    // The brand green of the compose button, so highlights read as "go".
+    Color highlightColor = AppColors.green,
   }) {
     final Color backgroundColor = isHighlighted
         ? highlightColor

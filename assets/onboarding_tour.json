@@ -57,7 +57,7 @@
       "id": "replies",
       "screen": "home",
       "spotlight": {
-        "target_element_name": "Messages",
+        "target_element_name": "Replies",
         "padding_px": 12,
         "shroud_opacity": 0.6,
         "radius_multiplier": 0.85
@@ -67,16 +67,16 @@
       "progress": "Step 5 of 7"
     },
     {
-      "id": "friends",
+      "id": "messages",
       "screen": "home",
       "spotlight": {
-        "target_element_name": "Friends",
+        "target_element_name": "Messages",
         "padding_px": 12,
         "shroud_opacity": 0.6,
         "radius_multiplier": 0.85
       },
-      "title": "Friends",
-      "body": "Jump into your friend chats and messages from here.",
+      "title": "Messages",
+      "body": "Your direct messages with other alumnae live here.",
       "progress": "Step 6 of 7"
     },
     {
