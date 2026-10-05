@@ -179,17 +179,7 @@ class AppRouter {
               ),
             ],
           ),
-          // Alumni Directory
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/directory',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: AlumniDirectoryScreen()),
-              ),
-            ],
-          ),
-          // Home
+          // Home (centre tab; order must match ScaffoldWithNavBar)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -205,16 +195,13 @@ class AppRouter {
               ),
             ],
           ),
-          // Events
+          // Alumni Directory
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/events/calendar',
-                pageBuilder: (context, state) => NoTransitionPage(
-                  child: EventsScreen(
-                    canModerate: authService.realUser?.canModerate ?? false,
-                  ),
-                ),
+                path: '/directory',
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: AlumniDirectoryScreen()),
               ),
             ],
           ),
@@ -250,6 +237,14 @@ class AppRouter {
         path: '/alumni/running',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AlumniRunningScreen(),
+      ),
+      // Events open over the shell from Home's Calendar tile and counter.
+      GoRoute(
+        path: '/events',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => EventsScreen(
+          canModerate: authService.realUser?.canModerate ?? false,
+        ),
       ),
       GoRoute(
         path: '/events/:id',

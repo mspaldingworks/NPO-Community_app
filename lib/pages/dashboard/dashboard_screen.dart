@@ -217,7 +217,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: EmergeActionTile(
                 label: 'Calendar',
                 icon: Icons.calendar_month_outlined,
-                onTap: () => context.push('/events/calendar'),
+                onTap: () => context.push('/events'),
               ),
             ),
             const SizedBox(width: 2),
@@ -323,7 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: _buildInfoCard(
                     Icons.calendar_today_outlined,
                     _isLoading ? '...' : '$_todaysEventsCount events this week',
-                    onTap: () => context.push('/events/calendar'),
+                    onTap: () => context.push('/events'),
                     isHighlighted: _todaysEventsCount > 0,
                   ),
                 ),

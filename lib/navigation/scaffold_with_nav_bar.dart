@@ -27,17 +27,13 @@ class ScaffoldWithNavBar extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+        // Order must match the StatefulShellRoute branches in app_router.
+        // Home (the Emerge mark) sits in the middle; Events is reached from
+        // Home rather than from a tab.
         destinations: [
           const NavigationDestination(
             label: 'Community',
             icon: TourAnchor(name: 'Community', child: Icon(Icons.group)),
-          ),
-          const NavigationDestination(
-            label: 'Alumni Directory',
-            icon: TourAnchor(
-              name: 'Alumni Directory',
-              child: Icon(Icons.people_outline),
-            ),
           ),
           NavigationDestination(
             label: 'Home',
@@ -51,8 +47,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
             ),
           ),
           const NavigationDestination(
-            label: 'Events',
-            icon: TourAnchor(name: 'Events', child: Icon(Icons.calendar_today)),
+            label: 'Alumni Directory',
+            icon: TourAnchor(
+              name: 'Alumni Directory',
+              child: Icon(Icons.people_outline),
+            ),
           ),
         ],
         onDestinationSelected: _goBranch,
