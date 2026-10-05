@@ -1,4 +1,5 @@
 import 'package:npo_community/core/services/api_client.dart';
+import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 
 DateTime? _date(dynamic value) => value is String && value.isNotEmpty
     ? DateTime.tryParse(value)?.toLocal()
@@ -84,6 +85,7 @@ class CommunityEvent {
     this.shifts = const [],
     this.openVolunteerSlots = 0,
     this.myShiftCount = 0,
+    this.fundraiser,
   });
 
   final int id;
@@ -109,6 +111,9 @@ class CommunityEvent {
   final List<VolunteerShift> shifts;
   final int openVolunteerSlots;
   final int myShiftCount;
+
+  /// Set when this event is an alumna-hosted fundraiser.
+  final EventFundraiser? fundraiser;
 
   bool get isStatewide => group == null;
   String get scopeLabel => group?.name ?? 'Statewide';
@@ -145,6 +150,9 @@ class CommunityEvent {
       ],
       openVolunteerSlots: json['open_volunteer_slots'] as int? ?? 0,
       myShiftCount: json['my_shift_count'] as int? ?? 0,
+      fundraiser: json['fundraiser'] is Map
+          ? EventFundraiser.fromJson(json['fundraiser'] as Map<String, dynamic>)
+          : null,
     );
   }
 }

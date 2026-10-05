@@ -14,6 +14,7 @@ import 'package:npo_community/features/events/event_detail_screen.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/events/ics.dart';
+import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -134,6 +135,11 @@ class _FakeEvents extends EventsService {
   }
 }
 
+class _NoFundraisers extends FundraisersService {
+  @override
+  Future<List<Fundraiser>> fetchMine() async => const [];
+}
+
 Future<void> _pumpScreen(
   WidgetTester tester,
   _FakeEvents service, {
@@ -147,6 +153,7 @@ Future<void> _pumpScreen(
     MaterialApp(
       home: EventsScreen(
         service: service,
+        fundraisers: _NoFundraisers(),
         canModerate: canModerate,
         now: () => _now,
         candidates: candidates,

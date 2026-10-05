@@ -244,6 +244,10 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => EventsScreen(
           canModerate: authService.realUser?.canModerate ?? false,
+          hostName: authService.realUser?.fullName?.trim().isNotEmpty == true
+              ? authService.realUser!.fullName!.trim()
+              : authService.realUser?.username ?? 'You',
+          classYear: authService.realUser?.programYear,
         ),
       ),
       GoRoute(

@@ -4,6 +4,8 @@ import 'package:npo_community/features/events/event_form.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/events/ics.dart';
+import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
+import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// One event: when and where, RSVP, volunteer shifts, add-to-calendar, and
@@ -321,6 +323,10 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             ),
           ],
         ),
+        if (event.fundraiser != null) ...[
+          const SizedBox(height: 20),
+          _GiveBlock(fundraiser: event.fundraiser!),
+        ],
         if (event.shifts.isNotEmpty) ...[
           const SizedBox(height: 24),
           Text('Volunteer shifts', style: theme.textTheme.titleMedium),
@@ -409,6 +415,81 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ? null
           : () => _apply(() => _service.claimShift(event.id, shift.id)),
       child: const Text('Sign up'),
+    );
+  }
+}
+
+/// The fundraiser behind an event: progress and the way to give.
+class _GiveBlock extends StatelessWidget {
+  const _GiveBlock({required this.fundraiser});
+
+  final EventFundraiser fundraiser;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final f = fundraiser;
+    final percent = f.goalCents == 0
+        ? 0.0
+        : (f.raisedCents / f.goalCents).clamp(0.0, 1.0);
+    return Card(
+      key: const Key('give-block'),
+      color: scheme.secondaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.favorite_outline,
+                  color: scheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Fundraiser for Emerge Kentucky',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(value: percent, minHeight: 8),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${formatDollars(f.raisedCents)} of ${formatDollars(f.goalCents)} '
+              '· ${f.donorCount} ${f.donorCount == 1 ? 'donor' : 'donors'}',
+              style: TextStyle(color: scheme.onSecondaryContainer),
+            ),
+            const SizedBox(height: 10),
+            if (f.url.isNotEmpty && f.isLive)
+              FilledButton.icon(
+                key: const Key('give-button'),
+                onPressed: () => launchUrl(
+                  Uri.parse(f.url),
+                  mode: LaunchMode.externalApplication,
+                ),
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('Give on Givebutter'),
+              )
+            else
+              Text(
+                f.isLive
+                    ? previewNote
+                    : 'This fundraiser is ${f.status == 'closed' ? 'closed' : 'not open yet'}.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSecondaryContainer,
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

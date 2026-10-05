@@ -6,6 +6,8 @@ import 'package:npo_community/features/alumni_running/models/alumni_candidate.da
 import 'package:npo_community/features/events/event_detail_screen.dart';
 import 'package:npo_community/features/events/event_form.dart';
 import 'package:npo_community/features/events/events_service.dart';
+import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
+import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -91,13 +93,22 @@ class EventsScreen extends StatefulWidget {
   const EventsScreen({
     super.key,
     this.service,
+    this.fundraisers,
     this.canModerate = false,
+    this.hostName = 'You',
+    this.classYear,
     this.now,
     this.candidates,
   });
 
   /// Injected in tests.
   final EventsService? service;
+  final FundraisersService? fundraisers;
+
+  /// The signed-in member's name and Emerge class, used to prefill a new
+  /// fundraiser's title.
+  final String hostName;
+  final int? classYear;
 
   /// Moderators may add statewide events.
   final bool canModerate;
@@ -114,20 +125,47 @@ class EventsScreen extends StatefulWidget {
 
 class _EventsScreenState extends State<EventsScreen> {
   late final EventsService _service = widget.service ?? EventsService();
+  late final FundraisersService _fundraisers =
+      widget.fundraisers ?? FundraisersService();
   late Future<List<CommunityEvent>> _events = _service.fetchEvents(when: 'all');
   late Future<MyCommitments> _mine = _service.fetchMine();
+  late Future<List<Fundraiser>> _myFundraisers = _fundraisers.fetchMine();
 
   DateTime get _now => widget.now?.call() ?? DateTime.now();
 
   Future<void> _reload() async {
     final events = _service.fetchEvents(when: 'all');
     final mine = _service.fetchMine();
+    final fundraisers = _fundraisers.fetchMine();
     setState(() {
       _events = events;
       _mine = mine;
+      _myFundraisers = fundraisers;
     });
-    await Future.wait([events, mine]);
+    // Each tab reports its own failure; a refresh must not throw.
+    await Future.wait([events, mine, fundraisers].map(_settle));
   }
+
+  static Future<void> _settle(Future<Object?> future) =>
+      future.then((_) {}, onError: (Object _) {});
+
+  Future<void> _startFundraiser() async {
+    final created = await startFundraiserFlow(
+      context,
+      service: _fundraisers,
+      hostName: widget.hostName,
+      classYear: widget.classYear,
+    );
+    if (created) await _reload();
+  }
+
+  Future<void> _openFundraiser(Fundraiser fundraiser) => showFundraiserSheet(
+    context,
+    fundraiser: fundraiser,
+    service: _fundraisers,
+    onChanged: _reload,
+    onOpenEvent: _open,
+  );
 
   Future<void> _create() async {
     final saved = await showEventForm(
@@ -201,7 +239,15 @@ class _EventsScreenState extends State<EventsScreen> {
                   canModerate: widget.canModerate,
                   onOpen: _open,
                 ),
-                _MineTab(future: _mine, onOpen: _open, onRefresh: _reload),
+                _MineTab(
+                  future: _mine,
+                  fundraisers: _myFundraisers,
+                  canModerate: widget.canModerate,
+                  onOpen: _open,
+                  onRefresh: _reload,
+                  onStartFundraiser: _startFundraiser,
+                  onOpenFundraiser: _openFundraiser,
+                ),
               ],
             );
           },
@@ -339,13 +385,21 @@ class _CalendarTabState extends State<_CalendarTab>
 class _MineTab extends StatelessWidget {
   const _MineTab({
     required this.future,
+    required this.fundraisers,
+    required this.canModerate,
     required this.onOpen,
     required this.onRefresh,
+    required this.onStartFundraiser,
+    required this.onOpenFundraiser,
   });
 
   final Future<MyCommitments> future;
+  final Future<List<Fundraiser>> fundraisers;
+  final bool canModerate;
   final void Function(int id) onOpen;
   final Future<void> Function() onRefresh;
+  final Future<void> Function() onStartFundraiser;
+  final Future<void> Function(Fundraiser fundraiser) onOpenFundraiser;
 
   @override
   Widget build(BuildContext context) {
@@ -386,6 +440,29 @@ class _MineTab extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Your fundraisers',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                  ),
+                  FilledButton.tonalIcon(
+                    key: const Key('start-fundraiser'),
+                    onPressed: onStartFundraiser,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Start one'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              _FundraisersSection(
+                future: fundraisers,
+                showSample: canModerate,
+                onOpen: onOpenFundraiser,
               ),
               const SizedBox(height: 12),
               Text('Your RSVPs', style: theme.textTheme.titleMedium),
@@ -433,6 +510,69 @@ class _MineTab extends StatelessWidget {
                   ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+/// The member's own fundraisers, with a preview note while Givebutter is
+/// not connected.
+class _FundraisersSection extends StatelessWidget {
+  const _FundraisersSection({
+    required this.future,
+    required this.showSample,
+    required this.onOpen,
+  });
+
+  final Future<List<Fundraiser>> future;
+  final bool showSample;
+  final Future<void> Function(Fundraiser fundraiser) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return FutureBuilder<List<Fundraiser>>(
+      future: future,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: snapshot.hasError
+                ? Text('${snapshot.error}')
+                : const LinearProgressIndicator(),
+          );
+        }
+        final rows = snapshot.data!;
+        if (rows.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'Host a house party, happy hour or birthday fundraiser for '
+              'Emerge Kentucky. Pick a template and we set up the page.',
+            ),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (rows.any((f) => f.givebutterMode != 'live'))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  previewNote,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.tertiary,
+                  ),
+                ),
+              ),
+            for (final fundraiser in rows)
+              FundraiserCard(
+                fundraiser: fundraiser,
+                showSample: showSample,
+                onTap: () => onOpen(fundraiser),
+              ),
+          ],
         );
       },
     );
@@ -528,6 +668,13 @@ class EventListCard extends StatelessWidget {
                   if (event.isCancelled)
                     _chip(context, 'Cancelled', color: scheme.errorContainer),
                   if (showSample && event.isDemo) _chip(context, 'Sample'),
+                  if (event.fundraiser != null)
+                    _chip(
+                      context,
+                      'Fundraiser',
+                      color: scheme.secondaryContainer,
+                      icon: Icons.favorite_outline,
+                    ),
                   if (event.myRsvp == 'going')
                     _chip(
                       context,

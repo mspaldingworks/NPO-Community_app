@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
+import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:npo_community/features/moderation/moderation_service.dart';
 
 /// Moderation control panel: reports queue, member actions, audit log.
@@ -13,12 +15,14 @@ class ModerationScreen extends StatelessWidget {
   const ModerationScreen({
     super.key,
     this.service,
+    this.fundraisers,
     this.isSuperuser = false,
     this.viewerId,
   });
 
-  /// Optional injected service (used in tests).
+  /// Optional injected services (used in tests).
   final ModerationService? service;
+  final FundraisersService? fundraisers;
   final bool isSuperuser;
   final int? viewerId;
 
@@ -26,7 +30,7 @@ class ModerationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final api = service ?? ModerationService();
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Moderation'),
@@ -37,6 +41,7 @@ class ModerationScreen extends StatelessWidget {
               Tab(text: 'Signups'),
               Tab(text: 'Claims'),
               Tab(text: 'Members'),
+              Tab(text: 'Fundraisers'),
               Tab(text: 'Audit log'),
             ],
           ),
@@ -51,6 +56,7 @@ class ModerationScreen extends StatelessWidget {
               isSuperuser: isSuperuser,
               viewerId: viewerId,
             ),
+            _FundraisersTab(service: fundraisers ?? FundraisersService()),
             _AuditTab(service: api),
           ],
         ),
@@ -1259,6 +1265,82 @@ class _MemberSheetState extends State<_MemberSheet> {
 }
 
 // -- audit log ---------------------------------------------------------------
+
+// -- fundraisers ---------------------------------------------------------------
+
+/// Member fundraisers waiting for a moderator to approve or reject.
+class _FundraisersTab extends StatefulWidget {
+  const _FundraisersTab({required this.service});
+
+  final FundraisersService service;
+
+  @override
+  State<_FundraisersTab> createState() => _FundraisersTabState();
+}
+
+class _FundraisersTabState extends State<_FundraisersTab>
+    with AutomaticKeepAliveClientMixin {
+  late Future<List<Fundraiser>> _future = widget.service.fetchPending();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  Future<void> _refresh() async {
+    final future = widget.service.fetchPending();
+    setState(() {
+      _future = future;
+    });
+    await future;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return RefreshIndicator(
+      onRefresh: _refresh,
+      child: FutureBuilder<List<Fundraiser>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return snapshot.hasError
+                ? ListView(
+                    padding: const EdgeInsets.all(24),
+                    children: [Text('${snapshot.error}')],
+                  )
+                : const Center(child: CircularProgressIndicator());
+          }
+          final rows = snapshot.data!;
+          if (rows.isEmpty) {
+            return ListView(
+              padding: const EdgeInsets.all(24),
+              children: const [
+                Text(
+                  'No fundraisers are waiting for review.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            );
+          }
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+            children: [
+              for (final fundraiser in rows)
+                FundraiserCard(
+                  fundraiser: fundraiser,
+                  onTap: () => showFundraiserSheet(
+                    context,
+                    fundraiser: fundraiser,
+                    service: widget.service,
+                    onChanged: _refresh,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
 class _AuditTab extends StatelessWidget {
   const _AuditTab({required this.service});
