@@ -78,7 +78,6 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
             children: [
               _buildSearchField(),
               _buildCohortFilters(),
-              _buildRoleFilters(),
               Expanded(child: _buildBody()),
             ],
           );
@@ -150,36 +149,6 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
     } on ProviderNotFoundException {
       return null;
     }
-  }
-
-  Widget _buildRoleFilters() {
-    return SizedBox(
-      height: 48,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-            child: ChoiceChip(
-              label: const Text('Any role'),
-              selected: _controller.volunteerRole == null,
-              onSelected: (_) => _controller.setVolunteerRole(null),
-            ),
-          ),
-          for (final entry in volunteerRoleShortLabels.entries)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: ChoiceChip(
-                key: Key('role-filter-${entry.key}'),
-                label: Text(entry.value),
-                selected: _controller.volunteerRole == entry.key,
-                onSelected: (_) => _controller.setVolunteerRole(entry.key),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 
   Widget _buildBody() {

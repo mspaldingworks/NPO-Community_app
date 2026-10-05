@@ -573,8 +573,7 @@ class _VolunteersTab extends StatelessWidget {
         Text('Who has offered to help', style: theme.textTheme.titleMedium),
         const SizedBox(height: 4),
         Text(
-          'From the "How I can help" choices on member profiles. Filter the '
-          'directory by role to reach them.',
+          'From the "How I can help" choices on member profiles.',
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
