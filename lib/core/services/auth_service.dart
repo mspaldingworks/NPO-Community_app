@@ -55,6 +55,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   /// Whether the signed-in account may open the moderation panel. Judged on
   /// [realUser], so a touring persona never grants or removes it.
   bool get canModerate => realUser?.canModerate ?? false;
+  bool get canAdmin => realUser?.canAdmin ?? false;
 
   /// Seeds the signed-in account without a network round trip. Tests only.
   @visibleForTesting

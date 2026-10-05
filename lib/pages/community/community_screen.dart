@@ -145,7 +145,10 @@ class _GroupSwitcher extends StatelessWidget {
             const SizedBox(width: 8),
             ActionChip(
               key: Key('chip-group-${group.id}'),
-              avatar: const Icon(Icons.groups, size: 18),
+              avatar: Icon(
+                group.isCandidates ? Icons.how_to_vote_outlined : Icons.groups,
+                size: 18,
+              ),
               label: Text(group.name),
               onPressed: () => context.push(
                 '/community/group/${group.id}',

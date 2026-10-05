@@ -33,6 +33,7 @@ import 'package:npo_community/models/post.dart';
 import 'package:npo_community/features/events/event_detail_screen.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
+import 'package:npo_community/features/admin_console/admin_console_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 import 'package:npo_community/pages/auth/claim_profile_screen.dart';
 import 'package:npo_community/pages/auth/forgot_password_screen.dart';
@@ -257,6 +258,11 @@ class AppRouter {
             EventDetailScreen(eventId: int.parse(state.pathParameters['id']!)),
       ),
       GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
+      GoRoute(
+        path: '/admin/console',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AdminConsoleScreen(),
+      ),
       GoRoute(
         path: '/admin/moderation',
         builder: (context, state) => ModerationScreen(

@@ -129,6 +129,22 @@ class SettingsScreen extends StatelessWidget {
             ),
             Consumer<AuthService>(
               builder: (context, auth, _) {
+                if (!auth.canAdmin) return const SizedBox.shrink();
+                return ListTile(
+                  key: const Key('admin-console-tile'),
+                  title: const Text('Control console'),
+                  subtitle: const Text(
+                    'Members, fundraising, events, volunteers, integrations',
+                  ),
+                  leading: const Icon(Icons.admin_panel_settings_outlined),
+                  trailing: const Icon(Icons.chevron_right),
+                  minVerticalPadding: 16,
+                  onTap: () => context.push('/admin/console'),
+                );
+              },
+            ),
+            Consumer<AuthService>(
+              builder: (context, auth, _) {
                 if (!auth.canModerate) return const SizedBox.shrink();
                 return ListTile(
                   title: const Text('Moderation'),

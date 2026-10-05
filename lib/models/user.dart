@@ -18,6 +18,9 @@ class User {
   /// the server (`can_moderate`); opens the moderation panel.
   final bool canModerate;
 
+  /// Superusers and admin-role holders: opens the control console.
+  final bool canAdmin;
+
   /// The server's verification tier key, e.g. 'unverified' or 'verified'.
   final String? verificationTier;
   final int? programYear;
@@ -40,6 +43,7 @@ class User {
     this.isStaff = false,
     this.isSuperuser = false,
     this.canModerate = false,
+    this.canAdmin = false,
     this.verificationTier,
     this.programYear,
     this.fullName,
@@ -100,6 +104,9 @@ class User {
           json['can_moderate'] as bool? ??
           ((json['is_staff'] as bool? ?? false) ||
               (json['is_superuser'] as bool? ?? false)),
+      canAdmin:
+          json['can_admin'] as bool? ??
+          (json['is_superuser'] as bool? ?? false),
       verificationTier: json['verification_tier'] as String?,
       programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,

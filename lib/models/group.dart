@@ -5,8 +5,9 @@ class Group {
   final String name;
   final String? image;
 
-  /// Seeded alumni groups: 'statewide', 'regional' or 'cohort' (one per
-  /// class year); member-created groups are 'custom'.
+  /// Seeded alumni groups: 'statewide', 'regional', 'cohort' (one per
+  /// class year) or 'candidates' (alumnae on the ballot); member-created
+  /// groups are 'custom'.
   final String kind;
   final String? slug;
   final String? regionId;
@@ -25,6 +26,9 @@ class Group {
   bool get isStatewide => kind == 'statewide';
   bool get isRegional => kind == 'regional';
   bool get isCohort => kind == 'cohort';
+
+  /// Alumnae currently on the ballot; membership follows their candidacies.
+  bool get isCandidates => kind == 'candidates';
 
   factory Group.fromJson(Map<String, dynamic> json) {
     final regionId = json['region_id'];

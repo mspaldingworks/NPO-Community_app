@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:npo_community/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/friend_service.dart';
 import 'package:npo_community/models/user.dart';
@@ -127,13 +128,13 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: AppColors.canvas,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
-              const Icon(Icons.search, color: Colors.white),
+              const Icon(Icons.search, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: TourAnchor(
@@ -141,10 +142,10 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   child: TextField(
                     controller: _searchController,
                     autofocus: true,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: AppColors.textBlack),
                     decoration: const InputDecoration(
                       hintText: 'Search for users...',
-                      hintStyle: TextStyle(color: Colors.white70),
+                      hintStyle: TextStyle(color: AppColors.textMuted),
                       border: InputBorder.none,
                     ),
                   ),
@@ -152,7 +153,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               ),
               if (_searchController.text.isNotEmpty)
                 IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.white70),
+                  icon: const Icon(Icons.clear, color: AppColors.textMuted),
                   onPressed: () {
                     _searchController.clear();
                     setState(() {

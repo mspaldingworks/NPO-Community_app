@@ -327,6 +327,15 @@ class FundraisersService extends ApiClient {
     ),
   );
 
+  /// Every fundraiser, for the control console (moderators and admins).
+  Future<List<Fundraiser>> fetchAll({String status = ''}) async => _many(
+    await read(
+      urlPath:
+          '/api/fundraisers/?scope=all${status.isEmpty ? '' : '&status=$status'}',
+      jsonHeaders: authHeaders,
+    ),
+  );
+
   Future<List<Fundraiser>> fetchPending() async => _many(
     await read(
       urlPath: '/api/fundraisers/?scope=pending',

@@ -53,6 +53,14 @@ class AppColors {
 /// Montserrat (600/700, buttons uppercase) and body copy in Open Sans — both
 /// bundled under assets/fonts and declared in pubspec.yaml.
 class AppTheme {
+  /// Chip text: dark teal when selected, muted when disabled, body text
+  /// otherwise. Every state is legible on the white and light-cyan chips.
+  static Color _chipLabelColor(Set<WidgetState> states) {
+    if (states.contains(WidgetState.disabled)) return AppColors.textMuted;
+    if (states.contains(WidgetState.selected)) return AppColors.primaryDark;
+    return AppColors.textBlack;
+  }
+
   static ThemeData get lightTheme {
     final colorScheme =
         ColorScheme.fromSeed(
@@ -217,15 +225,29 @@ class AppTheme {
         ),
       ),
 
-      chipTheme: const ChipThemeData(
+      // A ChipTheme label style REPLACES Flutter's defaults rather than
+      // merging with them, so the color must be explicit: without it the
+      // engine paints chip text white and every chip in the app goes blank.
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.white,
+        selectedColor: const Color(0xFFDCF2F5),
+        secondarySelectedColor: const Color(0xFFDCF2F5),
+        disabledColor: AppColors.canvas,
+        checkmarkColor: AppColors.primaryDark,
+        iconTheme: const IconThemeData(color: AppColors.primary, size: 18),
         labelStyle: TextStyle(
+          color: WidgetStateColor.resolveWith(_chipLabelColor),
           fontFamily: 'Montserrat',
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
-        selectedColor: Color(0xFFDCF2F5),
-        checkmarkColor: AppColors.primaryDark,
-        shape: RoundedRectangleBorder(
+        secondaryLabelStyle: TextStyle(
+          color: WidgetStateColor.resolveWith(_chipLabelColor),
+          fontFamily: 'Montserrat',
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(4)),
           side: BorderSide(color: AppColors.border),
         ),
