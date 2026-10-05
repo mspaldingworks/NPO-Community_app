@@ -572,20 +572,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       isPrivateProfile: _isProfilePrivate,
     );
 
-    await _profileService.saveProfile(
-      _statusController.text,
-      _profileImage?.path,
-      fullName: _fullNameController.text,
-      city: _cityController.text,
-      flair: flair,
-      volunteerRoles: _volunteerRoles.toList()..sort(),
-      statusImagePaths: _statusImages.map((f) => f.path).toList(),
-    );
-    if (mounted) {
-      setState(() => _saving = false);
+    try {
+      await _profileService.saveProfile(
+        _statusController.text,
+        _profileImage?.path,
+        fullName: _fullNameController.text,
+        city: _cityController.text,
+        flair: flair,
+        volunteerRoles: _volunteerRoles.toList()..sort(),
+        statusImagePaths: _statusImages.map((f) => f.path).toList(),
+      );
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Profile saved!')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not save: $e')));
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -631,20 +638,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 32),
               Center(
-                child: Stack(
+                child: Column(
                   children: [
-                    _profileImage != null
-                        ? CircleAvatar(
-                            radius: 40,
-                            backgroundImage: FileImage(_profileImage!),
-                          )
-                        : DisplayProfilePic(radius: 40, imageUrl: imageUrl),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt),
-                        onPressed: _pickImage,
+                    GestureDetector(
+                      onTap: _saving ? null : _pickImage,
+                      child: _profileImage != null
+                          ? CircleAvatar(
+                              radius: 48,
+                              backgroundImage: FileImage(_profileImage!),
+                            )
+                          : DisplayProfilePic(radius: 48, imageUrl: imageUrl),
+                    ),
+                    const SizedBox(height: 8),
+                    FilledButton.tonalIcon(
+                      key: const Key('change-photo'),
+                      onPressed: _saving ? null : _pickImage,
+                      icon: const Icon(Icons.camera_alt_outlined),
+                      label: Text(
+                        _profileImage != null
+                            ? 'Photo chosen · tap Save'
+                            : 'Change photo',
                       ),
                     ),
                   ],

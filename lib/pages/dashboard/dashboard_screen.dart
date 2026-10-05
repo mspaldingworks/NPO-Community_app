@@ -443,9 +443,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   isStaff: me.isStaff,
                   isSuperuser: me.isSuperuser,
                   canModerate: me.canModerate,
+                  canAdmin: me.canAdmin,
                   verificationTier: me.verificationTier,
                   programYear: me.programYear,
                   fullName: me.fullName,
+                  volunteerRoles: me.volunteerRoles,
                 );
 
                 try {
@@ -482,7 +484,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: Theme.of(sheetContext).textTheme.titleLarge,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    ListTile(
+                      key: const Key('sheet-change-photo'),
+                      leading: const CircleAvatar(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textWhite,
+                        child: Icon(Icons.camera_alt_outlined),
+                      ),
+                      title: const Text('Change profile photo'),
+                      subtitle: const Text('Pick a photo from your library'),
+                      trailing: const Icon(Icons.chevron_right),
+                      enabled: !saving,
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        _pickAndUploadProfilePic();
+                      },
+                    ),
+                    const Divider(),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: statusCtrl,
                       enabled: !saving,
@@ -576,9 +596,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
               else
                 Positioned(
-                  bottom: 2,
-                  right: 2,
+                  bottom: -2,
+                  right: -2,
                   child: IconButton(
+                    key: const Key('home-change-photo'),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -587,12 +608,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ? null
                         : _pickAndUploadProfilePic,
                     icon: const CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Colors.black54,
-                      child: Icon(
-                        Icons.camera_alt_outlined,
-                        size: 14,
-                        color: Colors.white,
+                      radius: 17,
+                      backgroundColor: Colors.white,
+                      child: CircleAvatar(
+                        radius: 15,
+                        backgroundColor: AppColors.primary,
+                        child: Icon(
+                          Icons.camera_alt_outlined,
+                          size: 17,
+                          color: AppColors.textWhite,
+                        ),
                       ),
                     ),
                   ),
