@@ -126,17 +126,22 @@ class CommunityService extends ApiClient {
     return allPostsJson.map((json) => Post.fromJson(json)).toList();
   }
 
-  /// Fetches all posts for a given group by its ID.
-  /// NOTE: This still filters on the client-side as per the original implementation.
-  Future<List<Post>> fetchPostsForGroup(int groupId) async {
-    final result = await read(urlPath: '/api/posts/', jsonHeaders: authHeaders);
+  /// One group's posts, newest first. With [since], only posts published
+  /// after that moment, which is what the live feed polls for.
+  Future<List<Post>> fetchPostsForGroup(int groupId, {DateTime? since}) async {
+    final query = {
+      'group': '$groupId',
+      if (since != null) 'since': since.toUtc().toIso8601String(),
+    };
+    final result = await read(
+      urlPath: '/api/posts/?${Uri(queryParameters: query).query}',
+      jsonHeaders: authHeaders,
+    );
 
-    final List<dynamic> allPostsJson = result as List<dynamic>;
-    final List<Post> allPosts = allPostsJson
-        .map((json) => Post.fromJson(json))
-        .toList();
-
-    return allPosts.where((post) => post.groupId == groupId).toList();
+    final List<dynamic> rows = result as List<dynamic>;
+    final posts = rows.map((json) => Post.fromJson(json)).toList();
+    // Older servers ignore the filter; keep the feed to this group regardless.
+    return posts.where((post) => post.groupId == groupId).toList();
   }
 
   /// Creates a new post.

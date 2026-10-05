@@ -1,196 +1,204 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/community_service.dart';
+import 'package:npo_community/features/community/group_feed.dart';
 import 'package:npo_community/models/group.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/models/user.dart';
 
+/// The Community tab: the statewide group's feed, live, with the other
+/// groups one tap away in a chip row above it.
 class CommunityScreen extends StatefulWidget {
-  const CommunityScreen({super.key});
+  const CommunityScreen({
+    super.key,
+    this.service,
+    this.userDirectory,
+    this.currentUserId,
+    this.pollInterval = const Duration(seconds: 20),
+  });
+
+  /// Injected in tests.
+  final CommunityService? service;
+  final Future<List<User>> Function()? userDirectory;
+  final int? currentUserId;
+  final Duration pollInterval;
 
   @override
   State<CommunityScreen> createState() => _CommunityScreenState();
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  late Future<List<Group>> _groupsFuture;
-  late final CommunityService _communityService;
+  late final CommunityService _service = widget.service ?? CommunityService();
+  late Future<List<Group>> _groups = _service.fetchGroups();
+
+  Future<void> _reloadGroups() async {
+    final groups = _service.fetchGroups();
+    setState(() {
+      _groups = groups;
+    });
+    await groups;
+  }
 
   @override
-  void initState() {
-    super.initState();
-    _communityService = CommunityService();
-    _groupsFuture = _communityService.fetchGroups();
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Group>>(
+      future: _groups,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Community')),
+            body: snapshot.hasError
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                          ),
+                          TextButton(
+                            onPressed: _reloadGroups,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const Center(child: CircularProgressIndicator()),
+          );
+        }
+        final groups = snapshot.data!;
+        final statewide = groups.where((g) => g.isStatewide).firstOrNull;
+        final others = groups
+            .where((g) => !g.isStatewide && !g.isRegional && !g.isCohort)
+            .toList();
+        if (statewide == null) {
+          return _GroupsDirectory(groups: groups);
+        }
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(statewide.name),
+            actions: [
+              IconButton(
+                tooltip: 'Group info, events and polls',
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => context.push(
+                  '/community/group/${statewide.id}/console',
+                  extra: statewide.name,
+                ),
+              ),
+            ],
+          ),
+          body: Column(
+            children: [
+              _GroupSwitcher(others: others),
+              const Divider(height: 1),
+              Expanded(
+                child: GroupFeed(
+                  key: ValueKey('statewide-feed-${statewide.id}'),
+                  groupId: statewide.id,
+                  groupName: statewide.name,
+                  service: _service,
+                  userDirectory: widget.userDirectory,
+                  currentUserId: widget.currentUserId,
+                  live: true,
+                  pollInterval: widget.pollInterval,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
+}
 
-  IconData _iconForGroup(Group group) {
-    if (group.isStatewide) return Icons.flag_outlined;
-    return Icons.groups;
+/// Regional groups, class chats and any other groups, as chips.
+class _GroupSwitcher extends StatelessWidget {
+  const _GroupSwitcher({required this.others});
+
+  final List<Group> others;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 52,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        children: [
+          ActionChip(
+            key: const Key('chip-regional'),
+            avatar: const Icon(Icons.hub_outlined, size: 18),
+            label: const Text('Regional groups'),
+            onPressed: () => context.push('/community/regional'),
+          ),
+          const SizedBox(width: 8),
+          ActionChip(
+            key: const Key('chip-classes'),
+            avatar: const Icon(Icons.school_outlined, size: 18),
+            label: const Text('Class chats'),
+            onPressed: () => context.push('/community/classes'),
+          ),
+          for (final group in others) ...[
+            const SizedBox(width: 8),
+            ActionChip(
+              key: Key('chip-group-${group.id}'),
+              avatar: const Icon(Icons.groups, size: 18),
+              label: Text(group.name),
+              onPressed: () => context.push(
+                '/community/group/${group.id}',
+                extra: group.name,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
+}
+
+/// Fallback when the member has no statewide group: a plain list.
+class _GroupsDirectory extends StatelessWidget {
+  const _GroupsDirectory({required this.groups});
+
+  final List<Group> groups;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Community')),
-      body: FutureBuilder<List<Group>>(
-        future: _groupsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No groups found.'));
-          } else {
-            // Regional and class groups have their own lists; everything
-            // else (the statewide group, any custom groups) tiles here.
-            final otherGroups = snapshot.data!
-                .where((g) => !g.isRegional && !g.isCohort)
-                .toList();
-
-            final token = SharedPreferencesService().getData('user_token');
-            final headers = token != null
-                ? {'Authorization': 'Token $token'}
-                : null;
-
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                    child: ListTile(
-                      leading: const Icon(Icons.hub_outlined),
-                      title: const Text('Regional groups'),
-                      subtitle: const Text(
-                        'Your region, plus any others you join.',
-                      ),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () =>
-                          GoRouter.of(context).push('/community/regional'),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                    child: ListTile(
-                      leading: const Icon(Icons.school_outlined),
-                      title: const Text('Class chats'),
-                      subtitle: const Text('Your Emerge Kentucky class.'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () =>
-                          GoRouter.of(context).push('/community/classes'),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Groups',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 6),
-                        const Divider(),
-                      ],
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(8),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final group = otherGroups[index];
-                      final imgUrl = group.fullImageUrl;
-                      return InkWell(
-                        onTap: () {
-                          GoRouter.of(context).push(
-                            '/community/group/${group.id}',
-                            extra: group.name,
-                          );
-                        },
-                        child: Card(
-                          clipBehavior: Clip.antiAlias,
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              if (imgUrl != null)
-                                CachedNetworkImage(
-                                  imageUrl: imgUrl,
-                                  httpHeaders: headers,
-                                  fit: BoxFit.cover,
-                                )
-                              else
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Theme.of(context).colorScheme.primary
-                                            .withValues(alpha: 0.15),
-                                        Theme.of(context).colorScheme.primary
-                                            .withValues(alpha: 0.35),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                  ),
-                                ),
-                              if (imgUrl == null)
-                                Center(
-                                  child: Icon(
-                                    _iconForGroup(group),
-                                    size: 64,
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.7),
-                                  ),
-                                ),
-                              Align(
-                                alignment: Alignment.bottomLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black54,
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    group.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }, childCount: otherGroups.length),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 1.2,
-                        ),
-                  ),
-                ),
-              ],
-            );
-          }
-        },
+      body: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.hub_outlined),
+            title: const Text('Regional groups'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/community/regional'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: const Text('Class chats'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/community/classes'),
+          ),
+          for (final group in groups.where((g) => !g.isRegional && !g.isCohort))
+            ListTile(
+              leading: const Icon(Icons.groups),
+              title: Text(group.name),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(
+                '/community/group/${group.id}',
+                extra: group.name,
+              ),
+            ),
+          if (groups.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('No groups yet.', textAlign: TextAlign.center),
+            ),
+        ],
       ),
     );
   }
