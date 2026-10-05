@@ -4,15 +4,22 @@ import 'package:npo_community/features/alumni_directory/alumni_directory_control
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
 import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
 import 'package:npo_community/features/events/volunteer_roles.dart';
+import 'package:npo_community/pages/chat/chat_message_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/widgets/emerge/emerge_components.dart';
 
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
 /// backed by the server-side NGP VAN CRM.
 class AlumniDirectoryScreen extends StatefulWidget {
-  const AlumniDirectoryScreen({super.key, this.controller});
+  const AlumniDirectoryScreen({super.key, this.controller, this.currentUserId});
 
   /// Optional injected controller (used in tests / demo mode).
   final AlumniDirectoryController? controller;
+
+  /// The signed-in member, so she gets no Message button on herself;
+  /// read from the app's AuthService when not given.
+  final int? currentUserId;
 
   @override
   State<AlumniDirectoryScreen> createState() => _AlumniDirectoryScreenState();
@@ -136,6 +143,15 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
     );
   }
 
+  int? _viewerId(BuildContext context) {
+    if (widget.currentUserId != null) return widget.currentUserId;
+    try {
+      return Provider.of<AuthService>(context, listen: false).currentUser?.id;
+    } on ProviderNotFoundException {
+      return null;
+    }
+  }
+
   Widget _buildRoleFilters() {
     return SizedBox(
       height: 48,
@@ -207,7 +223,10 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
                   ],
                 );
               }
-              return _AlumniTile(profile: _controller.alumni[index - 1]);
+              return _AlumniTile(
+                currentUserId: _viewerId(context),
+                profile: _controller.alumni[index - 1],
+              );
             },
           ),
         );
@@ -248,10 +267,38 @@ class _OfflineNotice extends StatelessWidget {
   }
 }
 
+/// Opens a direct message with an alumna: by route under the app's router,
+/// else by a plain push (demo builds and tests).
+void openDirectMessage(BuildContext context, AlumniProfile profile) {
+  final id = profile.accountId;
+  if (id == null) return;
+  if (GoRouter.maybeOf(context) != null) {
+    context.push('/chat/$id', extra: profile.fullName);
+  } else {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ChatMessageScreen(
+          conversationId: '$id',
+          initialName: profile.fullName,
+        ),
+      ),
+    );
+  }
+}
+
+/// Whether the viewer can message this alumna: she has claimed her account
+/// (so she can log in and read it), is not a memorial, and is not the viewer.
+bool canMessage(AlumniProfile profile, int? viewerId) =>
+    profile.accountId != null &&
+    profile.claimed &&
+    !profile.isMemorial &&
+    profile.accountId != viewerId;
+
 class _AlumniTile extends StatelessWidget {
-  const _AlumniTile({required this.profile});
+  const _AlumniTile({required this.profile, required this.currentUserId});
 
   final AlumniProfile profile;
+  final int? currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +310,9 @@ class _AlumniTile extends StatelessWidget {
       if (profile.officeSought != null) profile.officeSought!,
       if (profile.volunteerRoles.isNotEmpty)
         profile.volunteerRoles.map(volunteerRoleShortLabel).join(', '),
+      if (!profile.claimed && !profile.isMemorial) "Hasn't joined yet",
     ];
+    final messageable = canMessage(profile, currentUserId);
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: colorScheme.primaryContainer,
@@ -272,23 +321,32 @@ class _AlumniTile extends StatelessWidget {
       ),
       title: Text(profile.fullName),
       subtitle: subtitleParts.isEmpty ? null : Text(subtitleParts.join(' · ')),
-      trailing: profile.email == null || profile.isMemorial
-          ? null
-          : const Icon(Icons.chevron_right),
-      onTap: profile.email == null || profile.isMemorial
+      trailing: messageable
+          ? IconButton(
+              key: Key('message-${profile.accountId}'),
+              tooltip: 'Message ${profile.firstName}',
+              icon: const Icon(Icons.chat_bubble_outline),
+              onPressed: () => openDirectMessage(context, profile),
+            )
+          : null,
+      onTap: profile.isMemorial
           ? null
           : () => showModalBottomSheet<void>(
               context: context,
-              builder: (_) => _AlumniDetailSheet(profile: profile),
+              builder: (_) => _AlumniDetailSheet(
+                profile: profile,
+                messageable: messageable,
+              ),
             ),
     );
   }
 }
 
 class _AlumniDetailSheet extends StatelessWidget {
-  const _AlumniDetailSheet({required this.profile});
+  const _AlumniDetailSheet({required this.profile, this.messageable = false});
 
   final AlumniProfile profile;
+  final bool messageable;
 
   @override
   Widget build(BuildContext context) {
@@ -315,6 +373,25 @@ class _AlumniDetailSheet extends StatelessWidget {
               _DetailRow(icon: Icons.email_outlined, text: profile.email!),
             if (profile.phone != null)
               _DetailRow(icon: Icons.phone_outlined, text: profile.phone!),
+            if (messageable) ...[
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                key: const Key('sheet-message'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  openDirectMessage(context, profile);
+                },
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: Text('Message ${profile.firstName}'),
+              ),
+            ] else if (!profile.claimed && !profile.isMemorial) ...[
+              const SizedBox(height: 12),
+              Text(
+                "${profile.firstName} hasn't claimed her profile yet, so she "
+                'can\'t receive messages in the app.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ],
         ),
       ),

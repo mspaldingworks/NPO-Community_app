@@ -490,15 +490,30 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
 
   Widget _buildContactsList() {
     Widget buildNewGroupTile() {
-      return ListTile(
-        leading: const CircleAvatar(child: Icon(Icons.group_add)),
-        title: const Text('New Group'),
-        onTap: () {
-          setState(() {
-            _isCreatingGroup = true;
-            _tabController.animateTo(1);
-          });
-        },
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            key: const Key('message-from-directory'),
+            leading: const CircleAvatar(child: Icon(Icons.people_outline)),
+            title: const Text('Message any alumna'),
+            subtitle: const Text(
+              'Find her in the Alumni Directory and tap the chat bubble.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.go('/directory'),
+          ),
+          ListTile(
+            leading: const CircleAvatar(child: Icon(Icons.group_add)),
+            title: const Text('New Group'),
+            onTap: () {
+              setState(() {
+                _isCreatingGroup = true;
+                _tabController.animateTo(1);
+              });
+            },
+          ),
+        ],
       );
     }
 

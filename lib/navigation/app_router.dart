@@ -96,7 +96,10 @@ class AppRouter {
             path: ':id',
             builder: (context, state) {
               final conversationId = state.pathParameters['id']!;
-              return ChatMessageScreen(conversationId: conversationId);
+              return ChatMessageScreen(
+                conversationId: conversationId,
+                initialName: state.extra as String?,
+              );
             },
           ),
         ],

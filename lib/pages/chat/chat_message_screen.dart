@@ -16,13 +16,16 @@ import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:npo_community/widgets/smart_link_body.dart';
 
 class ChatMessageScreen extends StatefulWidget {
+  /// The other member's account id (direct messages are keyed by member).
   final String conversationId;
-  // final Conversation? conversation;
+
+  /// Shown in the bar until the first message tells us her username.
+  final String? initialName;
 
   const ChatMessageScreen({
     super.key,
     required this.conversationId,
-    // this.conversation,
+    this.initialName,
   });
 
   @override
@@ -44,7 +47,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
   bool _isSending = false;
   bool _showEmojiPicker = false;
 
-  String _otherUsername = 'Chat';
+  late String _otherUsername = widget.initialName ?? 'Chat';
   late User _currentUser;
   bool _isFavoriteChat = false;
 
@@ -108,7 +111,7 @@ class _ChatMessageScreenState extends State<ChatMessageScreen> {
               ? otherParticipantMessage.sender
               : otherParticipantMessage.recipient;
           _otherUsername = otherUser.username;
-        } else if (_otherUsername == 'Chat') {
+        } else if (_otherUsername == 'Chat' && widget.initialName == null) {
           _otherUsername = 'User $otherUserId';
         }
       }

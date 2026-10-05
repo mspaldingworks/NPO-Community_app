@@ -72,4 +72,53 @@ void main() {
     );
     expect(tile.onTap, isNull);
   });
+
+  testWidgets('claimed alumnae get a Message button; unclaimed do not', (
+    tester,
+  ) async {
+    final rows = [
+      const AlumniProfile(
+        vanId: 1,
+        firstName: 'Claire',
+        lastName: 'Claimed',
+        accountId: 11,
+        claimed: true,
+      ),
+      const AlumniProfile(
+        vanId: 2,
+        firstName: 'Una',
+        lastName: 'Unclaimed',
+        accountId: 12,
+        claimed: false,
+      ),
+      const AlumniProfile(
+        vanId: 3,
+        firstName: 'Me',
+        lastName: 'Myself',
+        accountId: 99,
+        claimed: true,
+      ),
+    ];
+    final controller = AlumniDirectoryController(
+      service: _FakeDirectoryService(rows),
+    );
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AlumniDirectoryScreen(controller: controller, currentUserId: 99),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('message-11')), findsOneWidget);
+    expect(find.byKey(const Key('message-12')), findsNothing);
+    expect(find.byKey(const Key('message-99')), findsNothing);
+    expect(find.textContaining("Hasn't joined yet"), findsOneWidget);
+
+    // The sheet for an unclaimed alumna explains why there is no button.
+    await tester.tap(find.text('Una Unclaimed'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('sheet-message')), findsNothing);
+    expect(find.textContaining("hasn't claimed her profile"), findsOneWidget);
+  });
 }
