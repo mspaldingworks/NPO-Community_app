@@ -1,4 +1,4 @@
-package org.npocommunity.app
+package org.emergeky.app
 
 import io.flutter.embedding.android.FlutterActivity
 

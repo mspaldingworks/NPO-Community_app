@@ -16,6 +16,7 @@ class AlumniDirectoryController extends ChangeNotifier {
   String? _error;
   String _search = '';
   int? _cohortYear;
+  String? _volunteerRole;
   bool _isOffline = false;
 
   List<AlumniProfile> get alumni => List.unmodifiable(_alumni);
@@ -23,6 +24,7 @@ class AlumniDirectoryController extends ChangeNotifier {
   String? get error => _error;
   String get search => _search;
   int? get cohortYear => _cohortYear;
+  String? get volunteerRole => _volunteerRole;
 
   /// True when the current list came from the offline cache rather than the
   /// server (the screen labels it so nobody mistakes it for live data).
@@ -49,6 +51,7 @@ class AlumniDirectoryController extends ChangeNotifier {
       _alumni = await _service.fetchAlumni(
         search: _search.isEmpty ? null : _search,
         cohortYear: _cohortYear,
+        volunteerRole: _volunteerRole,
       );
       _isOffline = false;
       _status = AlumniDirectoryStatus.loaded;
@@ -77,6 +80,10 @@ class AlumniDirectoryController extends ChangeNotifier {
       if (_cohortYear != null && profile.cohortYear != _cohortYear) {
         return false;
       }
+      if (_volunteerRole != null &&
+          !profile.volunteerRoles.contains(_volunteerRole)) {
+        return false;
+      }
       if (query.isEmpty) return true;
       return profile.fullName.toLowerCase().contains(query);
     }).toList();
@@ -94,6 +101,12 @@ class AlumniDirectoryController extends ChangeNotifier {
   Future<void> setCohortYear(int? year) async {
     if (year == _cohortYear) return;
     _cohortYear = year;
+    await load();
+  }
+
+  Future<void> setVolunteerRole(String? role) async {
+    if (role == _volunteerRole) return;
+    _volunteerRole = role;
     await load();
   }
 }

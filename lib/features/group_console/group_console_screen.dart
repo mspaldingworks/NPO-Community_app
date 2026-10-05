@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:npo_community/features/events/event_form.dart';
+import 'package:npo_community/features/events/events_screen.dart';
+import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
 import 'package:npo_community/features/moderation/moderation_service.dart';
 
@@ -515,60 +518,19 @@ class _EventsTab extends StatelessWidget {
   final GroupConsoleService api;
   final bool canManage;
 
-  Future<bool> _add(BuildContext context) async {
-    final now = DateTime.now();
-    final day = await showDatePicker(
-      context: context,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 730)),
-      initialDate: now.add(const Duration(days: 7)),
-    );
-    if (day == null || !context.mounted) return false;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 18, minute: 0),
-    );
-    if (time == null || !context.mounted) return false;
-    final values = await _form(
-      context,
-      title: 'New event',
-      fields: const [
-        ('title', 'Title', 1),
-        ('location', 'Location', 1),
-        ('link', 'Video link (https://, optional)', 1),
-        ('description', 'Details', 4),
-      ],
-    );
-    if (values == null || values['title']!.isEmpty || !context.mounted) {
-      return false;
-    }
-    return _attempt(
-      context,
-      () => api.postEvent(
-        title: values['title']!,
-        startsAt: DateTime(
-          day.year,
-          day.month,
-          day.day,
-          time.hour,
-          time.minute,
-        ),
-        locationName: values['location']!,
-        virtualLink: values['link']!,
-        description: values['description']!,
-      ),
-    );
-  }
+  Future<bool> _add(BuildContext context) =>
+      showEventForm(context, onSubmit: api.postEvent);
 
   @override
   Widget build(BuildContext context) {
-    return _ListTab<GroupEvent>(
+    return _ListTab<CommunityEvent>(
       load: api.fetchEvents,
       empty: 'No upcoming events.',
       addLabel: 'Event',
       onAdd: canManage ? _add : null,
       itemBuilder: (context, event, reload) => Card(
         child: ListTile(
+          key: Key('console-event-${event.id}'),
           leading: Icon(
             event.isCancelled
                 ? Icons.event_busy_outlined
@@ -583,10 +545,12 @@ class _EventsTab extends StatelessWidget {
               if (event.locationName.isNotEmpty) event.locationName,
               if (event.isVirtual && event.virtualLink.isNotEmpty)
                 event.virtualLink,
-              if (event.description.isNotEmpty) event.description,
+              '${event.goingCount} going'
+                  '${event.openVolunteerSlots > 0 ? ' · ${event.openVolunteerSlots} volunteer slots open' : ''}',
             ].join('\n'),
           ),
           isThreeLine: true,
+          onTap: () => openEvent(context, event.id),
           trailing: canManage && !event.isCancelled
               ? TextButton(
                   onPressed: () async {

@@ -15,6 +15,7 @@ class AlumniProfile {
     this.accountId,
     this.isMemorial = false,
     this.claimed = true,
+    this.volunteerRoles = const [],
   });
 
   final int vanId;
@@ -38,6 +39,9 @@ class AlumniProfile {
 
   /// False for seeded alumnae who haven't claimed their account yet.
   final bool claimed;
+
+  /// Ways she has said she can help (keys of the API's VOLUNTEER_ROLES).
+  final List<String> volunteerRoles;
 
   String get fullName {
     final name = [
@@ -91,6 +95,10 @@ class AlumniProfile {
       accountId: asInt(json['account_id']),
       isMemorial: json['is_memorial'] == true,
       claimed: json['claimed'] != false,
+      volunteerRoles: [
+        for (final role in (json['volunteer_roles'] as List? ?? const []))
+          if (role is String) role,
+      ],
     );
   }
 }

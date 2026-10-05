@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
 
@@ -28,8 +29,12 @@ class _FakeConsole extends GroupConsoleService {
   ];
 
   @override
-  Future<List<GroupEvent>> fetchEvents() async => [
-    GroupEvent(id: 1, title: 'Canvass', startsAt: DateTime(2026, 10, 10, 10)),
+  Future<List<CommunityEvent>> fetchEvents() async => [
+    CommunityEvent(
+      id: 1,
+      title: 'Canvass',
+      startsAt: DateTime(2026, 10, 10, 10),
+    ),
   ];
 
   @override

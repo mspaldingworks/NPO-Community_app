@@ -9,6 +9,7 @@ import 'package:npo_community/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/events/volunteer_roles.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _updatingPronounsText = false;
   bool _pronounLimitSnackShown = false;
   final List<File> _statusImages = [];
+  final Set<String> _volunteerRoles = {};
   static const int _maxStatusImages = 4;
   static const int _maxStatusImageBytes = 10 * 1024 * 1024;
   static const int _maxPronounSelections = 5;
@@ -488,6 +490,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (user != null) {
         _fullNameController.text = user.fullName ?? '';
         _cityController.text = user.city ?? '';
+        _volunteerRoles
+          ..clear()
+          ..addAll(user.volunteerRoles);
         final pronounTokens = _parsePronounsText(pronouns);
         var parsedPronouns = pronounTokens
             .where((p) => !_isBlockedPronoun(p))
@@ -573,6 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       fullName: _fullNameController.text,
       city: _cityController.text,
       flair: flair,
+      volunteerRoles: _volunteerRoles.toList()..sort(),
       statusImagePaths: _statusImages.map((f) => f.path).toList(),
     );
     if (mounted) {
@@ -797,6 +803,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }).toList(),
                 ),
               ],
+              const SizedBox(height: 24),
+              Text(
+                'How I can help',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Emerge staff and group leads use this to find volunteers.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final entry in volunteerRoles.entries)
+                    FilterChip(
+                      key: Key('role-${entry.key}'),
+                      label: Text(entry.value),
+                      selected: _volunteerRoles.contains(entry.key),
+                      onSelected: (on) => setState(() {
+                        if (on) {
+                          _volunteerRoles.add(entry.key);
+                        } else {
+                          _volunteerRoles.remove(entry.key);
+                        }
+                      }),
+                    ),
+                ],
+              ),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {

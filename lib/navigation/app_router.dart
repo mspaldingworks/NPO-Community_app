@@ -30,7 +30,8 @@ import 'package:npo_community/pages/settings/app_info_screen.dart';
 import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:npo_community/pages/settings/settings_screen.dart';
 import 'package:npo_community/models/post.dart';
-import 'package:npo_community/pages/events/calendar_screen.dart';
+import 'package:npo_community/features/events/event_detail_screen.dart';
+import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 import 'package:npo_community/pages/auth/claim_profile_screen.dart';
@@ -209,8 +210,11 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/events/calendar',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: CalendarScreen()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: EventsScreen(
+                    canModerate: authService.realUser?.canModerate ?? false,
+                  ),
+                ),
               ),
             ],
           ),
@@ -246,6 +250,12 @@ class AppRouter {
         path: '/alumni/running',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AlumniRunningScreen(),
+      ),
+      GoRoute(
+        path: '/events/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            EventDetailScreen(eventId: int.parse(state.pathParameters['id']!)),
       ),
       GoRoute(path: '/board', builder: (context, state) => const BoardScreen()),
       GoRoute(

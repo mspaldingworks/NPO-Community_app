@@ -19,6 +19,21 @@ void main() {
       );
     });
 
+    test('keeps a query string as a query, not part of the path', () {
+      final config = AppConfig.fromValues(
+        environment: 'staging',
+        apiOrigin: 'https://api.example.org',
+      );
+
+      expect(
+        config.apiUri('/api/events/?when=all&group=3').toString(),
+        'https://api.example.org/api/events/?when=all&group=3',
+      );
+      expect(config.apiUri('/api/crm/alumni/?search=a%20b').queryParameters, {
+        'search': 'a b',
+      });
+    });
+
     test('disables network access in demo mode', () {
       final config = AppConfig.fromValues(
         environment: 'demo',

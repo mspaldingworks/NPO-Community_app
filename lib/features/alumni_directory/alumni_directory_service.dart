@@ -20,6 +20,7 @@ class AlumniDirectoryService {
   Future<List<AlumniProfile>> fetchAlumni({
     String? search,
     int? cohortYear,
+    String? volunteerRole,
   }) async {
     final query = <String, String>{};
     if (search != null && search.trim().isNotEmpty) {
@@ -27,6 +28,9 @@ class AlumniDirectoryService {
     }
     if (cohortYear != null) {
       query['cohort_year'] = '$cohortYear';
+    }
+    if (volunteerRole != null && volunteerRole.isNotEmpty) {
+      query['volunteer_role'] = volunteerRole;
     }
 
     final path = query.isEmpty
@@ -42,7 +46,7 @@ class AlumniDirectoryService {
 
     // Keep an offline copy of the full directory (only the unfiltered
     // response, so the cache is always the complete roster).
-    if (search == null && cohortYear == null) {
+    if (search == null && cohortYear == null && volunteerRole == null) {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_cacheKey, jsonEncode(results));

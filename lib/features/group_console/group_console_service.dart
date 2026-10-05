@@ -1,4 +1,5 @@
 import 'package:npo_community/core/services/api_client.dart';
+import 'package:npo_community/features/events/events_service.dart';
 
 DateTime? _date(dynamic value) => value is String && value.isNotEmpty
     ? DateTime.tryParse(value)?.toLocal()
@@ -81,42 +82,6 @@ class GroupAnnouncement {
         author: _name(json['created_by']),
         createdAt: _date(json['created_at']),
       );
-}
-
-class GroupEvent {
-  const GroupEvent({
-    required this.id,
-    required this.title,
-    required this.startsAt,
-    this.description = '',
-    this.endsAt,
-    this.locationName = '',
-    this.isVirtual = false,
-    this.virtualLink = '',
-    this.isCancelled = false,
-  });
-
-  final int id;
-  final String title;
-  final DateTime startsAt;
-  final String description;
-  final DateTime? endsAt;
-  final String locationName;
-  final bool isVirtual;
-  final String virtualLink;
-  final bool isCancelled;
-
-  factory GroupEvent.fromJson(Map<String, dynamic> json) => GroupEvent(
-    id: json['id'] as int,
-    title: json['title'] as String? ?? '',
-    startsAt: _date(json['starts_at']) ?? DateTime.now(),
-    description: json['description'] as String? ?? '',
-    endsAt: _date(json['ends_at']),
-    locationName: json['location_name'] as String? ?? '',
-    isVirtual: json['is_virtual'] == true,
-    virtualLink: json['virtual_link'] as String? ?? '',
-    isCancelled: json['is_cancelled'] == true,
-  );
 }
 
 class PollOption {
@@ -247,28 +212,16 @@ class GroupConsoleService extends ApiClient {
     );
   }
 
-  Future<List<GroupEvent>> fetchEvents() async => [
-    for (final row in await _list('events/')) GroupEvent.fromJson(row),
+  /// The group's upcoming events, in the same shape as `/api/events/`.
+  Future<List<CommunityEvent>> fetchEvents() async => [
+    for (final row in await _list('events/')) CommunityEvent.fromJson(row),
   ];
 
-  Future<void> postEvent({
-    required String title,
-    required DateTime startsAt,
-    String description = '',
-    String locationName = '',
-    String virtualLink = '',
-  }) async {
+  Future<void> postEvent(EventDraft draft) async {
     await post(
       urlPath: '$_base/events/',
       jsonHeaders: authHeaders,
-      jsonPayload: {
-        'title': title,
-        'starts_at': startsAt.toUtc().toIso8601String(),
-        'description': description,
-        'location_name': locationName,
-        'is_virtual': virtualLink.isNotEmpty,
-        'virtual_link': virtualLink,
-      },
+      jsonPayload: draft.toJson(),
       expectedStatusCode: 201,
     );
   }

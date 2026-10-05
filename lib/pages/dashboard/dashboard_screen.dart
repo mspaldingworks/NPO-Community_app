@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
-import 'package:npo_community/core/services/calendar_service.dart';
+import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/profile_service.dart';
@@ -30,7 +30,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final CalendarService _calendarService = CalendarService();
+  final EventsService _eventsService = EventsService();
   final ProfileService _profileService = ProfileService();
   final CommunityService _communityService = CommunityService();
 
@@ -58,13 +58,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData() async {
     await _loadLastSeenRepliesAt();
-    final allEvents = await _calendarService.fetchEvents();
+    List<CommunityEvent> allEvents = const [];
+    try {
+      allEvents = await _eventsService.fetchEvents();
+    } catch (_) {
+      // The counter is a nicety; the Events tab reports the real error.
+    }
     final imagePath = await _profileService.getImagePath();
     final now = DateTime.now();
+    final weekOut = now.add(const Duration(days: 7));
 
     final todaysEvents = allEvents.where((event) {
-      final d = event.start.toLocal();
-      return d.year == now.year && d.month == now.month && d.day == now.day;
+      return !event.isCancelled &&
+          event.startsAt.isBefore(weekOut) &&
+          (event.endsAt ?? event.startsAt).isAfter(now);
     }).length;
     final unreadReplyCount = await _computeUnreadReplyCount();
 
@@ -315,7 +322,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   name: 'Upcoming events',
                   child: _buildInfoCard(
                     Icons.calendar_today_outlined,
-                    _isLoading ? '...' : '$_todaysEventsCount upcoming events',
+                    _isLoading ? '...' : '$_todaysEventsCount events this week',
                     onTap: () => context.push('/events/calendar'),
                     isHighlighted: _todaysEventsCount > 0,
                   ),

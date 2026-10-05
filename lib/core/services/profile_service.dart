@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +16,7 @@ class ProfileService {
     String? fullName,
     String? city,
     String? flair,
+    List<String>? volunteerRoles,
     List<String> statusImagePaths = const [],
   }) async {
     // 1) If an image is provided, send a multipart PATCH with the image and status
@@ -35,6 +38,10 @@ class ProfileService {
       if (fullName != null) request.fields['full_name'] = fullName;
       if (city != null) request.fields['city'] = city;
       if (flair != null) request.fields['flair'] = flair;
+      if (volunteerRoles != null) {
+        // DRF reads a JSON string for JSON fields in multipart bodies.
+        request.fields['volunteer_roles'] = jsonEncode(volunteerRoles);
+      }
 
       if (imagePath != null && imagePath.isNotEmpty) {
         request.files.add(
@@ -59,6 +66,7 @@ class ProfileService {
       if (fullName != null) updates['full_name'] = fullName;
       if (city != null) updates['city'] = city;
       if (flair != null) updates['flair'] = flair;
+      if (volunteerRoles != null) updates['volunteer_roles'] = volunteerRoles;
       await auth.updateProfile(updates);
     }
 

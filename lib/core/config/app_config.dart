@@ -90,13 +90,17 @@ class AppConfig {
     }
   }
 
+  /// Joins [path] onto the API origin. A query string in [path]
+  /// (`/api/events/?when=all`) is kept as a query; putting it through
+  /// `replace(path:)` would percent-encode the `?` into the path.
   Uri _uriWithScheme(String scheme, String path) {
     final normalizedPath = path.startsWith('/') ? path : '/$path';
-    return apiOrigin.replace(
+    final parsed = Uri.parse(normalizedPath);
+    final base = apiOrigin.replace(
       scheme: scheme,
-      path: normalizedPath,
-      query: null,
+      path: parsed.path,
       fragment: null,
     );
+    return parsed.hasQuery ? base.replace(query: parsed.query) : base;
   }
 }

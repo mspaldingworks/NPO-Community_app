@@ -35,6 +35,7 @@ dependencies:
 
   logging: any
   meta: any
+  share_plus: ^10.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

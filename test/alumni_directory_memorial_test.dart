@@ -14,6 +14,7 @@ class _FakeDirectoryService extends AlumniDirectoryService {
   Future<List<AlumniProfile>> fetchAlumni({
     String? search,
     int? cohortYear,
+    String? volunteerRole,
   }) async => rows;
 }
 

@@ -23,6 +23,9 @@ class User {
   final int? programYear;
   final String? fullName;
 
+  /// How she'd like to help (keys of the API's VOLUNTEER_ROLES).
+  final List<String> volunteerRoles;
+
   User({
     required this.id,
     required this.username,
@@ -40,6 +43,7 @@ class User {
     this.verificationTier,
     this.programYear,
     this.fullName,
+    this.volunteerRoles = const [],
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -99,6 +103,10 @@ class User {
       verificationTier: json['verification_tier'] as String?,
       programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,
+      volunteerRoles: [
+        for (final role in (json['volunteer_roles'] as List? ?? const []))
+          if (role is String) role,
+      ],
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
 import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
+import 'package:npo_community/features/events/volunteer_roles.dart';
 import 'package:npo_community/widgets/emerge/emerge_components.dart';
 
 /// The Alumni Directory tab: browse and search Emerge Kentucky alumni,
@@ -70,6 +71,7 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
             children: [
               _buildSearchField(),
               _buildCohortFilters(),
+              _buildRoleFilters(),
               Expanded(child: _buildBody()),
             ],
           );
@@ -127,6 +129,36 @@ class _AlumniDirectoryScreenState extends State<AlumniDirectoryScreen> {
                 label: Text("Class of '${year % 100}"),
                 selected: _controller.cohortYear == year,
                 onSelected: (_) => _controller.setCohortYear(year),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleFilters() {
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: ChoiceChip(
+              label: const Text('Any role'),
+              selected: _controller.volunteerRole == null,
+              onSelected: (_) => _controller.setVolunteerRole(null),
+            ),
+          ),
+          for (final entry in volunteerRoleShortLabels.entries)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: ChoiceChip(
+                key: Key('role-filter-${entry.key}'),
+                label: Text(entry.value),
+                selected: _controller.volunteerRole == entry.key,
+                onSelected: (_) => _controller.setVolunteerRole(entry.key),
               ),
             ),
         ],
@@ -229,6 +261,8 @@ class _AlumniTile extends StatelessWidget {
       if (profile.cohortYear != null) 'Class of ${profile.cohortYear}',
       if (profile.location != null) profile.location!,
       if (profile.officeSought != null) profile.officeSought!,
+      if (profile.volunteerRoles.isNotEmpty)
+        profile.volunteerRoles.map(volunteerRoleShortLabel).join(', '),
     ];
     return ListTile(
       leading: CircleAvatar(
