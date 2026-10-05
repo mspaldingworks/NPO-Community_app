@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/features/community/group_feed.dart';
+import 'package:npo_community/features/events/events_service.dart';
+import 'package:npo_community/features/group_console/group_console_service.dart';
 import 'package:npo_community/models/group.dart';
 import 'package:npo_community/models/post.dart';
 import 'package:npo_community/pages/community/community_screen.dart';
@@ -55,7 +57,38 @@ class _FakeCommunity extends CommunityService {
   }
 }
 
+class _FakeConsole extends GroupConsoleService {
+  _FakeConsole({
+    this.announcements = const [],
+    this.events = const [],
+    this.polls = const [],
+  }) : super(1);
+
+  final List<GroupAnnouncement> announcements;
+  final List<CommunityEvent> events;
+  final List<GroupPoll> polls;
+  final calls = <String>[];
+
+  @override
+  Future<List<GroupAnnouncement>> fetchAnnouncements() async => announcements;
+
+  @override
+  Future<List<CommunityEvent>> fetchEvents() async => events;
+
+  @override
+  Future<List<GroupPoll>> fetchPolls() async => polls;
+
+  @override
+  Future<void> vote(int pollId, List<int> optionIds) async =>
+      calls.add('vote $pollId $optionIds');
+}
+
 final _statewide = Group(id: 1, name: 'Emerge KY Statewide', kind: 'statewide');
+final _candidates = Group(
+  id: 5,
+  name: 'Candidates Running',
+  kind: 'candidates',
+);
 final _region = Group(id: 2, name: 'Louisville', kind: 'regional');
 final _class = Group(id: 3, name: 'Class of 2019', kind: 'cohort');
 final _custom = Group(id: 4, name: 'Book club', kind: 'custom');
@@ -91,6 +124,7 @@ void main() {
       tester,
       CommunityScreen(
         service: service,
+        console: _FakeConsole(),
         userDirectory: () async => [],
         currentUserId: 1,
         pollInterval: const Duration(minutes: 5),
@@ -124,6 +158,7 @@ void main() {
       tester,
       CommunityScreen(
         service: service,
+        console: _FakeConsole(),
         userDirectory: () async => [],
         currentUserId: 1,
         pollInterval: const Duration(seconds: 5),
@@ -175,6 +210,7 @@ void main() {
       tester,
       CommunityScreen(
         service: service,
+        console: _FakeConsole(),
         userDirectory: () async => [],
         currentUserId: 1,
         pollInterval: const Duration(minutes: 5),
@@ -203,11 +239,111 @@ void main() {
     expect(find.text('Statewide hello'), findsNothing);
   });
 
+  testWidgets(
+    'announcements, events and polls sit above the posts; Running chip; '
+    'class dropdown first',
+    (tester) async {
+      final console = _FakeConsole(
+        announcements: const [
+          GroupAnnouncement(
+            id: 1,
+            title: 'Welcome to the network',
+            body: 'Say hello.',
+            isPinned: true,
+          ),
+        ],
+        events: [
+          CommunityEvent(
+            id: 7,
+            title: 'Alumnae Coffee',
+            startsAt: t0.add(const Duration(days: 2)),
+          ),
+        ],
+        polls: const [
+          GroupPoll(
+            id: 3,
+            question: 'Best night for coffee?',
+            allowMultiple: false,
+            isAnonymous: true,
+            isOpen: true,
+            totalVoters: 0,
+            myVotes: [],
+            options: [
+              PollOption(id: 1, text: 'Tuesday', votes: 0),
+              PollOption(id: 2, text: 'Thursday', votes: 0),
+            ],
+          ),
+          GroupPoll(
+            id: 4,
+            question: 'Closed poll',
+            allowMultiple: false,
+            isAnonymous: true,
+            isOpen: false,
+            totalVoters: 3,
+            myVotes: [],
+            options: [PollOption(id: 9, text: 'x', votes: 3)],
+          ),
+        ],
+      );
+      final service = _FakeCommunity(
+        groups: [_statewide, _candidates],
+        posts: [_post(1, 'A post', t0)],
+        classes: [
+          ClassGroup(
+            group: Group(
+              id: 29,
+              name: 'Class of 2019',
+              kind: 'cohort',
+              programYear: 2019,
+            ),
+            isMember: true,
+            isOwnClass: true,
+          ),
+        ],
+      );
+      await _pump(
+        tester,
+        CommunityScreen(
+          service: service,
+          console: console,
+          userDirectory: () async => [],
+          currentUserId: 1,
+          pollInterval: const Duration(minutes: 5),
+        ),
+      );
+
+      expect(find.byKey(const Key('group-highlights')), findsOneWidget);
+      expect(find.text('Welcome to the network'), findsOneWidget);
+      expect(find.text('Alumnae Coffee'), findsOneWidget);
+      expect(find.text('Best night for coffee?'), findsOneWidget);
+      expect(find.text('Closed poll'), findsNothing);
+      expect(find.text('Posts'), findsOneWidget);
+      final highlight = tester.getTopLeft(find.text('Welcome to the network'));
+      final post = tester.getTopLeft(find.text('A post'));
+      expect(highlight.dy, lessThan(post.dy));
+
+      await tester.tap(find.text('Thursday'));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('vote-3')));
+      await tester.pumpAndSettle();
+      expect(console.calls, ['vote 3 [2]']);
+
+      expect(find.text('Running'), findsOneWidget);
+      expect(find.text('Candidates Running'), findsNothing);
+      final picker = tester.getTopLeft(find.byKey(const Key('class-picker')));
+      final chips = tester.getTopLeft(find.byKey(const Key('chip-regional')));
+      expect(picker.dy, lessThan(chips.dy));
+    },
+  );
+
   testWidgets('without a statewide group the tab lists groups instead', (
     tester,
   ) async {
     final service = _FakeCommunity(groups: [_region, _custom], posts: const []);
-    await _pump(tester, CommunityScreen(service: service));
+    await _pump(
+      tester,
+      CommunityScreen(service: service, console: _FakeConsole()),
+    );
     expect(find.text('Community'), findsOneWidget);
     expect(find.text('Book club'), findsOneWidget);
     expect(find.byKey(const Key('group-feed')), findsNothing);

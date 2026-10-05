@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/features/community/group_feed.dart';
+import 'package:npo_community/features/group_console/group_console_service.dart';
 import 'package:npo_community/pages/community/post_list_screen.dart';
 import 'package:npo_community/models/group.dart';
 import 'package:npo_community/models/user.dart';
@@ -12,13 +13,19 @@ class CommunityScreen extends StatefulWidget {
   const CommunityScreen({
     super.key,
     this.service,
+    this.console,
     this.userDirectory,
     this.currentUserId,
+    this.canManage = false,
     this.pollInterval = const Duration(seconds: 20),
   });
 
   /// Injected in tests.
   final CommunityService? service;
+  final GroupConsoleService? console;
+
+  /// Moderators see sample markers and can close polls on the feed.
+  final bool canManage;
   final Future<List<User>> Function()? userDirectory;
   final int? currentUserId;
   final Duration pollInterval;
@@ -127,8 +134,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
           body: Column(
             children: [
-              _GroupSwitcher(others: others),
               _ClassPicker(future: _classes, onOpen: _openClass),
+              _GroupSwitcher(others: others),
               const Divider(height: 1),
               Expanded(
                 child: GroupFeed(
@@ -136,8 +143,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
                   groupId: statewide.id,
                   groupName: statewide.name,
                   service: _service,
+                  console: widget.console,
                   userDirectory: widget.userDirectory,
                   currentUserId: widget.currentUserId,
+                  canManage: widget.canManage,
                   live: true,
                   pollInterval: widget.pollInterval,
                 ),
@@ -178,7 +187,7 @@ class _GroupSwitcher extends StatelessWidget {
                 group.isCandidates ? Icons.how_to_vote_outlined : Icons.groups,
                 size: 18,
               ),
-              label: Text(group.name),
+              label: Text(group.isCandidates ? 'Running' : group.name),
               onPressed: () => context.push(
                 '/community/group/${group.id}',
                 extra: group.name,
@@ -208,7 +217,7 @@ class _ClassPicker extends StatelessWidget {
         if (classes.isEmpty) return const SizedBox.shrink();
         final own = classes.where((c) => c.isOwnClass).firstOrNull;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           child: DropdownMenu<int>(
             key: const Key('class-picker'),
             width: MediaQuery.sizeOf(context).width - 24,

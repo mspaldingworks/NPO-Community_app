@@ -118,8 +118,11 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/community',
-                pageBuilder: (context, state) =>
-                    const NoTransitionPage(child: CommunityScreen()),
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: CommunityScreen(
+                    canManage: authService.realUser?.canModerate ?? false,
+                  ),
+                ),
                 routes: [
                   GoRoute(
                     path: 'regional',

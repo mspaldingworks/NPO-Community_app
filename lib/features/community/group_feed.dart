@@ -9,6 +9,10 @@ import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/events/events_service.dart';
+import 'package:npo_community/features/group_console/group_console_screen.dart';
+import 'package:npo_community/features/group_console/group_console_service.dart';
+import 'package:npo_community/features/group_console/group_highlights.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:npo_community/models/group.dart';
 import 'package:npo_community/models/post.dart';
@@ -44,11 +48,13 @@ class GroupFeed extends StatefulWidget {
     required this.groupId,
     required this.groupName,
     this.service,
+    this.console,
     this.userDirectory,
     this.currentUserId,
     this.live = false,
     this.pollInterval = const Duration(seconds: 20),
     this.showGroupImage = true,
+    this.canManage = false,
   });
 
   final int groupId;
@@ -56,6 +62,13 @@ class GroupFeed extends StatefulWidget {
 
   /// Injected in tests.
   final CommunityService? service;
+
+  /// The group's console API, for the announcements, events and polls shown
+  /// above the posts. Injected in tests.
+  final GroupConsoleService? console;
+
+  /// Shows sample markers and the close-poll action.
+  final bool canManage;
 
   /// Source of member avatars and flair; defaults to the member list.
   final Future<List<User>> Function()? userDirectory;
@@ -72,7 +85,12 @@ class GroupFeed extends StatefulWidget {
 
 class _GroupFeedState extends State<GroupFeed> with WidgetsBindingObserver {
   late final CommunityService _service = widget.service ?? CommunityService();
+  late final GroupConsoleService _console =
+      widget.console ?? GroupConsoleService(widget.groupId);
   List<Post>? _posts;
+  List<GroupAnnouncement> _announcements = const [];
+  List<CommunityEvent> _groupEvents = const [];
+  List<GroupPoll> _polls = const [];
   Object? _error;
   Map<String, String?> _picByUsername = {};
   Map<String, String?> _flairByUsername = {};
@@ -88,6 +106,44 @@ class _GroupFeedState extends State<GroupFeed> with WidgetsBindingObserver {
     _reload();
     _loadDirectory();
     _startPolling();
+  }
+
+  /// Announcements, events and polls each load on their own, so one failing
+  /// (or an older server) only hides that section.
+  Future<void> _loadHighlights() async {
+    await Future.wait([
+      _console.fetchAnnouncements().then(
+        (rows) => mounted ? setState(() => _announcements = rows) : null,
+        onError: (Object _) {},
+      ),
+      _console.fetchEvents().then(
+        (rows) => mounted ? setState(() => _groupEvents = rows) : null,
+        onError: (Object _) {},
+      ),
+      _console.fetchPolls().then(
+        (rows) => mounted ? setState(() => _polls = rows) : null,
+        onError: (Object _) {},
+      ),
+    ]);
+  }
+
+  void _openConsole() {
+    if (GoRouter.maybeOf(context) != null) {
+      context.push(
+        '/community/group/${widget.groupId}/console',
+        extra: widget.groupName,
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => GroupConsoleScreen(
+            groupId: widget.groupId,
+            groupName: widget.groupName,
+            service: _console,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -126,6 +182,7 @@ class _GroupFeedState extends State<GroupFeed> with WidgetsBindingObserver {
   }
 
   Future<void> _reload() async {
+    final highlights = _loadHighlights();
     try {
       final posts = await _service.fetchPostsForGroup(widget.groupId);
       if (!mounted) return;
@@ -140,6 +197,7 @@ class _GroupFeedState extends State<GroupFeed> with WidgetsBindingObserver {
         _posts ??= const [];
       });
     }
+    await highlights;
   }
 
   /// Asks only for what is newer than the newest post shown and slots it
@@ -250,25 +308,52 @@ class _GroupFeedState extends State<GroupFeed> with WidgetsBindingObserver {
         onRefresh: _reload,
         child: posts == null
             ? const Center(child: CircularProgressIndicator())
-            : _error != null && posts.isEmpty
-            ? ListView(
-                padding: const EdgeInsets.all(24),
-                children: [Text('Error: $_error', textAlign: TextAlign.center)],
-              )
-            : posts.isEmpty
-            ? ListView(
-                padding: const EdgeInsets.symmetric(vertical: 64),
-                children: const [
-                  Text('No posts yet.', textAlign: TextAlign.center),
-                  SizedBox(height: 8),
-                  Text('Be the first to post!', textAlign: TextAlign.center),
-                ],
-              )
             : ListView.builder(
                 key: const Key('group-feed'),
                 itemCount: posts.length + 1,
                 itemBuilder: (context, index) {
-                  if (index == 0) return _GroupImage(future: _group);
+                  if (index == 0) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _GroupImage(future: _group),
+                        GroupHighlights(
+                          announcements: _announcements,
+                          events: _groupEvents,
+                          polls: _polls,
+                          api: _console,
+                          canManage: widget.canManage,
+                          onChanged: _reload,
+                          onOpenConsole: _openConsole,
+                        ),
+                        if (_error != null && posts.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              'Error: $_error',
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        else if (posts.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 48),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'No posts yet.',
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Be the first to post!',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    );
+                  }
                   final post = posts[index - 1];
                   return _PostCard(
                     post: post,

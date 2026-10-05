@@ -4,6 +4,7 @@ import 'package:npo_community/features/events/event_form.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
+import 'package:npo_community/features/group_console/group_highlights.dart';
 import 'package:npo_community/features/moderation/moderation_service.dart';
 
 /// A group's console: welcome and rules, announcements, events and polls.
@@ -607,141 +608,7 @@ class _PollsTab extends StatelessWidget {
       addLabel: 'Poll',
       onAdd: canManage ? _create : null,
       itemBuilder: (context, poll, reload) =>
-          _PollCard(poll: poll, api: api, canManage: canManage, reload: reload),
-    );
-  }
-}
-
-class _PollCard extends StatefulWidget {
-  const _PollCard({
-    required this.poll,
-    required this.api,
-    required this.canManage,
-    required this.reload,
-  });
-
-  final GroupPoll poll;
-  final GroupConsoleService api;
-  final bool canManage;
-  final Future<void> Function() reload;
-
-  @override
-  State<_PollCard> createState() => _PollCardState();
-}
-
-class _PollCardState extends State<_PollCard> {
-  late Set<int> _selected = widget.poll.myVotes.toSet();
-
-  @override
-  void didUpdateWidget(_PollCard old) {
-    super.didUpdateWidget(old);
-    _selected = widget.poll.myVotes.toSet();
-  }
-
-  void _toggle(int optionId) => setState(() {
-    if (widget.poll.allowMultiple) {
-      _selected.contains(optionId)
-          ? _selected.remove(optionId)
-          : _selected.add(optionId);
-    } else {
-      _selected = {optionId};
-    }
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final poll = widget.poll;
-    final theme = Theme.of(context);
-    final total = poll.options.fold<int>(0, (sum, o) => sum + o.votes);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(poll.question, style: theme.textTheme.titleSmall),
-            Text(
-              [
-                poll.isOpen ? 'Open' : 'Closed',
-                poll.allowMultiple ? 'choose any' : 'choose one',
-                poll.isAnonymous ? 'anonymous' : 'names shown',
-                '${poll.totalVoters} voted',
-              ].join(' · '),
-              style: theme.textTheme.bodySmall,
-            ),
-            for (final option in poll.options)
-              InkWell(
-                onTap: poll.isOpen ? () => _toggle(option.id) : null,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            _selected.contains(option.id)
-                                ? (poll.allowMultiple
-                                      ? Icons.check_box
-                                      : Icons.radio_button_checked)
-                                : (poll.allowMultiple
-                                      ? Icons.check_box_outline_blank
-                                      : Icons.radio_button_unchecked),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(option.text)),
-                          Text('${option.votes}'),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      LinearProgressIndicator(
-                        value: total == 0 ? 0 : option.votes / total,
-                      ),
-                      if (option.voters != null && option.voters!.isNotEmpty)
-                        Text(
-                          option.voters!.join(', '),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            Wrap(
-              spacing: 8,
-              children: [
-                if (poll.isOpen)
-                  FilledButton(
-                    onPressed: _selected.isEmpty
-                        ? null
-                        : () async {
-                            if (await _attempt(
-                              context,
-                              () =>
-                                  widget.api.vote(poll.id, _selected.toList()),
-                            )) {
-                              await widget.reload();
-                            }
-                          },
-                    child: Text(poll.myVotes.isEmpty ? 'Vote' : 'Change vote'),
-                  ),
-                if (poll.isOpen && widget.canManage)
-                  TextButton(
-                    onPressed: () async {
-                      if (await _attempt(
-                        context,
-                        () => widget.api.closePoll(poll.id),
-                      )) {
-                        await widget.reload();
-                      }
-                    },
-                    child: const Text('Close poll'),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          PollCard(poll: poll, api: api, canManage: canManage, reload: reload),
     );
   }
 }
