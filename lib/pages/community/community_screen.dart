@@ -134,8 +134,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
           body: Column(
             children: [
-              _ClassPicker(future: _classes, onOpen: _openClass),
-              _GroupSwitcher(others: others),
+              _GroupSwitcher(
+                others: others,
+                classes: _classes,
+                onOpenClass: _openClass,
+              ),
               const Divider(height: 1),
               Expanded(
                 child: GroupFeed(
@@ -159,11 +162,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 }
 
-/// Regional groups, class chats and any other groups, as chips.
+/// One row of chips: the Class chats dropdown, Groups (regions), the
+/// Running group and any other groups.
 class _GroupSwitcher extends StatelessWidget {
-  const _GroupSwitcher({required this.others});
+  const _GroupSwitcher({
+    required this.others,
+    required this.classes,
+    required this.onOpenClass,
+  });
 
   final List<Group> others;
+  final Future<List<ClassGroup>> classes;
+  final void Function(ClassGroup entry) onOpenClass;
 
   @override
   Widget build(BuildContext context) {
@@ -173,10 +183,11 @@ class _GroupSwitcher extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         children: [
+          _ClassChip(future: classes, onOpen: onOpenClass),
           ActionChip(
             key: const Key('chip-regional'),
             avatar: const Icon(Icons.hub_outlined, size: 18),
-            label: const Text('Regional groups'),
+            label: const Text('Groups'),
             onPressed: () => context.push('/community/regional'),
           ),
           for (final group in others) ...[
@@ -200,10 +211,10 @@ class _GroupSwitcher extends StatelessWidget {
   }
 }
 
-/// Every year Emerge Kentucky had a class, as a dropdown. Picking a year
-/// opens that class's chat; years the member isn't in are marked.
-class _ClassPicker extends StatelessWidget {
-  const _ClassPicker({required this.future, required this.onOpen});
+/// A chip that drops down every year Emerge Kentucky had a class. Picking a
+/// year opens that class's chat; years the member isn't in show a lock.
+class _ClassChip extends StatelessWidget {
+  const _ClassChip({required this.future, required this.onOpen});
 
   final Future<List<ClassGroup>> future;
   final void Function(ClassGroup entry) onOpen;
@@ -215,26 +226,13 @@ class _ClassPicker extends StatelessWidget {
       builder: (context, snapshot) {
         final classes = snapshot.data ?? const <ClassGroup>[];
         if (classes.isEmpty) return const SizedBox.shrink();
-        final own = classes.where((c) => c.isOwnClass).firstOrNull;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-          child: DropdownMenu<int>(
-            key: const Key('class-picker'),
-            width: MediaQuery.sizeOf(context).width - 24,
-            leadingIcon: const Icon(Icons.school_outlined),
-            label: const Text('Class chats'),
-            hintText: 'Pick a class year',
-            initialSelection: own?.group.id,
-            requestFocusOnTap: false,
-            inputDecorationTheme: const InputDecorationTheme(
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12),
-            ),
-            dropdownMenuEntries: [
+          padding: const EdgeInsets.only(right: 8),
+          child: MenuAnchor(
+            menuChildren: [
               for (final entry in classes)
-                DropdownMenuEntry<int>(
-                  value: entry.group.id,
-                  label: entry.group.name,
+                MenuItemButton(
+                  key: Key('class-${entry.group.id}'),
                   leadingIcon: Icon(
                     entry.isMember ? Icons.forum_outlined : Icons.lock_outline,
                     size: 18,
@@ -244,13 +242,23 @@ class _ClassPicker extends StatelessWidget {
                       : entry.memberCount > 0
                       ? Text('${entry.memberCount}')
                       : null,
+                  onPressed: () => onOpen(entry),
+                  child: Text(entry.group.name),
                 ),
             ],
-            onSelected: (id) {
-              if (id == null) return;
-              final entry = classes.firstWhere((c) => c.group.id == id);
-              onOpen(entry);
-            },
+            builder: (context, controller, _) => ActionChip(
+              key: const Key('class-picker'),
+              avatar: const Icon(Icons.school_outlined, size: 18),
+              label: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Class chats'),
+                  Icon(Icons.arrow_drop_down, size: 18),
+                ],
+              ),
+              onPressed: () =>
+                  controller.isOpen ? controller.close() : controller.open(),
+            ),
           ),
         );
       },
@@ -272,7 +280,7 @@ class _GroupsDirectory extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.hub_outlined),
-            title: const Text('Regional groups'),
+            title: const Text('Groups'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/community/regional'),
           ),

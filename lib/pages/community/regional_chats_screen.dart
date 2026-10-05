@@ -68,7 +68,7 @@ class _RegionalChatsScreenState extends State<RegionalChatsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Regional groups')),
+      appBar: AppBar(title: const Text('Groups')),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: FutureBuilder<List<RegionalGroup>>(

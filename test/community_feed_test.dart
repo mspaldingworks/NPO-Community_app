@@ -330,9 +330,13 @@ void main() {
 
       expect(find.text('Running'), findsOneWidget);
       expect(find.text('Candidates Running'), findsNothing);
+      // The class dropdown shares the row with the other chips, first in line.
       final picker = tester.getTopLeft(find.byKey(const Key('class-picker')));
       final chips = tester.getTopLeft(find.byKey(const Key('chip-regional')));
-      expect(picker.dy, lessThan(chips.dy));
+      expect((picker.dy - chips.dy).abs(), lessThan(4));
+      expect(picker.dx, lessThan(chips.dx));
+      expect(find.text('Groups'), findsOneWidget);
+      expect(find.text('Regional groups'), findsNothing);
     },
   );
 
