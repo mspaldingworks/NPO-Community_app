@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/chat_favorites_service.dart';
 import 'package:npo_community/core/services/chat_service.dart';
 import 'package:npo_community/widgets/friends/friends_tab_view.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:npo_community/theme/app_theme.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -55,9 +53,7 @@ class ConversationList extends StatefulWidget {
 class _ConversationListState extends State<ConversationList> {
   late Future<List<ConversationPreview>> _conversationsFuture;
   late final ChatService _chatService;
-  final AuthService _authService = AuthService();
   final ChatFavoritesService _chatFavoritesService = ChatFavoritesService();
-  Map<int, String?> _userFlairById = {};
   Set<int> _favoriteChatIds = <int>{};
 
   @override
@@ -66,7 +62,6 @@ class _ConversationListState extends State<ConversationList> {
     _chatService = ChatService();
     // Start fetching the list of other participants immediately
     _conversationsFuture = _chatService.getAllConversations();
-    _loadUserFlairMap();
     _loadFavoriteChatIds();
   }
 
@@ -87,18 +82,6 @@ class _ConversationListState extends State<ConversationList> {
     await _loadFavoriteChatIds();
   }
 
-  Future<void> _loadUserFlairMap() async {
-    try {
-      final users = await _authService.getAllUsers();
-      if (!mounted) return;
-      setState(() {
-        _userFlairById = {for (final u in users) u.id: u.flair};
-      });
-    } catch (_) {
-      // Ignore silently; pronouns will not be displayed
-    }
-  }
-
   Future<void> _loadConversations() async {
     try {
       final conversations = await _chatService.getAllConversations();
@@ -106,7 +89,6 @@ class _ConversationListState extends State<ConversationList> {
       setState(() {
         _conversationsFuture = Future.value(conversations);
       });
-      await _loadUserFlairMap();
     } catch (e) {
       if (!mounted) return;
       // Show error in a SnackBar
@@ -151,15 +133,6 @@ class _ConversationListState extends State<ConversationList> {
               itemBuilder: (context, index) {
                 final otherUser = conversations[index];
                 final displayName = otherUser.username;
-                final flair = _userFlairById[otherUser.id];
-                final isPrivate = FlairUtils.isProfilePrivate(flair);
-                final String? pronounsDisplay = isPrivate
-                    ? null
-                    : (FlairUtils.extractPronouns(flair) ?? '')
-                          .split(RegExp(r'[\n,]'))
-                          .map((p) => p.trim())
-                          .where((p) => p.isNotEmpty)
-                          .join(' • ');
 
                 // All previous logic for lastMessage, unreadCount, isGroup,
                 // and multi-participants has been REMOVED.
@@ -197,16 +170,6 @@ class _ConversationListState extends State<ConversationList> {
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (pronounsDisplay != null &&
-                              pronounsDisplay.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                pronounsDisplay,
-                                style: Theme.of(context).textTheme.bodySmall,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
                         ],
                       ),
                     ),

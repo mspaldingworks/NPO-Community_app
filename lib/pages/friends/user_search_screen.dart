@@ -185,13 +185,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 final status =
                     _requestStates[friend.id] ?? _FriendRequestStatus.idle;
                 final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-                final String? pronounsDisplay = isPrivate
-                    ? null
-                    : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                          .split(RegExp(r'[\n,]'))
-                          .map((p) => p.trim())
-                          .where((p) => p.isNotEmpty)
-                          .join(' • ');
 
                 return ListTile(
                   leading: GestureDetector(
@@ -205,17 +198,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   ),
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(friend.username),
-                      if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            pronounsDisplay,
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                    ],
+                    children: [Text(friend.username)],
                   ),
                   subtitle: isPrivate
                       ? const Text('Private profile')

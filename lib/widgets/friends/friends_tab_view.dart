@@ -7,7 +7,6 @@ import 'pending_sent_tile.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/core/utils/time_ago.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/core/services/chat_favorites_service.dart';
 
 class FriendsTabView extends StatefulWidget {
@@ -154,15 +153,6 @@ class _FriendsTabViewState extends State<FriendsTabView> {
   }
 
   Widget _buildFriendTile(Friend friend) {
-    final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-    final String? pronounsDisplay = isPrivate
-        ? null
-        : (FlairUtils.extractPronouns(friend.flair) ?? '')
-              .split(RegExp(r'[\n,]'))
-              .map((p) => p.trim())
-              .where((p) => p.isNotEmpty)
-              .join(' • ');
-
     return ListTile(
       leading: GestureDetector(
         onTap: () {
@@ -175,17 +165,7 @@ class _FriendsTabViewState extends State<FriendsTabView> {
       ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(friend.username),
-          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                pronounsDisplay,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-        ],
+        children: [Text(friend.username)],
       ),
       subtitle: _buildStatusSubtitle(friend),
       trailing: Row(

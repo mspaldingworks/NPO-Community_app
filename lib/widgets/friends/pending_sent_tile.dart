@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:npo_community/models/friend_request.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/utils/time_ago.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class PendingSentTile extends StatelessWidget {
   final FriendRequest request;
@@ -19,15 +18,6 @@ class PendingSentTile extends StatelessWidget {
     final imageUrl = toUser.fullProfilePicUrl;
 
     final isInProgress = controller.isRequestActionInProgress(toUser.username);
-
-    final isPrivate = FlairUtils.isProfilePrivate(toUser.flair);
-    final String? pronounsDisplay = isPrivate
-        ? null
-        : (FlairUtils.extractPronouns(toUser.flair) ?? '')
-              .split(RegExp(r'[\n,]'))
-              .map((p) => p.trim())
-              .where((p) => p.isNotEmpty)
-              .join(' • ');
 
     final subtitleText = request.createdAt != null
         ? 'Sent ${timeAgo(request.createdAt!)}'
@@ -48,15 +38,6 @@ class PendingSentTile extends StatelessWidget {
             toUser.username,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                pronounsDisplay,
-                style: Theme.of(context).textTheme.bodySmall,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
         ],
       ),
       subtitle: Text(subtitleText),

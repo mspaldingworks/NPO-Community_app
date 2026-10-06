@@ -14,7 +14,6 @@ import 'package:npo_community/core/constants/api_endpoints.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/widgets/smart_link_body.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -44,7 +43,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   final DateFormat _editedDateFormat = DateFormat('MMM d, yyyy h:mm a');
   final AuthService _authService = AuthService();
   Map<String, String?> _userPicByUsername = {};
-  Map<String, String?> _userFlairByUsername = {};
   final ImagePicker _commentImagePicker = ImagePicker();
   File? _commentImage;
   static const int _maxCommentImageBytes = 10 * 1024 * 1024;
@@ -70,7 +68,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         _userPicByUsername = {
           for (final u in users) u.username: u.fullProfilePicUrl,
         };
-        _userFlairByUsername = {for (final u in users) u.username: u.flair};
       });
     } catch (_) {
       // Ignore; avatars will stay placeholders
@@ -458,8 +455,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           }
 
           final post = snapshot.data!;
-          final authorFlair = _userFlairByUsername[post.authorUsername ?? ''];
-          final authorIsPrivate = FlairUtils.isProfilePrivate(authorFlair);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -491,15 +486,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     Expanded(
                       child: Builder(
                         builder: (context) {
-                          final String? pronounsDisplay =
-                              post.isAnonymous || authorIsPrivate
-                              ? null
-                              : (FlairUtils.extractPronouns(authorFlair) ?? '')
-                                    .split(RegExp(r'[\n,]'))
-                                    .map((p) => p.trim())
-                                    .where((p) => p.isNotEmpty)
-                                    .join(' • ');
-
                           return GestureDetector(
                             onTap: () {
                               if (post.isAnonymous) return;
@@ -512,17 +498,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                 Text(
                                   'By ${post.isAnonymous ? 'Anonymous' : (post.authorUsername ?? 'Unknown user')} · ${_formatRelative(post.pubDate)}',
                                 ),
-                                if (pronounsDisplay != null &&
-                                    pronounsDisplay.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      pronounsDisplay,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ),
                               ],
                             ),
                           );
@@ -603,18 +578,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   itemBuilder: (context, index) {
                     final comment = post.comments[index];
                     final isCommentAuthor = comment.authorId == currentUserId;
-                    final commentFlair =
-                        _userFlairByUsername[comment.authorUsername];
-                    final commentIsPrivate = FlairUtils.isProfilePrivate(
-                      commentFlair,
-                    );
-                    final String? pronounsDisplay = commentIsPrivate
-                        ? null
-                        : (FlairUtils.extractPronouns(commentFlair) ?? '')
-                              .split(RegExp(r'[\n,]'))
-                              .map((p) => p.trim())
-                              .where((p) => p.isNotEmpty)
-                              .join(' • ');
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -680,17 +643,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                       ),
                                   ],
                                 ),
-                                if (pronounsDisplay != null &&
-                                    pronounsDisplay.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      pronounsDisplay,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ),
                                 Text(
                                   _formatRelative(comment.pubDate),
                                   style: const TextStyle(

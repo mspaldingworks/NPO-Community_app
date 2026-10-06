@@ -5,7 +5,6 @@ import 'package:npo_community/core/utils/time_ago.dart';
 import 'package:npo_community/core/services/friends_controller.dart';
 import 'package:npo_community/models/friend_request.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class PendingRequestTile extends StatelessWidget {
   final FriendRequest request;
@@ -20,15 +19,6 @@ class PendingRequestTile extends StatelessWidget {
     final isInProgress = controller.isRequestActionInProgress(
       request.fromUser.username,
     );
-
-    final isPrivate = FlairUtils.isProfilePrivate(request.fromUser.flair);
-    final String? pronounsDisplay = isPrivate
-        ? null
-        : (FlairUtils.extractPronouns(request.fromUser.flair) ?? '')
-              .split(RegExp(r'[\n,]'))
-              .map((p) => p.trim())
-              .where((p) => p.isNotEmpty)
-              .join(' • ');
 
     return ListTile(
       leading: GestureDetector(
@@ -45,15 +35,6 @@ class PendingRequestTile extends StatelessWidget {
             request.fromUser.username,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                pronounsDisplay,
-                style: Theme.of(context).textTheme.bodySmall,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
         ],
       ),
       subtitle: request.createdAt != null

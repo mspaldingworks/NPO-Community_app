@@ -258,9 +258,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       text: (me.statusMessage ?? '').trim(),
     );
     final cityCtrl = TextEditingController(text: (me.city ?? '').trim());
-    final pronounsCtrl = TextEditingController(
-      text: (FlairUtils.extractPronouns(me.flair) ?? '').trim(),
-    );
     bool saving = false;
 
     try {
@@ -278,7 +275,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final status = statusCtrl.text.trim();
                 final city = cityCtrl.text.trim();
                 final flair = FlairUtils.buildFlair(
-                  pronouns: pronounsCtrl.text.trim(),
                   isPrivateProfile: FlairUtils.isProfilePrivate(me.flair),
                 );
                 final updates = <String, dynamic>{
@@ -372,16 +368,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextField(
-                      controller: pronounsCtrl,
-                      enabled: !saving,
-                      decoration: const InputDecoration(
-                        labelText: 'Pronouns',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
                       controller: cityCtrl,
                       enabled: !saving,
                       decoration: const InputDecoration(
@@ -418,7 +404,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } finally {
       statusCtrl.dispose();
       cityCtrl.dispose();
-      pronounsCtrl.dispose();
     }
   }
 

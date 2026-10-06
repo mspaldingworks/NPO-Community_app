@@ -16,13 +16,6 @@ class SearchUserTile extends StatelessWidget {
     final controller = context.watch<FriendsController>();
     final isSent = controller.isRequestSent(user.username);
     final isPrivate = FlairUtils.isProfilePrivate(user.flair);
-    final String? pronounsDisplay = isPrivate
-        ? null
-        : (FlairUtils.extractPronouns(user.flair) ?? '')
-              .split(RegExp(r'[\n,]'))
-              .map((p) => p.trim())
-              .where((p) => p.isNotEmpty)
-              .join(' • ');
 
     return ListTile(
       leading: GestureDetector(
@@ -38,14 +31,6 @@ class SearchUserTile extends StatelessWidget {
             user.username,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                pronounsDisplay,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
         ],
       ),
       subtitle: isPrivate

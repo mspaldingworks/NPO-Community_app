@@ -62,13 +62,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             itemBuilder: (context, index) {
               final friend = friends[index];
               final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-              final String? pronounsDisplay = isPrivate
-                  ? null
-                  : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                        .split(RegExp(r'[\n,]'))
-                        .map((p) => p.trim())
-                        .where((p) => p.isNotEmpty)
-                        .join(' • ');
               return ListTile(
                 leading: GestureDetector(
                   onTap: () {
@@ -88,14 +81,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                       },
                       child: Text(friend.username),
                     ),
-                    if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(
-                          pronounsDisplay,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ),
                   ],
                 ),
                 subtitle: isPrivate

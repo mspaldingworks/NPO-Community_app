@@ -8,7 +8,6 @@ import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
@@ -466,14 +465,6 @@ class _PostCard extends StatelessWidget {
     final displayAuthor = post.isAnonymous
         ? 'Anonymous'
         : (post.authorUsername ?? 'Unknown user');
-    final authorIsPrivate = FlairUtils.isProfilePrivate(flair);
-    final String? pronounsDisplay = post.isAnonymous || authorIsPrivate
-        ? null
-        : (FlairUtils.extractPronouns(flair) ?? '')
-              .split(RegExp(r'[\n,]'))
-              .map((p) => p.trim())
-              .where((p) => p.isNotEmpty)
-              .join(' • ');
 
     void openAuthor() {
       if (post.isAnonymous || post.author == null) return;
@@ -538,15 +529,6 @@ class _PostCard extends StatelessWidget {
                               ),
                           ],
                         ),
-                        if (pronounsDisplay != null &&
-                            pronounsDisplay.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              pronounsDisplay,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ),
                         Text(
                           'By $displayAuthor · ${timeago.format(postDate)}$editedLabel',
                           style: const TextStyle(

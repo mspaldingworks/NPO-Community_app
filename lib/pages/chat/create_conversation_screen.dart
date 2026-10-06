@@ -8,7 +8,6 @@ import 'package:npo_community/core/services/friend_service.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/loading_indicator.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class CreateConversationScreen extends StatefulWidget {
   const CreateConversationScreen({super.key});
@@ -436,14 +435,6 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final user = _searchResults[index];
-        final isPrivate = FlairUtils.isProfilePrivate(user.flair);
-        final String? pronounsDisplay = isPrivate
-            ? null
-            : (FlairUtils.extractPronouns(user.flair) ?? '')
-                  .split(RegExp(r'[\n,]'))
-                  .map((p) => p.trim())
-                  .where((p) => p.isNotEmpty)
-                  .join(' • ');
         return ListTile(
           leading: GestureDetector(
             onTap: () {
@@ -460,18 +451,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
             },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(user.username),
-                if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      pronounsDisplay,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-              ],
+              children: [Text(user.username)],
             ),
           ),
           onTap: _isCreatingGroup
@@ -562,14 +542,6 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
           }
 
           final friend = _friends[index - 2];
-          final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
-          final String? pronounsDisplay = isPrivate
-              ? null
-              : (FlairUtils.extractPronouns(friend.flair) ?? '')
-                    .split(RegExp(r'[\n,]'))
-                    .map((p) => p.trim())
-                    .where((p) => p.isNotEmpty)
-                    .join(' • ');
           return ListTile(
             leading: GestureDetector(
               onTap: () {
@@ -586,18 +558,7 @@ class _CreateConversationScreenState extends State<CreateConversationScreen>
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(friend.username),
-                  if (pronounsDisplay != null && pronounsDisplay.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        pronounsDisplay,
-                        style: Theme.of(context).textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
+                children: [Text(friend.username)],
               ),
             ),
             subtitle:

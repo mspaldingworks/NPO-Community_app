@@ -12,8 +12,8 @@ import 'package:npo_community/core/utils/time_ago.dart';
 import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Another member's profile: photo, name and pronouns, her status, then her
-/// details and links. A private profile shows only the name and pronouns.
+/// Another member's profile: photo and name, her status, then her details
+/// and links. A private profile shows only the name.
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
 
@@ -115,7 +115,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
           }
 
           final isPrivate = FlairUtils.isProfilePrivate(user.flair);
-          final pronouns = FlairUtils.extractPronouns(user.flair) ?? '';
           final status = (user.statusMessage ?? '').trim();
 
           return SingleChildScrollView(
@@ -137,16 +136,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                if (!isPrivate && pronouns.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      pronouns.trim(),
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
                 if (!isPrivate && status.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Card(
@@ -220,15 +209,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     Text('City', style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 6),
                     Text(user.city!.trim()),
-                    const SizedBox(height: 16),
-                  ],
-                  if (pronouns.trim().isNotEmpty) ...[
-                    Text(
-                      'Pronouns',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(pronouns.trim()),
                     const SizedBox(height: 16),
                   ],
                   if (user.links.isNotEmpty) ...[
