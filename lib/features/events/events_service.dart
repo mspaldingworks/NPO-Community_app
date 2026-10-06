@@ -81,6 +81,7 @@ class CommunityEvent {
     this.goingCount = 0,
     this.maybeCount = 0,
     this.myRsvp,
+    this.isFavorite = false,
     this.canManage = false,
     this.shifts = const [],
     this.openVolunteerSlots = 0,
@@ -107,6 +108,9 @@ class CommunityEvent {
 
   /// going, maybe, declined or null.
   final String? myRsvp;
+
+  /// Saved by the member for herself; organizers never see it.
+  final bool isFavorite;
   final bool canManage;
   final List<VolunteerShift> shifts;
   final int openVolunteerSlots;
@@ -118,6 +122,10 @@ class CommunityEvent {
   bool get isStatewide => group == null;
   String get scopeLabel => group?.name ?? 'Statewide';
   bool get isFull => capacity != null && goingCount >= capacity!;
+
+  /// The member said she is going, claimed a shift, or saved the event.
+  /// Only these light up the Events tile on Home; a Maybe does not.
+  bool get isMine => myRsvp == 'going' || myShiftCount > 0 || isFavorite;
 
   factory CommunityEvent.fromJson(Map<String, dynamic> json) {
     final group = json['group'];
@@ -143,6 +151,7 @@ class CommunityEvent {
       goingCount: json['going_count'] as int? ?? 0,
       maybeCount: json['maybe_count'] as int? ?? 0,
       myRsvp: json['my_rsvp'] as String?,
+      isFavorite: json['is_favorite'] == true,
       canManage: json['can_manage'] == true,
       shifts: [
         for (final row in (json['shifts'] as List? ?? const []))
@@ -188,12 +197,16 @@ class RosterRow {
 class MyCommitments {
   const MyCommitments({
     this.events = const [],
+    this.favorites = const [],
     this.shifts = const [],
     this.attendedCount = 0,
     this.volunteerHours = 0,
   });
 
   final List<CommunityEvent> events;
+
+  /// Upcoming events the member saved, soonest first.
+  final List<CommunityEvent> favorites;
   final List<VolunteerShift> shifts;
   final int attendedCount;
   final double volunteerHours;
@@ -201,6 +214,10 @@ class MyCommitments {
   factory MyCommitments.fromJson(Map<String, dynamic> json) => MyCommitments(
     events: [
       for (final row in (json['events'] as List? ?? const []))
+        CommunityEvent.fromJson(row as Map<String, dynamic>),
+    ],
+    favorites: [
+      for (final row in (json['favorites'] as List? ?? const []))
         CommunityEvent.fromJson(row as Map<String, dynamic>),
     ],
     shifts: [
@@ -244,7 +261,27 @@ class EventDraft {
   };
 }
 
-/// `/api/events/` — events, RSVPs and volunteer shifts.
+/// The member's own events (going, volunteering or saved) that start within
+/// the next [window] and have not ended. This is what lights up the Events
+/// tile on Home.
+List<CommunityEvent> myEventsSoon(
+  Iterable<CommunityEvent> events,
+  DateTime now, {
+  Duration window = const Duration(days: 7),
+}) {
+  final until = now.add(window);
+  return [
+    for (final event in events)
+      if (!event.isCancelled &&
+          event.isMine &&
+          event.startsAt.isBefore(until) &&
+          (event.endsAt ?? event.startsAt.add(const Duration(hours: 2)))
+              .isAfter(now))
+        event,
+  ]..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+}
+
+/// `/api/events/` — events, RSVPs, volunteer shifts and saved events.
 class EventsService extends ApiClient {
   EventsService();
 
@@ -292,6 +329,21 @@ class EventsService extends ApiClient {
       jsonHeaders: authHeaders,
       jsonPayload: {'status': status},
     ),
+  );
+
+  /// Saves (or unsaves) the event for the member alone.
+  Future<CommunityEvent> setFavorite(int id, bool favorite) async => _event(
+    favorite
+        ? await post(
+            urlPath: '/api/events/$id/favorite/',
+            jsonHeaders: authHeaders,
+            jsonPayload: const {},
+          )
+        : await delete(
+            urlPath: '/api/events/$id/favorite/',
+            jsonHeaders: authHeaders,
+            expectedStatusCode: 200,
+          ),
   );
 
   Future<CommunityEvent> addShift(

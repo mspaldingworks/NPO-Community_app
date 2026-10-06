@@ -7,8 +7,13 @@ import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
 import 'package:npo_community/core/services/block_service.dart';
+import 'package:npo_community/core/utils/profile_links.dart';
+import 'package:npo_community/core/utils/time_ago.dart';
 import 'package:npo_community/pages/settings/blocked_members_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+/// Another member's profile: photo, name and pronouns, her status, then her
+/// details and links. A private profile shows only the name and pronouns.
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
 
@@ -111,6 +116,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
 
           final isPrivate = FlairUtils.isProfilePrivate(user.flair);
           final pronouns = FlairUtils.extractPronouns(user.flair) ?? '';
+          final status = (user.statusMessage ?? '').trim();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -138,6 +144,48 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                       pronouns.trim(),
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+                if (!isPrivate && status.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Card(
+                    key: const Key('status-card'),
+                    color: Theme.of(context).colorScheme.secondaryContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.mode_comment_outlined,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSecondaryContainer,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  status,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                if (user.statusUpdatedAt != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    timeAgo(user.statusUpdatedAt!),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -183,14 +231,31 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     Text(pronouns.trim()),
                     const SizedBox(height: 16),
                   ],
-                  if (user.statusMessage != null &&
-                      user.statusMessage!.trim().isNotEmpty) ...[
+                  if (user.links.isNotEmpty) ...[
                     Text(
-                      'Status',
+                      'Links',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 6),
-                    Text(user.statusMessage!.trim()),
+                    for (final link in user.links)
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        child: ListTile(
+                          key: Key('link-${link.url}'),
+                          leading: Icon(iconForProfileLink(link)),
+                          title: Text(link.displayLabel),
+                          subtitle: Text(
+                            Uri.tryParse(link.url)?.host ?? link.url,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: const Icon(Icons.open_in_new, size: 18),
+                          onTap: () => launchUrl(
+                            Uri.parse(link.url),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                        ),
+                      ),
                   ],
                 ],
               ],

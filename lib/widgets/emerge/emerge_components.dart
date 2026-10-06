@@ -201,6 +201,10 @@ class EmergePhotoHeader extends StatelessWidget {
 /// One tile of the website's home quick-link grid (CALENDAR · RECENT NEWS ·
 /// JOIN OUR MOVEMENT · FOLLOW US): an uppercase Montserrat label with a
 /// trailing icon on a solid brand surface.
+///
+/// A [highlighted] tile swaps to the brand green with a soft glow, the way
+/// Home flags something that needs the member's attention, and may carry a
+/// small [badge] (a count) beside the icon.
 class EmergeActionTile extends StatelessWidget {
   const EmergeActionTile({
     super.key,
@@ -209,6 +213,8 @@ class EmergeActionTile extends StatelessWidget {
     required this.onTap,
     this.background = Colors.white,
     this.foreground = AppColors.primary,
+    this.highlighted = false,
+    this.badge,
   });
 
   final String label;
@@ -217,30 +223,75 @@ class EmergeActionTile extends StatelessWidget {
   final Color background;
   final Color foreground;
 
+  /// Lights the tile up in green with a glow.
+  final bool highlighted;
+
+  /// Short text (a count) shown in a pill beside the icon.
+  final String? badge;
+
+  static const Color highlightColor = AppColors.green;
+
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: background,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: TextStyle(
-                    fontFamily: 'Montserrat',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                    color: foreground,
+    final bg = highlighted ? highlightColor : background;
+    final fg = highlighted ? AppColors.textWhite : foreground;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        boxShadow: highlighted
+            ? [
+                BoxShadow(
+                  color: highlightColor.withValues(alpha: 0.6),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ]
+            : const [],
+      ),
+      child: Material(
+        color: bg,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label.toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: 'Montserrat',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                      color: fg,
+                    ),
                   ),
                 ),
-              ),
-              Icon(icon, color: foreground, size: 26),
-            ],
+                if (badge != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: fg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      badge!,
+                      style: TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: bg,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Icon(icon, color: fg, size: 26),
+              ],
+            ),
           ),
         ),
       ),

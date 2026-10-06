@@ -88,7 +88,7 @@ String formatWhen(DateTime start, DateTime? end) {
 }
 
 /// The Events tab: what's coming up (ours and campaign shifts), a month
-/// calendar, and what the member has signed up for.
+/// calendar, and what the member has signed up for or saved.
 class EventsScreen extends StatefulWidget {
   const EventsScreen({
     super.key,
@@ -178,6 +178,29 @@ class _EventsScreenState extends State<EventsScreen> {
 
   void _open(int id) => openEvent(context, id, service: _service);
 
+  /// Saves or unsaves one event and swaps the refreshed copy into the list,
+  /// so the star flips without refetching everything.
+  Future<void> _toggleFavorite(CommunityEvent event) async {
+    try {
+      final updated = await _service.setFavorite(event.id, !event.isFavorite);
+      final current = await _events;
+      if (!mounted) return;
+      setState(() {
+        _events = Future.value([
+          for (final e in current)
+            if (e.id == updated.id) updated else e,
+        ]);
+        _mine = _service.fetchMine();
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -228,6 +251,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   items: upcoming,
                   canModerate: widget.canModerate,
                   onOpen: _open,
+                  onToggleFavorite: _toggleFavorite,
                   onRefresh: _reload,
                 ),
                 _CalendarTab(
@@ -238,12 +262,14 @@ class _EventsScreenState extends State<EventsScreen> {
                   now: now,
                   canModerate: widget.canModerate,
                   onOpen: _open,
+                  onToggleFavorite: _toggleFavorite,
                 ),
                 _MineTab(
                   future: _mine,
                   fundraisers: _myFundraisers,
                   canModerate: widget.canModerate,
                   onOpen: _open,
+                  onToggleFavorite: _toggleFavorite,
                   onRefresh: _reload,
                   onStartFundraiser: _startFundraiser,
                   onOpenFundraiser: _openFundraiser,
@@ -262,12 +288,14 @@ class _UpcomingTab extends StatelessWidget {
     required this.items,
     required this.canModerate,
     required this.onOpen,
+    required this.onToggleFavorite,
     required this.onRefresh,
   });
 
   final List<EventListItem> items;
   final bool canModerate;
   final void Function(int id) onOpen;
+  final Future<void> Function(CommunityEvent event) onToggleFavorite;
   final Future<void> Function() onRefresh;
 
   @override
@@ -287,6 +315,7 @@ class _UpcomingTab extends StatelessWidget {
                     item: item,
                     showSample: canModerate,
                     onOpen: onOpen,
+                    onToggleFavorite: onToggleFavorite,
                   ),
               ],
             ),
@@ -300,12 +329,14 @@ class _CalendarTab extends StatefulWidget {
     required this.now,
     required this.canModerate,
     required this.onOpen,
+    required this.onToggleFavorite,
   });
 
   final List<EventListItem> items;
   final DateTime now;
   final bool canModerate;
   final void Function(int id) onOpen;
+  final Future<void> Function(CommunityEvent event) onToggleFavorite;
 
   @override
   State<_CalendarTab> createState() => _CalendarTabState();
@@ -373,6 +404,7 @@ class _CalendarTabState extends State<_CalendarTab>
                         item: item,
                         showSample: widget.canModerate,
                         onOpen: widget.onOpen,
+                        onToggleFavorite: widget.onToggleFavorite,
                       ),
                   ],
                 ),
@@ -388,6 +420,7 @@ class _MineTab extends StatelessWidget {
     required this.fundraisers,
     required this.canModerate,
     required this.onOpen,
+    required this.onToggleFavorite,
     required this.onRefresh,
     required this.onStartFundraiser,
     required this.onOpenFundraiser,
@@ -397,6 +430,7 @@ class _MineTab extends StatelessWidget {
   final Future<List<Fundraiser>> fundraisers;
   final bool canModerate;
   final void Function(int id) onOpen;
+  final Future<void> Function(CommunityEvent event) onToggleFavorite;
   final Future<void> Function() onRefresh;
   final Future<void> Function() onStartFundraiser;
   final Future<void> Function(Fundraiser fundraiser) onOpenFundraiser;
@@ -481,6 +515,26 @@ class _MineTab extends StatelessWidget {
                     item: CommunityEventItem(event),
                     showSample: false,
                     onOpen: onOpen,
+                    onToggleFavorite: onToggleFavorite,
+                  ),
+              const SizedBox(height: 12),
+              Text('Saved events', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 4),
+              if (mine.favorites.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Tap the star on any event to save it here. Only you '
+                    'see what you save.',
+                  ),
+                )
+              else
+                for (final event in mine.favorites)
+                  EventListCard(
+                    item: CommunityEventItem(event),
+                    showSample: false,
+                    onOpen: onOpen,
+                    onToggleFavorite: onToggleFavorite,
                   ),
               const SizedBox(height: 12),
               Text('Your volunteer shifts', style: theme.textTheme.titleMedium),
@@ -616,15 +670,16 @@ class _Message extends StatelessWidget {
   );
 }
 
-/// One row in an events list: a date block, the title, where and when, and
-/// chips for scope and status. Campaign shifts open the campaign's sign-up
-/// page; ours open the event page.
+/// One row in an events list: a date block, the title, where and when,
+/// chips for scope and status, and a star to save the event. Campaign
+/// shifts open the campaign's sign-up page; ours open the event page.
 class EventListCard extends StatelessWidget {
   const EventListCard({
     super.key,
     required this.item,
     required this.showSample,
     required this.onOpen,
+    this.onToggleFavorite,
   });
 
   final EventListItem item;
@@ -632,6 +687,9 @@ class EventListCard extends StatelessWidget {
   /// Moderators see which events are seeded samples.
   final bool showSample;
   final void Function(int id) onOpen;
+
+  /// Shows the star when set.
+  final Future<void> Function(CommunityEvent event)? onToggleFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -641,6 +699,16 @@ class EventListCard extends StatelessWidget {
         child: ListTile(
           key: Key('event-${event.id}'),
           leading: _DateBlock(event.startsAt, muted: event.isCancelled),
+          trailing: onToggleFavorite == null
+              ? null
+              : IconButton(
+                  key: Key('favorite-${event.id}'),
+                  tooltip: event.isFavorite ? 'Saved · tap to unsave' : 'Save',
+                  isSelected: event.isFavorite,
+                  icon: const Icon(Icons.star_border),
+                  selectedIcon: Icon(Icons.star, color: scheme.primary),
+                  onPressed: () => onToggleFavorite!(event),
+                ),
           title: Text(
             event.title,
             style: event.isCancelled
@@ -683,6 +751,13 @@ class EventListCard extends StatelessWidget {
                       icon: Icons.check,
                     ),
                   if (event.myRsvp == 'maybe') _chip(context, 'Maybe'),
+                  if (event.isFavorite)
+                    _chip(
+                      context,
+                      'Saved',
+                      color: scheme.primaryContainer,
+                      icon: Icons.star,
+                    ),
                   if (event.myShiftCount > 0)
                     _chip(
                       context,

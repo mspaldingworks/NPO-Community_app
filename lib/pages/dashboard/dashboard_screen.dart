@@ -5,43 +5,46 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/events/events_service.dart';
-import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/profile_service.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
-import 'package:npo_community/models/comment.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/theme/app_theme.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/widgets/emergency_alert_banner.dart';
 import 'package:npo_community/widgets/emerge/emerge_components.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Home: the website's quick-link tiles, today's counters (friends,
-/// replies, events) and the member's own profile card.
+/// Home: the website's quick-link tiles (the Events tile lights up when the
+/// member has something of her own this week), then her profile photo with
+/// the change-photo and Messages buttons beside it.
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({super.key, this.eventsService, this.now});
+
+  /// Injected in tests.
+  final EventsService? eventsService;
+
+  /// Clock override for tests.
+  final DateTime Function()? now;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  final EventsService _eventsService = EventsService();
+  late final EventsService _eventsService =
+      widget.eventsService ?? EventsService();
   final ProfileService _profileService = ProfileService();
-  final CommunityService _communityService = CommunityService();
 
-  static const String _lastSeenRepliesAtPrefKey =
-      'dashboard_last_seen_replies_at_v1';
-  DateTime _lastSeenRepliesAt = DateTime.fromMillisecondsSinceEpoch(0);
-  int _unreadReplyCount = 0;
-  int _todaysEventsCount = 0;
+  /// Events she is going to, volunteering at or saved, starting this week.
+  List<CommunityEvent> _myEventsSoon = const [];
   File? _profileImage;
   bool _isLoading = true;
   bool _updatingProfilePic = false;
+
+  DateTime get _now => widget.now?.call() ?? DateTime.now();
 
   @override
   void initState() {
@@ -53,106 +56,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Provider.of<HomeAlertService>(
       context,
       listen: false,
-    ).setDashboardAlerts(_todaysEventsCount > 0 || _unreadReplyCount > 0);
+    ).setDashboardAlerts(_myEventsSoon.isNotEmpty);
   }
 
   Future<void> _loadDashboardData() async {
-    await _loadLastSeenRepliesAt();
     List<CommunityEvent> allEvents = const [];
     try {
       allEvents = await _eventsService.fetchEvents();
     } catch (_) {
-      // The counter is a nicety; the Events tab reports the real error.
+      // The highlight is a nicety; the Events page reports the real error.
     }
     final imagePath = await _profileService.getImagePath();
-    final now = DateTime.now();
-    final weekOut = now.add(const Duration(days: 7));
-
-    final todaysEvents = allEvents.where((event) {
-      return !event.isCancelled &&
-          event.startsAt.isBefore(weekOut) &&
-          (event.endsAt ?? event.startsAt).isAfter(now);
-    }).length;
-    final unreadReplyCount = await _computeUnreadReplyCount();
+    final mine = myEventsSoon(allEvents, _now);
 
     if (!mounted) return;
     setState(() {
-      _todaysEventsCount = todaysEvents;
-      _unreadReplyCount = unreadReplyCount;
+      _myEventsSoon = mine;
       if (imagePath != null) _profileImage = File(imagePath);
       _isLoading = false;
     });
     _updateDashboardAlerts();
-  }
-
-  // -- replies to the member's own posts ------------------------------------
-
-  Future<void> _loadLastSeenRepliesAt() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_lastSeenRepliesAtPrefKey);
-    if (raw == null || raw.trim().isEmpty) {
-      final now = DateTime.now();
-      await prefs.setString(_lastSeenRepliesAtPrefKey, now.toIso8601String());
-      if (!mounted) return;
-      setState(() {
-        _lastSeenRepliesAt = now;
-        _unreadReplyCount = 0;
-      });
-      return;
-    }
-    final parsed = DateTime.tryParse(raw.trim());
-    if (parsed == null || !mounted) return;
-    setState(() {
-      _lastSeenRepliesAt = parsed;
-    });
-  }
-
-  Future<void> _markRepliesRead() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-    await prefs.setString(_lastSeenRepliesAtPrefKey, now.toIso8601String());
-    if (!mounted) return;
-    setState(() {
-      _lastSeenRepliesAt = now;
-      _unreadReplyCount = 0;
-    });
-    _updateDashboardAlerts();
-  }
-
-  DateTime? _tryParseCommentTimestamp(Comment c) {
-    final raw = (c.updatedAt != null && c.updatedAt!.trim().isNotEmpty)
-        ? c.updatedAt!
-        : c.pubDate;
-    try {
-      return DateTime.parse(raw).toLocal();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<int> _computeUnreadReplyCount() async {
-    final auth = Provider.of<AuthService>(context, listen: false);
-    var me = auth.currentUser;
-    try {
-      me ??= await auth.getCurrentUser();
-    } catch (_) {}
-    if (me == null) return 0;
-
-    try {
-      final posts = await _communityService.fetchAllPosts();
-      var count = 0;
-      for (final p in posts.where((p) => p.author == me!.id)) {
-        for (final c in p.comments) {
-          final ts = _tryParseCommentTimestamp(c);
-          if (ts == null || !ts.isAfter(_lastSeenRepliesAt)) continue;
-          if (c.authorId == me.id || c.authorUsername == me.username) continue;
-          count += 1;
-        }
-      }
-      return count;
-    } catch (_) {
-      return 0;
-    }
   }
 
   // -- profile photo --------------------------------------------------------
@@ -202,49 +125,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // -- layout ---------------------------------------------------------------
 
   /// The website's home quick-link touts reproduced as a 2x2 tile grid, with
-  /// the website's FOLLOW US tile swapped for the in-app Ballot page. Calendar
+  /// the website's FOLLOW US tile swapped for the in-app Ballot page. Events
   /// and Ballot stay in-app; News and Join open ky.emergeamerica.org.
+  ///
+  /// The Events tile glows green when the member has an event of her own
+  /// this week. The glow spills past the tile's edges, so the grid is laid
+  /// out bottom-up and right-to-left: the Events tile (top-left) is painted
+  /// last and its glow sits on top of its neighbours instead of under them.
   Widget _buildEmergeTouts(BuildContext context) {
     Future<void> open(String url) async {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     }
 
+    final count = _myEventsSoon.length;
     return Column(
+      verticalDirection: VerticalDirection.up,
       children: [
         Row(
+          textDirection: TextDirection.rtl,
           children: [
-            Expanded(
-              child: EmergeActionTile(
-                label: 'Calendar',
-                icon: Icons.calendar_month_outlined,
-                onTap: () => context.push('/events'),
-              ),
-            ),
-            const SizedBox(width: 2),
-            Expanded(
-              child: EmergeActionTile(
-                label: 'Recent News',
-                icon: Icons.article_outlined,
-                background: AppColors.primary,
-                foreground: AppColors.textWhite,
-                onTap: () => open('https://ky.emergeamerica.org/news/'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Row(
-          children: [
-            Expanded(
-              child: EmergeActionTile(
-                label: 'Join Our Movement',
-                icon: Icons.emoji_objects_outlined,
-                background: AppColors.primary,
-                foreground: AppColors.textWhite,
-                onTap: () => open('https://ky.emergeamerica.org/get-involved/'),
-              ),
-            ),
-            const SizedBox(width: 2),
             Expanded(
               child: EmergeActionTile(
                 key: const Key('ballot-tile'),
@@ -255,6 +154,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => context.push('/alumni/running'),
               ),
             ),
+            const SizedBox(width: 2),
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Join Our Movement',
+                icon: Icons.emoji_objects_outlined,
+                background: AppColors.primary,
+                foreground: AppColors.textWhite,
+                onTap: () => open('https://ky.emergeamerica.org/get-involved/'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Row(
+          textDirection: TextDirection.rtl,
+          children: [
+            Expanded(
+              child: EmergeActionTile(
+                label: 'Recent News',
+                icon: Icons.article_outlined,
+                background: AppColors.primary,
+                foreground: AppColors.textWhite,
+                onTap: () => open('https://ky.emergeamerica.org/news/'),
+              ),
+            ),
+            const SizedBox(width: 2),
+            Expanded(
+              child: TourAnchor(
+                name: 'Upcoming events',
+                child: EmergeActionTile(
+                  key: const Key('events-tile'),
+                  label: 'Events',
+                  icon: Icons.calendar_month_outlined,
+                  highlighted: count > 0,
+                  badge: count > 0 ? '$count' : null,
+                  onTap: () => context.push('/events'),
+                ),
+              ),
+            ),
           ],
         ),
       ],
@@ -263,13 +201,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final replies = _unreadReplyCount;
-    final repliesText = replies <= 0
-        ? 'No new replies'
-        : (replies > 99
-              ? '99+ new replies'
-              : '$replies new ${replies == 1 ? 'reply' : 'replies'}');
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -290,46 +221,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const EmergencyAlertBanner(),
             _buildEmergeTouts(context),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                TourAnchor(
-                  name: 'Messages',
-                  child: _buildInfoCard(
-                    Icons.chat,
-                    'Messages',
-                    onTap: () => context.push('/chat'),
-                  ),
-                ),
-                TourAnchor(
-                  name: 'Replies',
-                  child: _buildInfoCard(
-                    Icons.mark_email_unread_outlined,
-                    repliesText,
-                    onTap: () async {
-                      if (_unreadReplyCount > 0) {
-                        await _markRepliesRead();
-                        if (!context.mounted) return;
-                      }
-                      context.push('/community');
-                    },
-                    isHighlighted: replies > 0,
-                  ),
-                ),
-                TourAnchor(
-                  name: 'Upcoming events',
-                  child: _buildInfoCard(
-                    Icons.calendar_today_outlined,
-                    _isLoading ? '...' : '$_todaysEventsCount events this week',
-                    onTap: () => context.push('/events'),
-                    isHighlighted: _todaysEventsCount > 0,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            _buildProfileAvatar(),
+            if (!_isLoading && _myEventsSoon.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                _myEventsSoonLine(),
+                key: const Key('events-soon-line'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 28),
+            _buildProfileRow(),
             const SizedBox(height: 16),
             TourAnchor(name: 'Edit Profile', child: _buildEditProfileButton()),
           ],
@@ -338,58 +240,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildInfoCard(
-    IconData icon,
-    String text, {
-    VoidCallback? onTap,
-    bool isHighlighted = false,
-    // The brand green of the compose button, so highlights read as "go".
-    Color highlightColor = AppColors.green,
-  }) {
-    final Color backgroundColor = isHighlighted
-        ? highlightColor
-        : Colors.grey[200]!;
-    final Color contentColor = isHighlighted ? Colors.white : Colors.grey[700]!;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 110,
-        height: 90,
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: isHighlighted
-              ? [
-                  BoxShadow(
-                    color: highlightColor.withValues(alpha: 0.6),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  ),
-                ]
-              : const [],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 30, color: contentColor),
-            const SizedBox(height: 8),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: contentColor,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
+  /// "Fall Social is Thursday" or "2 of your events this week".
+  String _myEventsSoonLine() {
+    if (_myEventsSoon.length == 1) {
+      final event = _myEventsSoon.first;
+      return '${event.title} is coming up this week.';
+    }
+    return '${_myEventsSoon.length} of your events are coming up this week.';
   }
 
   Future<void> _showQuickEditProfileSheet() async {
@@ -448,6 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   programYear: me.programYear,
                   fullName: me.fullName,
                   volunteerRoles: me.volunteerRoles,
+                  links: me.links,
                 );
 
                 try {
@@ -564,68 +422,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildProfileAvatar() {
+  /// Her photo (tap for the quick-edit sheet), then the change-photo button
+  /// just to its right and the Messages button beside that.
+  Widget _buildProfileRow() {
     final authService = Provider.of<AuthService>(context, listen: false);
     final imageUrl = authService.currentUser?.fullProfilePicUrl;
 
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: _showQuickEditProfileSheet,
-          child: Stack(
-            alignment: Alignment.bottomRight,
-            children: [
-              if (_profileImage != null)
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: FileImage(_profileImage!),
-                )
-              else
-                DisplayProfilePic(radius: 40, imageUrl: imageUrl),
-              if (_updatingProfilePic)
-                const Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              else
-                Positioned(
-                  bottom: -2,
-                  right: -2,
-                  child: IconButton(
-                    key: const Key('home-change-photo'),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    tooltip: 'Change profile photo',
-                    onPressed: _updatingProfilePic
-                        ? null
-                        : _pickAndUploadProfilePic,
-                    icon: const CircleAvatar(
-                      radius: 17,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 15,
-                        backgroundColor: AppColors.primary,
-                        child: Icon(
-                          Icons.camera_alt_outlined,
-                          size: 17,
-                          color: AppColors.textWhite,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Material(
+          key: const Key('home-avatar'),
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: _showQuickEditProfileSheet,
+            child: _profileImage != null
+                ? CircleAvatar(
+                    radius: 40,
+                    backgroundImage: FileImage(_profileImage!),
+                  )
+                : DisplayProfilePic(radius: 40, imageUrl: imageUrl),
           ),
         ),
-      ),
+        const SizedBox(width: 20),
+        _RoundAction(
+          key: const Key('home-change-photo'),
+          icon: Icons.camera_alt_outlined,
+          label: 'Photo',
+          tooltip: 'Change profile photo',
+          busy: _updatingProfilePic,
+          onTap: _pickAndUploadProfilePic,
+        ),
+        const SizedBox(width: 20),
+        TourAnchor(
+          name: 'Messages',
+          child: _RoundAction(
+            key: const Key('home-messages'),
+            icon: Icons.chat_bubble_outline,
+            label: 'Messages',
+            tooltip: 'Messages',
+            onTap: () => context.push('/chat'),
+          ),
+        ),
+      ],
     );
   }
 
@@ -640,6 +481,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: const Text('Edit Profile'),
       ),
+    );
+  }
+}
+
+/// A round brand-teal button with a one-word label under it, sized to sit
+/// beside the profile photo.
+class _RoundAction extends StatelessWidget {
+  const _RoundAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.tooltip,
+    required this.onTap,
+    this.busy = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String tooltip;
+  final VoidCallback onTap;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Tooltip(
+          message: tooltip,
+          child: Material(
+            color: AppColors.primary,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: busy ? null : onTap,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: busy
+                    ? const Padding(
+                        padding: EdgeInsets.all(14),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.textWhite,
+                        ),
+                      )
+                    : Icon(icon, color: AppColors.textWhite, size: 24),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: AppColors.textMuted),
+        ),
+      ],
     );
   }
 }

@@ -8,9 +8,9 @@ import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
 import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// One event: when and where, RSVP, volunteer shifts, add-to-calendar, and
-/// organizer tools (edit, shifts, roster and check-in, cancel) for those who
-/// can manage it.
+/// One event: when and where, RSVP, a star to save it for yourself,
+/// volunteer shifts, add-to-calendar, and organizer tools (edit, shifts,
+/// roster and check-in, cancel) for those who can manage it.
 class EventDetailScreen extends StatefulWidget {
   const EventDetailScreen({
     super.key,
@@ -163,6 +163,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
       appBar: AppBar(
         title: Text(event?.title ?? 'Event'),
         actions: [
+          if (event != null)
+            IconButton(
+              key: const Key('favorite'),
+              tooltip: event.isFavorite
+                  ? 'Saved · tap to unsave'
+                  : 'Save event',
+              isSelected: event.isFavorite,
+              icon: const Icon(Icons.star_border),
+              selectedIcon: const Icon(Icons.star),
+              onPressed: _busy
+                  ? null
+                  : () => _apply(
+                      () => _service.setFavorite(event.id, !event.isFavorite),
+                    ),
+            ),
           if (event != null && event.canManage)
             PopupMenuButton<String>(
               key: const Key('organizer-menu'),
@@ -243,6 +258,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 label: Text('Sample'),
                 visualDensity: VisualDensity.compact,
               ),
+            if (event.isFavorite)
+              const Chip(
+                key: Key('saved-chip'),
+                avatar: Icon(Icons.star, size: 16),
+                label: Text('Saved'),
+                visualDensity: VisualDensity.compact,
+              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -307,6 +329,18 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             padding: const EdgeInsets.only(top: 6),
             child: Text(
               'This event is full. You can still mark Maybe.',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+        if (!closed)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              event.isFavorite
+                  ? 'Saved. Going, volunteering and saved events light up '
+                        'the Events tile on Home the week they happen.'
+                  : 'Not sure yet? Tap the star to save this event for '
+                        'yourself; only you see it.',
               style: theme.textTheme.bodySmall,
             ),
           ),

@@ -30,6 +30,7 @@ CommunityEvent _event({
   EventGroupRef? group,
   List<VolunteerShift> shifts = const [],
   bool isCancelled = false,
+  bool isFavorite = false,
 }) => CommunityEvent(
   id: id,
   title: title,
@@ -40,6 +41,7 @@ CommunityEvent _event({
   locationName: 'Louisville',
   isDemo: isDemo,
   myRsvp: myRsvp,
+  isFavorite: isFavorite,
   canManage: canManage,
   group: group,
   shifts: shifts,
@@ -92,6 +94,25 @@ class _FakeEvents extends EventsService {
       canManage: current.canManage,
       shifts: current.shifts,
     );
+  }
+
+  @override
+  Future<CommunityEvent> setFavorite(int id, bool favorite) async {
+    calls.add('favorite $id $favorite');
+    final current = _byId(id);
+    final updated = _event(
+      id: id,
+      title: current.title,
+      myRsvp: current.myRsvp,
+      canManage: current.canManage,
+      shifts: current.shifts,
+      isFavorite: favorite,
+    );
+    events = [
+      for (final e in events)
+        if (e.id == id) updated else e,
+    ];
+    return updated;
   }
 
   @override
@@ -359,6 +380,77 @@ void main() {
       await tester.tap(find.text('Greeter'));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('rsvp')), findsOneWidget);
+    });
+  });
+
+  group('saving events', () {
+    testWidgets('the star on a list card saves and shows the Saved chip', (
+      tester,
+    ) async {
+      final service = _FakeEvents([_event()]);
+      await _pumpScreen(tester, service);
+      expect(find.text('Saved'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('favorite-1')));
+      await tester.pumpAndSettle();
+      expect(service.calls, contains('favorite 1 true'));
+      expect(find.text('Saved'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('favorite-1')));
+      await tester.pumpAndSettle();
+      expect(service.calls, contains('favorite 1 false'));
+      expect(find.text('Saved'), findsNothing);
+    });
+
+    testWidgets('Mine lists saved events', (tester) async {
+      final service = _FakeEvents(
+        [_event(isFavorite: true)],
+        mine: MyCommitments(
+          favorites: [_event(title: 'Saved social', isFavorite: true)],
+        ),
+      );
+      await _pumpScreen(tester, service);
+      await tester.tap(find.text('Mine'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saved events'), findsOneWidget);
+      expect(find.text('Saved social'), findsOneWidget);
+      expect(
+        find.text(
+          'Nothing yet. Find something under Upcoming and tap '
+          'Going.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the star on the event page saves it', (tester) async {
+      final service = _FakeEvents([_event()]);
+      await _pumpDetail(tester, service);
+      expect(find.byKey(const Key('saved-chip')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('favorite')));
+      await tester.pumpAndSettle();
+      expect(service.calls, contains('favorite 1 true'));
+      expect(find.byKey(const Key('saved-chip')), findsOneWidget);
+      expect(service.calls.where((c) => c.startsWith('rsvp')), isEmpty);
+    });
+
+    test('MyCommitments reads favorites', () {
+      final mine = MyCommitments.fromJson({
+        'events': [],
+        'favorites': [
+          {
+            'id': 4,
+            'title': 'Saved',
+            'starts_at': '2026-10-09T18:00:00Z',
+            'is_favorite': true,
+          },
+        ],
+        'shifts': [],
+      });
+      expect(mine.favorites.single.title, 'Saved');
+      expect(mine.favorites.single.isFavorite, isTrue);
+      expect(mine.favorites.single.isMine, isTrue);
     });
   });
 

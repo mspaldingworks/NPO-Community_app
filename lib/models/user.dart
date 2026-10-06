@@ -1,5 +1,42 @@
 import 'package:npo_community/core/constants/api_endpoints.dart';
 
+/// A social media or other link on a member's profile, as the API stores it
+/// in `links`: `{"label": "Instagram", "url": "https://..."}`.
+class ProfileLink {
+  const ProfileLink({required this.label, required this.url});
+
+  final String label;
+  final String url;
+
+  /// The label, or the site's host when the member left the label blank.
+  String get displayLabel {
+    if (label.trim().isNotEmpty) return label.trim();
+    final host = Uri.tryParse(url)?.host ?? '';
+    return host.startsWith('www.') ? host.substring(4) : host;
+  }
+
+  factory ProfileLink.fromJson(Map<String, dynamic> json) => ProfileLink(
+    label: json['label'] as String? ?? '',
+    url: json['url'] as String? ?? '',
+  );
+
+  Map<String, dynamic> toJson() => {'label': label, 'url': url};
+
+  static List<ProfileLink> listFromJson(dynamic rows) => [
+    for (final row in (rows as List? ?? const []))
+      if (row is Map<String, dynamic> &&
+          (row['url'] as String? ?? '').isNotEmpty)
+        ProfileLink.fromJson(row),
+  ];
+
+  @override
+  bool operator ==(Object other) =>
+      other is ProfileLink && other.label == label && other.url == url;
+
+  @override
+  int get hashCode => Object.hash(label, url);
+}
+
 class User {
   final int id;
   final String username;
@@ -29,6 +66,9 @@ class User {
   /// How she'd like to help (keys of the API's VOLUNTEER_ROLES).
   final List<String> volunteerRoles;
 
+  /// Social media and other links she shares on her profile.
+  final List<ProfileLink> links;
+
   User({
     required this.id,
     required this.username,
@@ -48,6 +88,7 @@ class User {
     this.programYear,
     this.fullName,
     this.volunteerRoles = const [],
+    this.links = const [],
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -114,6 +155,7 @@ class User {
         for (final role in (json['volunteer_roles'] as List? ?? const []))
           if (role is String) role,
       ],
+      links: ProfileLink.listFromJson(json['links']),
     );
   }
 
@@ -139,6 +181,7 @@ class Friend {
   final DateTime? statusUpdatedAt;
   final String? flair;
   final String? profilePic;
+  final List<ProfileLink> links;
 
   Friend({
     required this.id,
@@ -149,6 +192,7 @@ class Friend {
     this.statusUpdatedAt,
     this.flair,
     this.profilePic,
+    this.links = const [],
   });
 
   factory Friend.fromJson(Map<String, dynamic> json) {
@@ -191,6 +235,7 @@ class Friend {
       ),
       flair: json['flair'] as String?,
       profilePic: json['profile_pic'] as String?,
+      links: ProfileLink.listFromJson(json['links']),
     );
   }
 

@@ -62,7 +62,7 @@ they work offline and on every platform.
 | `EmergeQuoteDots` | `.c-quote__dots` — the three green dots dividing sections |
 | `EmergeTitleBlock` | `.c-title-block` — centered heading + summary + dots (e.g. "All Alumnae: 334 Ready to Run") |
 | `EmergePhotoHeader` | `.c-photo-header` / `.c-text-header` — the page-title band |
-| `EmergeActionTile` | The home-page touts (CALENDAR · RECENT NEWS · JOIN OUR MOVEMENT · FOLLOW US) |
+| `EmergeActionTile` | The home-page touts (CALENDAR · RECENT NEWS · JOIN OUR MOVEMENT · FOLLOW US); `highlighted` turns one brand green with a glow, `badge` adds a count |
 | `EmergeBioCard` | `.c-bio-body` — alumna portrait, name in teal, office subtitle, bio |
 
 Where they are used today:

@@ -14,7 +14,7 @@
       },
       "title": "Home dashboard",
       "body": "Your Home tab is the command center for quick actions and updates.",
-      "progress": "Step 1 of 7"
+      "progress": "Step 1 of 6"
     },
     {
       "id": "community-tab",
@@ -26,7 +26,7 @@
       },
       "title": "Community",
       "body": "Visit group spaces and discussions in Community.",
-      "progress": "Step 2 of 7"
+      "progress": "Step 2 of 6"
     },
     {
       "id": "directory-tab",
@@ -38,7 +38,7 @@
       },
       "title": "Alumni Directory",
       "body": "Find and connect with Emerge Kentucky alumni by cohort in the Alumni Directory.",
-      "progress": "Step 3 of 7"
+      "progress": "Step 3 of 6"
     },
     {
       "id": "events-card",
@@ -47,24 +47,11 @@
         "target_element_name": "Upcoming events",
         "padding_px": 12,
         "shroud_opacity": 0.6,
-        "radius_multiplier": 0.85
+        "radius_multiplier": 0.2
       },
-      "title": "Upcoming events",
-      "body": "See and jump into upcoming events from your dashboard.",
-      "progress": "Step 4 of 7"
-    },
-    {
-      "id": "replies",
-      "screen": "home",
-      "spotlight": {
-        "target_element_name": "Replies",
-        "padding_px": 12,
-        "shroud_opacity": 0.6,
-        "radius_multiplier": 0.85
-      },
-      "title": "Replies",
-      "body": "This card keeps you updated on new replies and notifications.",
-      "progress": "Step 5 of 7"
+      "title": "Events",
+      "body": "Open the calendar from here. The tile glows green when an event you're going to, volunteering at or saved is coming up this week.",
+      "progress": "Step 4 of 6"
     },
     {
       "id": "messages",
@@ -76,8 +63,8 @@
         "radius_multiplier": 0.85
       },
       "title": "Messages",
-      "body": "Your direct messages with other alumnae live here.",
-      "progress": "Step 6 of 7"
+      "body": "Your direct messages with other alumnae live here, next to your profile photo.",
+      "progress": "Step 5 of 6"
     },
     {
       "id": "edit-profile",
@@ -90,7 +77,7 @@
       },
       "title": "Edit profile",
       "body": "Update your profile details anytime.",
-      "progress": "Step 7 of 7"
+      "progress": "Step 6 of 6"
     }
   ],
   "post_tour_tip": "You can replay this tour anytime from Settings > Info & tour.",

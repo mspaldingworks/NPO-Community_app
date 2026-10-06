@@ -4,6 +4,7 @@ import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/models/user.dart';
 
 class ProfileService {
   final SharedPreferencesService _prefsService = SharedPreferencesService();
@@ -17,6 +18,7 @@ class ProfileService {
     String? city,
     String? flair,
     List<String>? volunteerRoles,
+    List<ProfileLink>? links,
     List<String> statusImagePaths = const [],
   }) async {
     // 1) If an image is provided, send a multipart PATCH with the image and status
@@ -41,6 +43,11 @@ class ProfileService {
       if (volunteerRoles != null) {
         // DRF reads a JSON string for JSON fields in multipart bodies.
         request.fields['volunteer_roles'] = jsonEncode(volunteerRoles);
+      }
+      if (links != null) {
+        request.fields['links'] = jsonEncode([
+          for (final link in links) link.toJson(),
+        ]);
       }
 
       if (imagePath != null && imagePath.isNotEmpty) {
@@ -67,6 +74,9 @@ class ProfileService {
       if (city != null) updates['city'] = city;
       if (flair != null) updates['flair'] = flair;
       if (volunteerRoles != null) updates['volunteer_roles'] = volunteerRoles;
+      if (links != null) {
+        updates['links'] = [for (final link in links) link.toJson()];
+      }
       await auth.updateProfile(updates);
     }
 

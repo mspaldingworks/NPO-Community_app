@@ -9,8 +9,11 @@ import 'package:npo_community/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/core/utils/profile_links.dart';
 import 'package:npo_community/features/events/volunteer_roles.dart';
 
+/// Edit Profile: photo, status, name, city, pronouns, how she can help, and
+/// the social media and other links shown on her public profile.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -34,6 +37,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _pronounLimitSnackShown = false;
   final List<File> _statusImages = [];
   final Set<String> _volunteerRoles = {};
+  final List<_LinkRow> _links = [];
+  static const int _maxLinks = 10;
   static const int _maxStatusImages = 4;
   static const int _maxStatusImageBytes = 10 * 1024 * 1024;
   static const int _maxPronounSelections = 5;
@@ -481,7 +486,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isPrivateProfile = FlairUtils.isProfilePrivate(flair);
 
     setState(() {
-      if (status != null) {
+      // The server's status wins: the quick-edit sheet on Home saves there
+      // without touching the local hint, which is only a fallback.
+      final serverStatus = (user?.statusMessage ?? '').trim();
+      if (serverStatus.isNotEmpty) {
+        _statusController.text = serverStatus;
+      } else if (status != null) {
         _statusController.text = status;
       }
       if (imagePath != null) {
@@ -493,6 +503,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _volunteerRoles
           ..clear()
           ..addAll(user.volunteerRoles);
+        for (final row in _links) {
+          row.dispose();
+        }
+        _links
+          ..clear()
+          ..addAll(user.links.map(_LinkRow.fromLink));
         final pronounTokens = _parsePronounsText(pronouns);
         var parsedPronouns = pronounTokens
             .where((p) => !_isBlockedPronoun(p))
@@ -561,6 +577,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  /// Links with a URL, normalised to https. Rows left empty are dropped.
+  List<ProfileLink> _linksToSave() => [
+    for (final row in _links)
+      if (normalizeProfileLinkUrl(row.url.text).isNotEmpty)
+        ProfileLink(
+          label: row.label.text.trim(),
+          url: normalizeProfileLinkUrl(row.url.text),
+        ),
+  ];
+
+  void _addLink(ProfileLinkPreset preset) {
+    if (_saving || _links.length >= _maxLinks) return;
+    setState(() {
+      _links.add(
+        _LinkRow(
+          label: preset.label == 'Other' ? '' : preset.label,
+          url: preset.urlPrefix,
+        ),
+      );
+    });
+  }
+
+  void _removeLink(_LinkRow row) {
+    if (_saving) return;
+    setState(() {
+      _links.remove(row);
+    });
+    row.dispose();
+  }
+
   void _saveProfile() async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -580,6 +626,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         city: _cityController.text,
         flair: flair,
         volunteerRoles: _volunteerRoles.toList()..sort(),
+        links: _linksToSave(),
         statusImagePaths: _statusImages.map((f) => f.path).toList(),
       );
       if (!mounted) return;
@@ -604,7 +651,96 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _pronounsController.removeListener(_onPronounsTextChanged);
     _pronounsController.dispose();
     _customPronounController.dispose();
+    for (final row in _links) {
+      row.dispose();
+    }
     super.dispose();
+  }
+
+  Widget _buildLinksSection(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Links', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Social media, your campaign site, anything you want other alumnae '
+          'to find. Shown on your profile unless it is private.',
+          style: theme.textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        for (final row in _links)
+          Padding(
+            key: ValueKey(row),
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    key: Key('link-label-${_links.indexOf(row)}'),
+                    controller: row.label,
+                    enabled: !_saving,
+                    maxLength: 40,
+                    decoration: const InputDecoration(
+                      labelText: 'Label',
+                      hintText: 'Instagram',
+                      border: OutlineInputBorder(),
+                      counterText: '',
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    key: Key('link-url-${_links.indexOf(row)}'),
+                    controller: row.url,
+                    enabled: !_saving,
+                    decoration: const InputDecoration(
+                      labelText: 'Link',
+                      hintText: 'https://',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ),
+                IconButton(
+                  key: Key('link-remove-${_links.indexOf(row)}'),
+                  tooltip: 'Remove link',
+                  onPressed: _saving ? null : () => _removeLink(row),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+        if (_links.length < _maxLinks)
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              for (final preset in profileLinkPresets)
+                ActionChip(
+                  key: Key('add-link-${preset.label}'),
+                  avatar: Icon(preset.icon, size: 18),
+                  label: Text(preset.label),
+                  onPressed: _saving ? null : () => _addLink(preset),
+                ),
+            ],
+          )
+        else
+          Text(
+            'You can list up to $_maxLinks links.',
+            style: theme.textTheme.bodySmall,
+          ),
+      ],
+    );
   }
 
   @override
@@ -846,6 +982,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                 ],
               ),
+              const SizedBox(height: 24),
+              _buildLinksSection(context),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
@@ -870,5 +1008,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+}
+
+/// One editable link: its label and URL fields.
+class _LinkRow {
+  _LinkRow({String label = '', String url = ''})
+    : label = TextEditingController(text: label),
+      url = TextEditingController(text: url);
+
+  factory _LinkRow.fromLink(ProfileLink link) =>
+      _LinkRow(label: link.label, url: link.url);
+
+  final TextEditingController label;
+  final TextEditingController url;
+
+  void dispose() {
+    label.dispose();
+    url.dispose();
   }
 }
