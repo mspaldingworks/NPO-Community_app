@@ -199,10 +199,8 @@ class _GroupSwitcher extends StatelessWidget {
                 size: 18,
               ),
               label: Text(group.isCandidates ? 'Running' : group.name),
-              onPressed: () => context.push(
-                '/community/group/${group.id}',
-                extra: group.name,
-              ),
+              onPressed: () =>
+                  context.push('/community/group/${group.id}', extra: group),
             ),
           ],
         ],

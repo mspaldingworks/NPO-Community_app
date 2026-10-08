@@ -45,6 +45,37 @@ class AlumniRunningScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Ballot')),
+      body: AlumniRunningList(
+        candidates: candidates,
+        openLink: openLink,
+        showPhotos: showPhotos,
+        now: now,
+      ),
+    );
+  }
+}
+
+/// The Ballot page's body: an intro line and one card per alumna on the
+/// ballot, or the empty state. Also the "Who's running" tab of the
+/// Candidates Running group.
+class AlumniRunningList extends StatelessWidget {
+  const AlumniRunningList({
+    super.key,
+    this.candidates,
+    this.openLink,
+    this.showPhotos,
+    this.now,
+  });
+
+  final List<AlumniCandidate>? candidates;
+  final CampaignLinkOpener? openLink;
+  final bool? showPhotos;
+  final DateTime Function()? now;
+
+  @override
+  Widget build(BuildContext context) {
     final today = (now ?? DateTime.now)();
     // The 2026 candidacies are hidden once Election Day is over.
     final electionOver = !today.isBefore(alumniCandidatesHideAfter);
@@ -53,42 +84,41 @@ class AlumniRunningScreen extends StatelessWidget {
         : candidates ?? alumniCandidates2026;
     final photos = showPhotos ?? AppConfig.current.networkEnabled;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ballot')),
-      body: list.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  electionOver
-                      ? 'The 2026 general election is over. Thank you to '
-                            'every Emerge Kentucky alumna who ran!'
-                      : 'No alumni candidates are listed yet. Check back soon.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: list.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Text(
-                    'Emerge Kentucky alumnae on the ballot in '
-                    '$alumniCandidatesElection. Visit their campaigns and '
-                    'sign up to volunteer.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  );
-                }
-                return AlumniCandidateCard(
-                  candidate: list[index - 1],
-                  openLink: openLink ?? _defaultOpenLink,
-                  showPhoto: photos,
-                  now: today,
-                );
-              },
-            ),
+    if (list.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            electionOver
+                ? 'The 2026 general election is over. Thank you to '
+                      'every Emerge Kentucky alumna who ran!'
+                : 'No alumni candidates are listed yet. Check back soon.',
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    return ListView.separated(
+      key: const Key('alumni-running-list'),
+      padding: const EdgeInsets.all(16),
+      itemCount: list.length + 1,
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Text(
+            'Emerge Kentucky alumnae on the ballot in '
+            '$alumniCandidatesElection. Visit their campaigns and '
+            'sign up to volunteer.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          );
+        }
+        return AlumniCandidateCard(
+          candidate: list[index - 1],
+          openLink: openLink ?? _defaultOpenLink,
+          showPhoto: photos,
+          now: today,
+        );
+      },
     );
   }
 }

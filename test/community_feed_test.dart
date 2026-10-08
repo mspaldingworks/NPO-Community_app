@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
+import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
 import 'package:npo_community/features/community/group_feed.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
@@ -369,6 +370,58 @@ void main() {
       ),
     );
     expect(find.text('Hello'), findsOneWidget);
+    expect(find.byTooltip('Group info, events and polls'), findsOneWidget);
+  });
+
+  testWidgets('the Candidates Running group opens on who is running', (
+    tester,
+  ) async {
+    // The fake's posts all belong to group 1.
+    final running = Group(
+      id: 1,
+      name: 'Candidates Running',
+      kind: 'candidates',
+    );
+    final service = _FakeCommunity(
+      groups: [running],
+      posts: [_post(1, 'Hello candidates', t0)],
+    );
+    final opened = <Uri>[];
+    await _pump(
+      tester,
+      PostListScreen(
+        groupId: 1,
+        groupName: running.name,
+        group: running,
+        service: service,
+        showPhotos: false,
+        now: () => DateTime(2026, 10, 7, 12),
+        openLink: (uri) async {
+          opened.add(uri);
+          return true;
+        },
+        candidates: [
+          AlumniCandidate(
+            name: 'Jane Doe',
+            office: 'Kentucky House of Representatives, District 1',
+            election: '2026 General Election',
+            donateUrl: Uri.parse('https://donate.example/jane'),
+          ),
+        ],
+      ),
+    );
+    // Cards first, chat behind the second tab.
+    expect(find.byKey(const Key('tab-running')), findsOneWidget);
+    expect(find.text('Jane Doe'), findsOneWidget);
+    expect(find.text('Hello candidates'), findsNothing);
+
+    await tester.tap(find.text('Donate'));
+    await tester.pumpAndSettle();
+    expect(opened, [Uri.parse('https://donate.example/jane')]);
+
+    await tester.tap(find.byKey(const Key('tab-chat')));
+    await tester.pumpAndSettle();
+    expect(find.text('Hello candidates'), findsOneWidget);
     expect(find.byTooltip('Group info, events and polls'), findsOneWidget);
   });
 

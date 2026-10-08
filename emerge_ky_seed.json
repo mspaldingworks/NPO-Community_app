@@ -248,14 +248,16 @@
         "office": "Middletown City Commission",
         "district": null,
         "status": "on_ballot",
-        "status_note": "Name match only",
+        "status_note": "Incumbent; led the May primary",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
-        "show_on_card": false,
-        "confidence": "medium",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://ballotpedia.org/Amy_Oliver",
+          "https://vrsws.sos.ky.gov/liveresults/?id=58"
         ]
       },
       "roles": [
@@ -263,7 +265,7 @@
       ],
       "verification_tier": 1,
       "data_flags": [
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY \"All Alumnae\" / \"Class of 2026\" page"
     },
@@ -391,13 +393,15 @@
         "district": "SD 14",
         "status": "on_ballot",
         "status_note": "Open seat; vs. Ben Mudd",
-        "campaign_url": "https://www.votetruittforsenate.com/",
-        "volunteer_url": "https://www.votetruittforsenate.com/volunteer",
-        "donate_url": "https://secure.actblue.com/donate/truittforkysenate",
-        "show_on_card": false,
-        "confidence": "medium",
+        "campaign_url": "https://votetruittforsenate.com",
+        "volunteer_url": "https://votetruittforsenate.com/volunteer",
+        "donate_url": "https://votetruittforsenate.com/contribute",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://en.wikipedia.org/wiki/2026_Kentucky_Senate_election"
+          "https://en.wikipedia.org/wiki/2026_Kentucky_Senate_election",
+          "https://votetruittforsenate.com",
+          "https://www.ballotready.org/people/carrie-g-truitt"
         ]
       },
       "roles": [
@@ -405,7 +409,7 @@
       ],
       "verification_tier": 1,
       "data_flags": [
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY \"All Alumnae\" / \"Class of 2026\" page"
     },
@@ -602,14 +606,16 @@
         "office": "Kentucky House of Representatives",
         "district": "HD 33",
         "status": "on_ballot",
-        "status_note": "vs. Jason Nemes",
+        "status_note": "Won Dem primary; vs. incumbent Jason Nemes",
         "campaign_url": "https://www.hardin4ky.com/",
         "volunteer_url": "https://www.hardin4ky.com/get-involved",
         "donate_url": "https://secure.actblue.com/donate/jennifer-hardin-1",
-        "show_on_card": false,
-        "confidence": "medium",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election"
+          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election",
+          "https://www.hardin4ky.com/",
+          "https://ballotpedia.org/Jennifer_Hardin"
         ]
       },
       "roles": [
@@ -617,7 +623,7 @@
       ],
       "verification_tier": 1,
       "data_flags": [
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY \"All Alumnae\" / \"Class of 2026\" page"
     },
@@ -702,14 +708,16 @@
         "office": "Marshall County Commissioner",
         "district": "District 3",
         "status": "on_ballot",
-        "status_note": "Name match only",
-        "campaign_url": null,
+        "status_note": "vs. incumbent Monti Collins",
+        "campaign_url": "https://www.mchugh4you.com/",
         "volunteer_url": null,
         "donate_url": null,
-        "show_on_card": false,
-        "confidence": "medium",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://www.mchugh4you.com/",
+          "https://www.marshallcountydaily.com/2026/01/13/multiple-candidates-file-for-marshall-county-offices-in-2026-primary-election/"
         ]
       },
       "roles": [
@@ -717,7 +725,7 @@
       ],
       "verification_tier": 1,
       "data_flags": [
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY \"All Alumnae\" / \"Class of 2026\" page"
     },
@@ -749,11 +757,12 @@
         "status_note": "vs. John Schickel",
         "campaign_url": "https://www.lianna4boone.com/",
         "volunteer_url": "https://www.lianna4boone.com/volunteer",
-        "donate_url": "https://www.lianna4boone.com/contribute",
+        "donate_url": "https://secure.actblue.com/donate/lianna-nguyen-1",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://linknky.com/elections/2025/12/01/lianna-nguyen-boone-county-fiscal-court-candidacy/"
+          "https://linknky.com/elections/2025/12/01/lianna-nguyen-boone-county-fiscal-court-candidacy/",
+          "https://secure.actblue.com/donate/lianna-nguyen-1"
         ]
       },
       "roles": [
@@ -1451,14 +1460,15 @@
         "office": "Kentucky House of Representatives",
         "district": "HD 44",
         "status": "on_ballot",
-        "status_note": "Won Dem primary; unopposed in general. Name match to a Class of 2025 profile — confirm",
+        "status_note": "Won Dem primary; unopposed in general",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
-        "show_on_card": false,
-        "confidence": "medium",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election"
+          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election",
+          "https://www.whas11.com/article/news/local/jefferson-county-clerks-office-recanvasses-ky-44th-house-district-seat-beverly-chester-burton-kenya-wade/417-d71bd876-37d2-4bb9-89dd-cc6a19597bbc"
         ]
       },
       "roles": [
@@ -1467,7 +1477,7 @@
       "verification_tier": 1,
       "data_flags": [
         "Class of 2025 is missing from the public class lists; year taken from profile batch (confirmed on Bari Calderon's page). Confirm name spelling and county.",
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY profile (Class of 2025 batch, published 2025-01-03)"
     },
@@ -2240,13 +2250,14 @@
         "district": "At-large",
         "status": "on_ballot",
         "status_note": "Incumbent",
-        "campaign_url": "https://www.ruthgao.com/",
+        "campaign_url": "https://ruthgao4jtown.com/",
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://ruthgao4jtown.com/"
         ]
       },
       "roles": [
@@ -2614,14 +2625,15 @@
         "office": "Kentucky House of Representatives",
         "district": "HD 76",
         "status": "on_ballot",
-        "status_note": "Incumbent",
+        "status_note": "Incumbent; vs. Avram Hicks",
         "campaign_url": "https://www.annegaydonworth.com/",
         "volunteer_url": "https://www.annegaydonworth.com/volunteer",
         "donate_url": "https://secure.actblue.com/donate/agdwebsite",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election"
+          "https://en.wikipedia.org/wiki/2026_Kentucky_House_of_Representatives_election",
+          "https://ballotpedia.org/Kentucky_House_of_Representatives_District_76"
         ]
       },
       "roles": [
@@ -3191,14 +3203,15 @@
         "office": "Circuit Judge, 50th Judicial Circuit",
         "district": "Division 1",
         "status": "on_ballot",
-        "status_note": "vs. Christopher Reed",
-        "campaign_url": null,
-        "volunteer_url": null,
-        "donate_url": null,
+        "status_note": "Appointed incumbent; vs. Christopher Reed",
+        "campaign_url": "https://www.judgejohns.com/",
+        "volunteer_url": "https://www.judgejohns.com/get-involved",
+        "donate_url": "https://www.judgejohns.com/donate",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/default.aspx?id=17"
+          "https://web.sos.ky.gov/CandidateFilings/default.aspx?id=17",
+          "https://www.judgejohns.com/"
         ]
       },
       "roles": [
@@ -3735,14 +3748,15 @@
         "office": "Langdon Place City Commission",
         "district": null,
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Incumbent; vs. Steve Casebeer",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://elections.jeffersoncountyclerk.org/pdfs/2026-candidate-filing.pdf"
         ]
       },
       "roles": [
@@ -3825,14 +3839,15 @@
         "office": "Glasgow City Council",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "18 candidates for 9 seats",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://glasgownews1.com/2026/06/04/ballot-positions-set-for-november-elections-in-barren-county/"
         ]
       },
       "roles": [
@@ -4013,14 +4028,15 @@
         "office": "JCPS Board of Education",
         "district": "District 4",
         "status": "on_ballot",
-        "status_note": null,
-        "campaign_url": null,
-        "volunteer_url": null,
-        "donate_url": null,
+        "status_note": "Five-way race for a two-year term",
+        "campaign_url": "https://www.djforjcps.com/",
+        "volunteer_url": "https://forms.gle/SzRJuxJcMXYUCTwZ7",
+        "donate_url": "https://secure.actblue.com/donate/djforschoolboard",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://www.lpm.org/investigate/2026-07-13/two-jcps-school-board-candidates-filed-in-wrong-districts"
+          "https://www.lpm.org/investigate/2026-07-13/two-jcps-school-board-candidates-filed-in-wrong-districts",
+          "https://www.djforjcps.com/"
         ]
       },
       "roles": [
@@ -4296,14 +4312,15 @@
         "office": "Warren County Magistrate",
         "district": "District 4",
         "status": "on_ballot",
-        "status_note": "vs. Rex A. McWhorter",
+        "status_note": "vs. incumbent Rex A. McWhorter",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://www.wbko.com/2025/11/07/list-your-guide-2026-local-election-candidates/"
         ]
       },
       "roles": [
@@ -4474,13 +4491,15 @@
         "district": "District 1",
         "status": "on_ballot",
         "status_note": "vs. incumbent Beth Sewell",
-        "campaign_url": null,
-        "volunteer_url": null,
+        "campaign_url": "https://sarahforkentoncounty.com/",
+        "volunteer_url": "https://tally.so/r/NpEAVW",
         "donate_url": "https://secure.actblue.com/donate/sarahforkentoncounty",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://linknky.com/elections/election-nky-2026/2026/05/19/here-are-the-kenton-county-commission-candidates-heading-to-the-general-election/"
+          "https://linknky.com/elections/election-nky-2026/2026/05/19/here-are-the-kenton-county-commission-candidates-heading-to-the-general-election/",
+          "https://sarahforkentoncounty.com/",
+          "https://kentoncountydemocrats.org/2026-candidates"
         ]
       },
       "roles": [
@@ -5117,14 +5136,15 @@
         "office": "Frankfort City Commission",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Incumbent",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://state-journal.com/2026/10/06/city-commission-candidates-discuss-key-issues-during-public-forum/"
         ]
       },
       "roles": [
@@ -5164,14 +5184,15 @@
         "office": "Cave City Council",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Appointed incumbent",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://glasgownews1.com/2026/06/04/ballot-positions-set-for-november-elections-in-barren-county/"
         ]
       },
       "roles": [
@@ -6392,14 +6413,15 @@
         "office": "Georgetown City Council",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Incumbent; led the May primary",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://www.news-graphic.com/news/election-2026-more-faces-join-city-council-race-ahead-of-holidays/article_44bb7723-6007-4b82-81a9-7f4b57fd3655.html"
         ]
       },
       "roles": [
@@ -6617,14 +6639,15 @@
         "office": "Bowling Green City Commission",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Incumbent",
         "campaign_url": "https://danaforbg.com/",
         "volunteer_url": "https://forms.gle/r9J9dgj1aSz6Fwiv8",
         "donate_url": "https://secure.actblue.com/donate/dana4bg",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://bgdailynews.com/2026/06/03/race-set-for-bowling-green-city-commission/"
         ]
       },
       "roles": [
@@ -6846,7 +6869,7 @@
         "office": "Elizabethtown City Council",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
+        "status_note": "Incumbent",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
@@ -7027,7 +7050,7 @@
         "office": "Versailles City Council",
         "district": null,
         "status": "on_ballot",
-        "status_note": "Emerge page says Versailles Mayor; SOS list shows council",
+        "status_note": "Emerge page says Versailles Mayor; SOS list shows council; 2026 filing unconfirmed 2026-10-07",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
@@ -7254,14 +7277,15 @@
         "office": "Mayor of Radcliff",
         "district": null,
         "status": "on_ballot",
-        "status_note": "vs. Toshie Murrell",
+        "status_note": "Open seat; vs. Toshie Murrell",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://www.thenewsenterprise.com/news/local/murrell-owens-will-battle-for-radcliff-mayor/article_93b28891-068d-552e-9c2e-8ccf615cabd5.html"
         ]
       },
       "roles": [
@@ -7716,11 +7740,12 @@
         "status_note": "Incumbent; vs. Everett C. Corley",
         "campaign_url": null,
         "volunteer_url": null,
-        "donate_url": null,
+        "donate_url": "https://secure.actblue.com/donate/campaign-for-karen-berg-ky-state-senate-1",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://en.wikipedia.org/wiki/2026_Kentucky_Senate_election"
+          "https://en.wikipedia.org/wiki/2026_Kentucky_Senate_election",
+          "https://secure.actblue.com/donate/campaign-for-karen-berg-ky-state-senate-1"
         ]
       },
       "roles": [
@@ -9406,14 +9431,15 @@
         "office": "Fayette County Magistrate",
         "district": "District 3",
         "status": "on_ballot",
-        "status_note": "Won Dem primary",
+        "status_note": "Won Dem primary; vs. Amanda Settell",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://news.civiclex.org/primary-election-results-its-gorton-vs-carter-plus-other-local-race-outcomes/"
+          "https://news.civiclex.org/primary-election-results-its-gorton-vs-carter-plus-other-local-race-outcomes/",
+          "https://lex.vote/magistrate"
         ]
       },
       "roles": [
@@ -9605,11 +9631,12 @@
         "status_note": "Unopposed",
         "campaign_url": "https://judgejessicamoore.com/",
         "volunteer_url": null,
-        "donate_url": "https://judgejessicamoore.com/wp-content/uploads/2025/10/moore-donate.pdf",
+        "donate_url": null,
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/default.aspx?id=17"
+          "https://web.sos.ky.gov/CandidateFilings/default.aspx?id=17",
+          "https://judgejessicamoore.com/ (donate PDF returned 404 on 2026-10-07)"
         ]
       },
       "roles": [
@@ -10324,7 +10351,7 @@
         "office": "Daviess County PVA",
         "district": null,
         "status": "on_ballot",
-        "status_note": "Filed as a Republican; her Emerge profile page returns 404 — confirm before publishing",
+        "status_note": "Different person: Republican incumbent PVA since 2002, not the alumna",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
@@ -11979,14 +12006,15 @@
         "office": "Newport City Commission",
         "district": "At-large",
         "status": "on_ballot",
-        "status_note": null,
-        "campaign_url": null,
-        "volunteer_url": null,
-        "donate_url": null,
+        "status_note": "Incumbent, Vice Mayor",
+        "campaign_url": "https://www.electsmithmorrow.com/",
+        "volunteer_url": "https://www.electsmithmorrow.com/volunteer",
+        "donate_url": "https://www.electsmithmorrow.com/donate",
         "show_on_card": true,
         "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://www.electsmithmorrow.com/"
         ]
       },
       "roles": [
@@ -12426,14 +12454,15 @@
         "office": "Erlanger-Elsmere Board of Education",
         "district": null,
         "status": "on_ballot",
-        "status_note": "Name match on SOS list",
+        "status_note": "Nonpartisan; filed May 2026",
         "campaign_url": null,
         "volunteer_url": null,
         "donate_url": null,
-        "show_on_card": false,
-        "confidence": "medium",
+        "show_on_card": true,
+        "confidence": "high",
         "sources": [
-          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx"
+          "https://web.sos.ky.gov/CandidateFilings/countyfilings.aspx",
+          "https://kentonkyclerk.gov/wp-content/uploads/2026/06/2026-GENERAL-BALLOT-DRAW.pdf"
         ]
       },
       "roles": [
@@ -12442,7 +12471,7 @@
       "verification_tier": 1,
       "data_flags": [
         "Has a profile but is not on any class list; class year unknown.",
-        "2026 candidacy is a name match — verify, then set candidacy_2026.show_on_card to true."
+        "2026 candidacy confirmed 2026-10-07: bio on the campaign/office pages matches her Emerge profile."
       ],
       "source": "Emerge KY profile page only"
     }

@@ -89,10 +89,17 @@ def main():
     ]
     for alum, candidacy, extra in rows:
         links = {f: (extra[f] if f in extra else candidacy.get(f)) for f in LINK_FIELDS}
-        lines.append('  AlumniCandidate(')
+        # An entry with no Uri or DateTime is a compile-time constant; the
+        # analyzer insists on `const` for those.
+        has_runtime_values = bool(
+            extra.get('photo_url') or extra.get('ballotpedia_url')
+            or any(links.values()) or extra.get('volunteer_opportunities')
+        )
+        lines.append('  AlumniCandidate(' if has_runtime_values else '  const AlumniCandidate(')
         lines.append(f"    seedId: {dart_str(alum['seed_id'])},")
         lines.append(f"    name: {dart_str(alum['full_name'])},")
-        lines.append(f"    classYear: {alum['class_year']},")
+        if alum.get('class_year') is not None:
+            lines.append(f"    classYear: {alum['class_year']},")
         lines.append(f'    office: {dart_str(race(candidacy))},')
         lines.append('    election: alumniCandidatesElection,')
         if candidacy.get('status_note'):

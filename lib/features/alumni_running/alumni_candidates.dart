@@ -10,7 +10,7 @@ const String alumniCandidatesElection = '2026 General Election · Nov. 3, 2026';
 final DateTime alumniCandidatesHideAfter = DateTime(2026, 11, 4);
 
 /// Emerge Kentucky alumnae on the Nov. 3, 2026 ballot
-/// (45 confirmed in emerge_ky_seed.json).
+/// (51 confirmed in emerge_ky_seed.json).
 final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
   AlumniCandidate(
     seedId: 'emky-megan-bailey',
@@ -18,10 +18,24 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2021,
     office: 'Warren County Magistrate, District 4',
     election: alumniCandidatesElection,
-    status: 'vs. Rex A. McWhorter',
+    status: 'vs. incumbent Rex A. McWhorter',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/Megan-Bailey_400x400_acf_cropped.jpg',
     ),
+    volunteerOpportunities: [
+      VolunteerOpportunity(
+        title: 'Warren County Democrats canvass (Dem ticket, incl. Megan)',
+        startsAt: DateTime(2026, 10, 10, 10, 0),
+        location: 'Pushin Building, 2nd floor, Bowling Green (Central time)',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1019725/'),
+      ),
+      VolunteerOpportunity(
+        title: 'Warren County Democrats phone bank (Dem ticket, incl. Megan)',
+        startsAt: DateTime(2026, 10, 13, 18, 0),
+        location: 'Pushin Building, Bowling Green (Central time)',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1035485/'),
+      ),
+    ],
   ),
   AlumniCandidate(
     seedId: 'emky-almaria-baker',
@@ -104,6 +118,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2018,
     office: 'Bowling Green City Commission, At-large',
     election: alumniCandidatesElection,
+    status: 'Incumbent',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Daaa_400x400_acf_cropped.jpg',
     ),
@@ -141,6 +156,9 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Screen-Shot-2018-07-03-at-2.00.10-PM_400x400_acf_cropped.png',
     ),
     ballotpediaUrl: Uri.parse('https://ballotpedia.org/Karen_Berg'),
+    donateUrl: Uri.parse(
+      'https://secure.actblue.com/donate/campaign-for-karen-berg-ky-state-senate-1',
+    ),
   ),
   AlumniCandidate(
     seedId: 'emky-tina-bojanowski',
@@ -188,7 +206,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
         endsAt: DateTime(2026, 10, 10, 12, 0),
         location: 'Heine Brothers Clifton, 2309 Frankfort Ave, Louisville',
         signupUrl: Uri.parse(
-          'https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00',
+          'https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-10-10-00',
         ),
       ),
       VolunteerOpportunity(
@@ -196,18 +214,21 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
         startsAt: DateTime(2026, 10, 17, 10, 0),
         endsAt: DateTime(2026, 10, 17, 12, 0),
         location: 'Heine Brothers Clifton, 2309 Frankfort Ave, Louisville',
-        signupUrl: Uri.parse(
-          'https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00',
-        ),
+        signupUrl: Uri.parse('https://www.alisonforlouisville.com/events'),
       ),
       VolunteerOpportunity(
         title: 'Talk to voters with Alison',
         startsAt: DateTime(2026, 10, 24, 10, 0),
         endsAt: DateTime(2026, 10, 24, 12, 0),
         location: 'Heine Brothers Clifton, 2309 Frankfort Ave, Louisville',
-        signupUrl: Uri.parse(
-          'https://www.alisonforlouisville.com/event-details/saturdays-join-alison-talking-to-voters-2026-10-03-10-00',
-        ),
+        signupUrl: Uri.parse('https://www.alisonforlouisville.com/events'),
+      ),
+      VolunteerOpportunity(
+        title: 'Talk to voters with Alison',
+        startsAt: DateTime(2026, 10, 31, 10, 0),
+        endsAt: DateTime(2026, 10, 31, 12, 0),
+        location: 'Heine Brothers Clifton, 2309 Frankfort Ave, Louisville',
+        signupUrl: Uri.parse('https://www.alisonforlouisville.com/events'),
       ),
     ],
   ),
@@ -259,7 +280,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2014,
     office: 'Fayette County Magistrate, District 3',
     election: alumniCandidatesElection,
-    status: 'Won Dem primary',
+    status: 'Won Dem primary; vs. Amanda Settell',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Screen-Shot-2018-07-03-at-12.12.47-PM_400x400_acf_cropped.png',
     ),
@@ -271,6 +292,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2020,
     office: 'Cave City Council, At-large',
     election: alumniCandidatesElection,
+    status: 'Appointed incumbent',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Leticia-Headshot.jpg',
     ),
@@ -308,6 +330,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2022,
     office: 'Langdon Place City Commission',
     election: alumniCandidatesElection,
+    status: 'Incumbent; vs. Steve Casebeer',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/01/Yolanda-Emerge-Ky-Yolanda-Demaree_400x400_acf_cropped.jpg',
     ),
@@ -318,7 +341,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2023,
     office: 'Kentucky House of Representatives, District 76',
     election: alumniCandidatesElection,
-    status: 'Incumbent',
+    status: 'Incumbent; vs. Avram Hicks',
     photoUrl: Uri.parse(
       'https://images.squarespace-cdn.com/content/v1/65c82a45a0fd0602278ceca4/642e0335-8b60-4c7c-b7ac-9070c75d905a/240121_Anne+Donworth_MM_0083-Edit-2.jpg?format=500w',
     ),
@@ -379,12 +402,64 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/rsz_sarah_froelich.jpg',
     ),
+    campaignUrl: Uri.parse('https://sarahforkentoncounty.com/'),
     ballotpediaUrl: Uri.parse(
       'https://ballotpedia.org/Sarah_Froelich_(Park_Hills_City_Council_At-large,_Kentucky,_candidate_2024)',
     ),
+    volunteerUrl: Uri.parse('https://tally.so/r/NpEAVW'),
     donateUrl: Uri.parse(
       'https://secure.actblue.com/donate/sarahforkentoncounty',
     ),
+    volunteerOpportunities: [
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 10, 17, 14, 0),
+        endsAt: DateTime(2026, 10, 17, 16, 0),
+        location: 'Barb Cook Park, 2709 Ashland Ave, Covington',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036183/'),
+      ),
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 10, 18, 15, 0),
+        endsAt: DateTime(2026, 10, 18, 17, 0),
+        location: 'Volunteer Park, 31 Park Rd, Fort Wright',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036206/'),
+      ),
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 10, 24, 14, 0),
+        endsAt: DateTime(2026, 10, 24, 16, 0),
+        location: 'Kroger Marketplace, 1700 Declaration Dr, Independence',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036235/'),
+      ),
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 10, 25, 15, 0),
+        endsAt: DateTime(2026, 10, 25, 17, 0),
+        location: 'Railroad Depot Park, 3313 Crescent Ave, Erlanger',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036243/'),
+      ),
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 10, 31, 14, 0),
+        endsAt: DateTime(2026, 10, 31, 16, 0),
+        location: 'George Rogers Clark Park, 301 Riverside Dr, Covington',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036237/'),
+      ),
+      VolunteerOpportunity(
+        title:
+            'Kenton County Democrats GOTV canvass (whole ticket, incl. Sarah)',
+        startsAt: DateTime(2026, 11, 1, 15, 0),
+        endsAt: DateTime(2026, 11, 1, 17, 0),
+        location: 'Pioneer Park, 3952 Madison Pike, Covington',
+        signupUrl: Uri.parse('https://www.mobilize.us/kydems/event/1036239/'),
+      ),
+    ],
   ),
   AlumniCandidate(
     seedId: 'emky-ruth-gao',
@@ -396,7 +471,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2024/01/Ruth-Gao-1_400x400_acf_cropped.jpg',
     ),
-    campaignUrl: Uri.parse('https://www.ruthgao.com/'),
+    campaignUrl: Uri.parse('https://ruthgao4jtown.com/'),
     ballotpediaUrl: Uri.parse('https://ballotpedia.org/Ruth_Gao'),
   ),
   AlumniCandidate(
@@ -417,9 +492,21 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2019,
     office: 'Georgetown City Council, At-large',
     election: alumniCandidatesElection,
+    status: 'Incumbent; led the May primary',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/23DC49FB-0B30-429C-A43E-CFECDCB9046B-Willow-Hambrick_400x400_acf_cropped.jpeg',
     ),
+  ),
+  AlumniCandidate(
+    seedId: 'emky-jennifer-hardin',
+    name: 'Jennifer Hardin',
+    classYear: 2026,
+    office: 'Kentucky House of Representatives, District 33',
+    election: alumniCandidatesElection,
+    status: 'Won Dem primary; vs. incumbent Jason Nemes',
+    campaignUrl: Uri.parse('https://www.hardin4ky.com/'),
+    volunteerUrl: Uri.parse('https://www.hardin4ky.com/get-involved'),
+    donateUrl: Uri.parse('https://secure.actblue.com/donate/jennifer-hardin-1'),
   ),
   AlumniCandidate(
     seedId: 'emky-kesia-hatcher',
@@ -446,6 +533,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2021,
     office: 'Glasgow City Council, At-large',
     election: alumniCandidatesElection,
+    status: '18 candidates for 9 seats',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2021/01/rsz_alex_hayes_400x400_acf_cropped.jpg',
     ),
@@ -481,9 +569,13 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2021,
     office: 'JCPS Board of Education, District 4',
     election: alumniCandidatesElection,
+    status: 'Five-way race for a two-year term',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/rsz_2deja_jackson_400x400_acf_cropped_400x400_acf_cropped.jpg',
     ),
+    campaignUrl: Uri.parse('https://www.djforjcps.com/'),
+    volunteerUrl: Uri.parse('https://forms.gle/SzRJuxJcMXYUCTwZ7'),
+    donateUrl: Uri.parse('https://secure.actblue.com/donate/djforschoolboard'),
   ),
   AlumniCandidate(
     seedId: 'emky-whitney-johns',
@@ -491,10 +583,13 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2023,
     office: 'Circuit Judge, 50th Judicial Circuit, Division 1',
     election: alumniCandidatesElection,
-    status: 'vs. Christopher Reed',
+    status: 'Appointed incumbent; vs. Christopher Reed',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2023/01/Whitney-Johns_400x400_acf_cropped.jpg',
     ),
+    campaignUrl: Uri.parse('https://www.judgejohns.com/'),
+    volunteerUrl: Uri.parse('https://www.judgejohns.com/get-involved'),
+    donateUrl: Uri.parse('https://www.judgejohns.com/donate'),
   ),
   AlumniCandidate(
     seedId: 'emky-nima-kulkarni',
@@ -540,6 +635,15 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     ),
   ),
   AlumniCandidate(
+    seedId: 'emky-laura-mchugh',
+    name: 'Laura McHugh',
+    classYear: 2026,
+    office: 'Marshall County Commissioner, District 3',
+    election: alumniCandidatesElection,
+    status: 'vs. incumbent Monti Collins',
+    campaignUrl: Uri.parse('https://www.mchugh4you.com/'),
+  ),
+  AlumniCandidate(
     seedId: 'emky-brenda-monarrez',
     name: 'Brenda Monarrez',
     classYear: 2012,
@@ -565,9 +669,6 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     ),
     campaignUrl: Uri.parse('https://judgejessicamoore.com/'),
     ballotpediaUrl: Uri.parse('https://ballotpedia.org/Jessica_Moore'),
-    donateUrl: Uri.parse(
-      'https://judgejessicamoore.com/wp-content/uploads/2025/10/moore-donate.pdf',
-    ),
   ),
   AlumniCandidate(
     seedId: 'emky-lianna-nguyen',
@@ -581,7 +682,22 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     ),
     campaignUrl: Uri.parse('https://www.lianna4boone.com/'),
     volunteerUrl: Uri.parse('https://www.lianna4boone.com/volunteer'),
-    donateUrl: Uri.parse('https://www.lianna4boone.com/contribute'),
+    donateUrl: Uri.parse('https://secure.actblue.com/donate/lianna-nguyen-1'),
+  ),
+  const AlumniCandidate(
+    seedId: 'emky-amy-oliver',
+    name: 'Amy Oliver',
+    classYear: 2026,
+    office: 'Middletown City Commission',
+    election: alumniCandidatesElection,
+    status: 'Incumbent; led the May primary',
+  ),
+  const AlumniCandidate(
+    seedId: 'emky-serena-owen',
+    name: 'Serena Owen',
+    office: 'Erlanger-Elsmere Board of Education',
+    election: alumniCandidatesElection,
+    status: 'Nonpartisan; filed May 2026',
   ),
   AlumniCandidate(
     seedId: 'emky-lt-col-terry-owens',
@@ -589,7 +705,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2018,
     office: 'Mayor of Radcliff',
     election: alumniCandidatesElection,
-    status: 'vs. Toshie Murrell',
+    status: 'Open seat; vs. Toshie Murrell',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/Terry_400x400_acf_cropped.jpg',
     ),
@@ -654,12 +770,16 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2010,
     office: 'Newport City Commission, At-large',
     election: alumniCandidatesElection,
+    status: 'Incumbent, Vice Mayor',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2018/07/woo.jpeg',
     ),
+    campaignUrl: Uri.parse('https://www.electsmithmorrow.com/'),
     ballotpediaUrl: Uri.parse(
       'https://ballotpedia.org/Julie_Smith-Morrow_(Newport_City_Commission_At-large,_Kentucky,_candidate_2024)',
     ),
+    volunteerUrl: Uri.parse('https://www.electsmithmorrow.com/volunteer'),
+    donateUrl: Uri.parse('https://www.electsmithmorrow.com/donate'),
   ),
   AlumniCandidate(
     seedId: 'emky-julia-springsteen',
@@ -667,6 +787,7 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     classYear: 2018,
     office: 'Elizabethtown City Council, At-large',
     election: alumniCandidatesElection,
+    status: 'Incumbent',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2022/02/JSpringsteen-Julia-Springsteen_400x400_acf_cropped.jpeg',
     ),
@@ -709,15 +830,35 @@ final List<AlumniCandidate> alumniCandidates2026 = List.unmodifiable([
     ),
   ),
   AlumniCandidate(
+    seedId: 'emky-carrie-truitt',
+    name: 'Carrie Truitt',
+    classYear: 2026,
+    office: 'Kentucky State Senate, District 14',
+    election: alumniCandidatesElection,
+    status: 'Open seat; vs. Ben Mudd',
+    campaignUrl: Uri.parse('https://votetruittforsenate.com'),
+    volunteerUrl: Uri.parse('https://votetruittforsenate.com/volunteer'),
+    donateUrl: Uri.parse('https://votetruittforsenate.com/contribute'),
+  ),
+  AlumniCandidate(
     seedId: 'emky-leesa-unger',
     name: 'Leesa Unger',
     classYear: 2020,
     office: 'Frankfort City Commission, At-large',
     election: alumniCandidatesElection,
+    status: 'Incumbent',
     photoUrl: Uri.parse(
       'https://ky.emergeamerica.org/wp-content/uploads/sites/22/2020/08/Leesa-1917-ZF-5265-39177-1-001-096.jpg',
     ),
     ballotpediaUrl: Uri.parse('https://ballotpedia.org/Leesa_Unger'),
+  ),
+  const AlumniCandidate(
+    seedId: 'emky-kenya-wade',
+    name: 'Kenya Wade',
+    classYear: 2025,
+    office: 'Kentucky House of Representatives, District 44',
+    election: alumniCandidatesElection,
+    status: 'Won Dem primary; unopposed in general',
   ),
   AlumniCandidate(
     seedId: 'emky-renee-wilson',

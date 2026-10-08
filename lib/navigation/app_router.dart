@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/models/group.dart';
 import 'package:npo_community/pages/auth/signin_screen.dart';
 import 'package:npo_community/pages/auth/register_screen.dart';
 import 'package:npo_community/pages/auth/onboarding_screen.dart';
@@ -136,8 +137,17 @@ class AppRouter {
                     path: 'group/:id',
                     builder: (context, state) {
                       final id = int.parse(state.pathParameters['id']!);
-                      final groupName = state.extra as String? ?? 'Group';
-                      return PostListScreen(groupId: id, groupName: groupName);
+                      // Callers pass the Group when they have it (so the
+                      // candidates group gets its tabs), else just the name.
+                      final extra = state.extra;
+                      final group = extra is Group ? extra : null;
+                      final groupName =
+                          group?.name ?? (extra as String? ?? 'Group');
+                      return PostListScreen(
+                        groupId: id,
+                        groupName: groupName,
+                        group: group,
+                      );
                     },
                     routes: [
                       GoRoute(
