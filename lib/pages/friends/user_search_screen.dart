@@ -8,7 +8,6 @@ import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 
 class UserSearchScreen extends StatefulWidget {
@@ -184,7 +183,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                 final friend = _searchResults[index];
                 final status =
                     _requestStates[friend.id] ?? _FriendRequestStatus.idle;
-                final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
 
                 return ListTile(
                   leading: GestureDetector(
@@ -200,14 +198,13 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [Text(friend.username)],
                   ),
-                  subtitle: isPrivate
-                      ? const Text('Private profile')
-                      : (friend.statusMessage != null &&
-                                friend.statusMessage!.isNotEmpty
-                            ? Text(friend.statusMessage!)
-                            : (friend.city != null && friend.city!.isNotEmpty
-                                  ? Text(friend.city!)
-                                  : null)),
+                  subtitle:
+                      friend.statusMessage != null &&
+                          friend.statusMessage!.isNotEmpty
+                      ? Text(friend.statusMessage!)
+                      : (friend.city != null && friend.city!.isNotEmpty
+                            ? Text(friend.city!)
+                            : null),
                   trailing: _buildActionButton(friend, status),
                   onTap: () {
                     GoRouter.of(context).push('/users/${friend.id}');

@@ -8,7 +8,6 @@ import 'package:npo_community/core/services/profile_service.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/core/utils/profile_links.dart';
 import 'package:npo_community/features/events/volunteer_roles.dart';
 
@@ -29,7 +28,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final ProfileService _profileService = ProfileService();
   File? _profileImage;
   bool _saving = false;
-  bool _isProfilePrivate = false;
   final List<File> _statusImages = [];
   final Set<String> _volunteerRoles = {};
   final List<_LinkRow> _links = [];
@@ -53,8 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       user = auth.currentUser ?? await auth.getCurrentUser();
     } catch (_) {}
     if (!mounted) return;
-
-    final isPrivateProfile = FlairUtils.isProfilePrivate(user?.flair);
 
     setState(() {
       // The server's status wins: the quick-edit sheet on Home saves there
@@ -80,7 +76,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _links
           ..clear()
           ..addAll(user.links.map(_LinkRow.fromLink));
-        _isProfilePrivate = isPrivateProfile;
       }
     });
   }
@@ -153,15 +148,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_saving) return;
     setState(() => _saving = true);
 
-    final flair = FlairUtils.buildFlair(isPrivateProfile: _isProfilePrivate);
-
     try {
       await _profileService.saveProfile(
         _statusController.text,
         _profileImage?.path,
         fullName: _fullNameController.text,
         city: _cityController.text,
-        flair: flair,
+        // Profiles are always public; clears the retired private flag.
+        flair: '',
         volunteerRoles: _volunteerRoles.toList()..sort(),
         links: _linksToSave(),
         statusImagePaths: _statusImages.map((f) => f.path).toList(),
@@ -291,22 +285,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Private profile'),
-                subtitle: const Text(
-                  'Hide your profile details from other users.',
-                ),
-                value: _isProfilePrivate,
-                onChanged: _saving
-                    ? null
-                    : (v) {
-                        setState(() {
-                          _isProfilePrivate = v;
-                        });
-                      },
-              ),
-              const SizedBox(height: 32),
               Center(
                 child: Column(
                   children: [

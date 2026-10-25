@@ -5,7 +5,6 @@ import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/report_service.dart';
 import 'package:npo_community/widgets/report_dialog.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class FriendsListScreen extends StatefulWidget {
   const FriendsListScreen({super.key});
@@ -61,7 +60,6 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
             itemCount: friends.length,
             itemBuilder: (context, index) {
               final friend = friends[index];
-              final isPrivate = FlairUtils.isProfilePrivate(friend.flair);
               return ListTile(
                 leading: GestureDetector(
                   onTap: () {
@@ -83,12 +81,11 @@ class _FriendsListScreenState extends State<FriendsListScreen> {
                     ),
                   ],
                 ),
-                subtitle: isPrivate
-                    ? const Text('Private profile')
-                    : (friend.statusMessage != null &&
-                              friend.statusMessage!.isNotEmpty
-                          ? Text(friend.statusMessage!)
-                          : null),
+                subtitle:
+                    friend.statusMessage != null &&
+                        friend.statusMessage!.isNotEmpty
+                    ? Text(friend.statusMessage!)
+                    : null,
                 trailing: IconButton(
                   icon: const Icon(Icons.info_outline),
                   onPressed: () {

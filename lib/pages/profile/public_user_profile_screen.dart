@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:npo_community/core/services/auth_service.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/awards/award_widgets.dart';
 import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:npo_community/models/user.dart';
@@ -15,7 +14,7 @@ import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Another member's profile: photo and name, their status, then their
-/// details, awards and links. A private profile shows only the name.
+/// details, awards and links. Every profile is public to members.
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
 
@@ -123,7 +122,6 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
             );
           }
 
-          final isPrivate = FlairUtils.isProfilePrivate(user.flair);
           final status = (user.statusMessage ?? '').trim();
 
           return SingleChildScrollView(
@@ -145,7 +143,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                if (!isPrivate && status.isNotEmpty) ...[
+                if (status.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Card(
                     key: const Key('status-card'),
@@ -188,25 +186,7 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                if (isPrivate)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.lock_outline),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'This profile is private.',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else ...[
+                ...[
                   if (user.fullName != null &&
                       user.fullName!.trim().isNotEmpty) ...[
                     Text('Name', style: Theme.of(context).textTheme.titleSmall),

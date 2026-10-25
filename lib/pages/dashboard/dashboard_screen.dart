@@ -9,7 +9,6 @@ import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/profile_service.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/theme/app_theme.dart';
@@ -284,13 +283,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 final status = statusCtrl.text.trim();
                 final city = cityCtrl.text.trim();
-                final flair = FlairUtils.buildFlair(
-                  isPrivateProfile: FlairUtils.isProfilePrivate(me.flair),
-                );
                 final updates = <String, dynamic>{
                   'status_message': status,
                   'city': city,
-                  'flair': flair,
                 };
                 final optimisticUser = User(
                   id: me.id,
@@ -299,7 +294,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   city: city.isEmpty ? null : city,
                   statusMessage: status.isEmpty ? null : status,
                   statusUpdatedAt: DateTime.now(),
-                  flair: flair,
+                  flair: me.flair,
                   profilePic: me.profilePic,
                   friends: me.friends,
                   userType: me.userType,

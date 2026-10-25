@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:npo_community/core/services/friends_controller.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
-import 'package:npo_community/core/utils/flair_utils.dart';
 
 class SearchUserTile extends StatelessWidget {
   final Friend user;
@@ -15,7 +14,6 @@ class SearchUserTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = context.watch<FriendsController>();
     final isSent = controller.isRequestSent(user.username);
-    final isPrivate = FlairUtils.isProfilePrivate(user.flair);
 
     return ListTile(
       leading: GestureDetector(
@@ -33,9 +31,7 @@ class SearchUserTile extends StatelessWidget {
           ),
         ],
       ),
-      subtitle: isPrivate
-          ? const Text('Private profile')
-          : Text(user.city ?? 'No location'),
+      subtitle: Text(user.city ?? 'No location'),
       onTap: () {
         context.push('/users/${user.id}');
       },
