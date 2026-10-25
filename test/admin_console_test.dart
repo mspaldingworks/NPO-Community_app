@@ -66,9 +66,12 @@ const _overviewJson = {
 };
 
 class _FakeAdmin extends AdminConsoleService {
+  _FakeAdmin({this.json = _overviewJson});
+
+  final Map<String, dynamic> json;
+
   @override
-  Future<AdminOverview> fetchOverview() async =>
-      AdminOverview.fromJson(_overviewJson);
+  Future<AdminOverview> fetchOverview() async => AdminOverview.fromJson(json);
 }
 
 class _FakeFundraisers extends FundraisersService {
@@ -105,16 +108,21 @@ class _FakeEvents extends EventsService {
       ];
 }
 
-Future<void> _pump(WidgetTester tester) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  _FakeAdmin? service,
+  bool canModerate = true,
+}) async {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
       home: AdminConsoleScreen(
-        service: _FakeAdmin(),
+        service: service ?? _FakeAdmin(),
         fundraisers: _FakeFundraisers(),
         events: _FakeEvents(),
+        canModerate: canModerate,
       ),
     ),
   );
@@ -132,6 +140,15 @@ void main() {
       User.fromJson({'id': 1, 'username': 'a', 'is_superuser': true}).canAdmin,
       isTrue,
     );
+  });
+
+  testWidgets('the board sees the console without moderation', (tester) async {
+    final board = Map<String, dynamic>.of(_overviewJson)..remove('moderation');
+    await _pump(tester, service: _FakeAdmin(json: board), canModerate: false);
+    expect(find.text('385'), findsOneWidget);
+    expect(find.byTooltip('Moderation panel'), findsNothing);
+    expect(find.text('Open panel'), findsNothing);
+    expect(find.byKey(const Key('stat-moderation-open')), findsNothing);
   });
 
   testWidgets('the overview sums the platform', (tester) async {

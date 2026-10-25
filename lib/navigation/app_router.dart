@@ -293,7 +293,8 @@ class AppRouter {
       GoRoute(
         path: '/admin/console',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AdminConsoleScreen(),
+        builder: (context, state) =>
+            AdminConsoleScreen(canModerate: authService.canModerate),
       ),
       GoRoute(
         path: '/admin/graduation',
@@ -344,7 +345,14 @@ class AppRouter {
         return '/home';
       }
 
-      if (location.startsWith('/admin') && !authService.canModerate) {
+      // Staff tools: the console and graduation tracker are for staff,
+      // administrators and (for now) the board; moderation for moderators.
+      final allowed = location.startsWith('/admin/console')
+          ? authService.canAdmin
+          : location.startsWith('/admin/graduation')
+          ? authService.canTrackGraduation
+          : authService.canModerate;
+      if (location.startsWith('/admin') && !allowed) {
         return '/home';
       }
 

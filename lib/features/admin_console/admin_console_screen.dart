@@ -23,6 +23,7 @@ class AdminConsoleScreen extends StatefulWidget {
     this.fundraisers,
     this.events,
     this.awards,
+    this.canModerate = true,
   });
 
   /// Injected in tests.
@@ -30,6 +31,9 @@ class AdminConsoleScreen extends StatefulWidget {
   final FundraisersService? fundraisers;
   final EventsService? events;
   final AwardsService? awards;
+
+  /// Board members open the console but not the moderation panel.
+  final bool canModerate;
 
   @override
   State<AdminConsoleScreen> createState() => _AdminConsoleScreenState();
@@ -85,11 +89,12 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
                       ),
                     ),
             ),
-            IconButton(
-              tooltip: 'Moderation panel',
-              icon: const Icon(Icons.shield_outlined),
-              onPressed: _openModeration,
-            ),
+            if (widget.canModerate)
+              IconButton(
+                tooltip: 'Moderation panel',
+                icon: const Icon(Icons.shield_outlined),
+                onPressed: _openModeration,
+              ),
             IconButton(
               tooltip: 'Refresh',
               icon: const Icon(Icons.refresh),
@@ -200,29 +205,30 @@ class _OverviewTab extends StatelessWidget {
               ),
             ],
           ),
-          _Section(
-            title: 'Moderation',
-            trailing: TextButton(
-              onPressed: onModeration,
-              child: const Text('Open panel'),
+          if (o.hasModeration)
+            _Section(
+              title: 'Moderation',
+              trailing: TextButton(
+                onPressed: onModeration,
+                child: const Text('Open panel'),
+              ),
+              children: [
+                _Stat(
+                  keyName: 'moderation-open',
+                  value: '${o.count('moderation', 'open')}',
+                  label: 'open reports',
+                  attention: o.count('moderation', 'open') > 0,
+                ),
+                _Stat(
+                  value: '${o.count('moderation', 'escalated')}',
+                  label: 'escalated',
+                ),
+                _Stat(
+                  value: '${o.count('moderation', 'total')}',
+                  label: 'reports ever',
+                ),
+              ],
             ),
-            children: [
-              _Stat(
-                keyName: 'moderation-open',
-                value: '${o.count('moderation', 'open')}',
-                label: 'open reports',
-                attention: o.count('moderation', 'open') > 0,
-              ),
-              _Stat(
-                value: '${o.count('moderation', 'escalated')}',
-                label: 'escalated',
-              ),
-              _Stat(
-                value: '${o.count('moderation', 'total')}',
-                label: 'reports ever',
-              ),
-            ],
-          ),
           _Section(
             title: 'Fundraising',
             subtitle: o.text('fundraising', 'mode') == 'live'

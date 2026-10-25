@@ -7,6 +7,10 @@ class AdminOverview {
 
   final Map<String, dynamic> raw;
 
+  /// The server leaves the moderation figures out for viewers who can't
+  /// moderate (the board).
+  bool get hasModeration => raw['moderation'] is Map;
+
   Map<String, dynamic> section(String key) {
     final value = raw[key];
     return value is Map ? value.cast<String, dynamic>() : const {};
