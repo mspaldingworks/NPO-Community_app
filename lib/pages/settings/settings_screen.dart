@@ -145,6 +145,23 @@ class SettingsScreen extends StatelessWidget {
             ),
             Consumer<AuthService>(
               builder: (context, auth, _) {
+                if (!auth.canTrackGraduation) return const SizedBox.shrink();
+                return ListTile(
+                  key: const Key('graduation-tile'),
+                  title: const Text('Graduation tracker'),
+                  subtitle: const Text(
+                    'Each class member\'s fundraising, sessions and volunteer '
+                    'hours',
+                  ),
+                  leading: const Icon(Icons.school_outlined),
+                  trailing: const Icon(Icons.chevron_right),
+                  minVerticalPadding: 16,
+                  onTap: () => context.push('/admin/graduation'),
+                );
+              },
+            ),
+            Consumer<AuthService>(
+              builder: (context, auth, _) {
                 if (!auth.canModerate) return const SizedBox.shrink();
                 return ListTile(
                   title: const Text('Moderation'),

@@ -58,6 +58,9 @@ class User {
   /// Superusers and admin-role holders: opens the control console.
   final bool canAdmin;
 
+  /// Emerge staff and administrators: opens the graduation tracker.
+  final bool canTrackGraduation;
+
   /// The server's verification tier key, e.g. 'unverified' or 'verified'.
   final String? verificationTier;
   final int? programYear;
@@ -84,6 +87,7 @@ class User {
     this.isSuperuser = false,
     this.canModerate = false,
     this.canAdmin = false,
+    this.canTrackGraduation = false,
     this.verificationTier,
     this.programYear,
     this.fullName,
@@ -148,6 +152,10 @@ class User {
       canAdmin:
           json['can_admin'] as bool? ??
           (json['is_superuser'] as bool? ?? false),
+      canTrackGraduation:
+          json['can_track_graduation'] as bool? ??
+          ((json['is_staff'] as bool? ?? false) ||
+              (json['is_superuser'] as bool? ?? false)),
       verificationTier: json['verification_tier'] as String?,
       programYear: json['program_year'] as int?,
       fullName: json['full_name'] as String?,

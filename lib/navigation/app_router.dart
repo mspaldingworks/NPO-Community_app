@@ -37,6 +37,7 @@ import 'package:npo_community/features/events/event_detail_screen.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/group_console/group_console_screen.dart';
 import 'package:npo_community/features/admin_console/admin_console_screen.dart';
+import 'package:npo_community/features/graduation/graduation_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 import 'package:npo_community/pages/auth/claim_profile_screen.dart';
 import 'package:npo_community/pages/auth/forgot_password_screen.dart';
@@ -293,6 +294,12 @@ class AppRouter {
         path: '/admin/console',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AdminConsoleScreen(),
+      ),
+      GoRoute(
+        path: '/admin/graduation',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            GraduationScreen(canGiveAwards: authService.canAdmin),
       ),
       GoRoute(
         path: '/admin/moderation',

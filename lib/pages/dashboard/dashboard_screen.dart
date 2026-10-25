@@ -321,6 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   isSuperuser: me.isSuperuser,
                   canModerate: me.canModerate,
                   canAdmin: me.canAdmin,
+                  canTrackGraduation: me.canTrackGraduation,
                   verificationTier: me.verificationTier,
                   programYear: me.programYear,
                   fullName: me.fullName,

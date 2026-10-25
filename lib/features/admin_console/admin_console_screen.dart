@@ -9,6 +9,7 @@ import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/events/volunteer_roles.dart';
 import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
 import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
+import 'package:npo_community/features/graduation/graduation_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 
 /// The administrators' control console: the state of the platform at a
@@ -73,6 +74,17 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
         appBar: AppBar(
           title: const Text('Control console'),
           actions: [
+            IconButton(
+              tooltip: 'Graduation tracker',
+              icon: const Icon(Icons.school_outlined),
+              onPressed: () => GoRouter.maybeOf(context) != null
+                  ? context.push('/admin/graduation')
+                  : Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const GraduationScreen(),
+                      ),
+                    ),
+            ),
             IconButton(
               tooltip: 'Moderation panel',
               icon: const Icon(Icons.shield_outlined),
