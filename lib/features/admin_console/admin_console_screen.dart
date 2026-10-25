@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:npo_community/features/admin_console/admin_console_service.dart';
+import 'package:npo_community/features/awards/award_admin.dart';
+import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/events/volunteer_roles.dart';
@@ -10,20 +12,23 @@ import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
 
 /// The administrators' control console: the state of the platform at a
-/// glance, every fundraiser, upcoming events, volunteers, and the status
-/// of the VAN, Givebutter, email and image-screening integrations.
+/// glance, every fundraiser, upcoming events, volunteers, the awards
+/// members can earn or be given, and the status of the VAN, Givebutter,
+/// email and image-screening integrations.
 class AdminConsoleScreen extends StatefulWidget {
   const AdminConsoleScreen({
     super.key,
     this.service,
     this.fundraisers,
     this.events,
+    this.awards,
   });
 
   /// Injected in tests.
   final AdminConsoleService? service;
   final FundraisersService? fundraisers;
   final EventsService? events;
+  final AwardsService? awards;
 
   @override
   State<AdminConsoleScreen> createState() => _AdminConsoleScreenState();
@@ -35,6 +40,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
   late final FundraisersService _fundraisers =
       widget.fundraisers ?? FundraisersService();
   late final EventsService _events = widget.events ?? EventsService();
+  late final AwardsService _awards = widget.awards ?? AwardsService();
   late Future<AdminOverview> _overview = _service.fetchOverview();
 
   Future<void> _refresh() async {
@@ -62,7 +68,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Control console'),
@@ -85,6 +91,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
               Tab(text: 'Fundraising'),
               Tab(text: 'Events'),
               Tab(text: 'Volunteers'),
+              Tab(text: 'Awards'),
               Tab(text: 'Integrations'),
             ],
           ),
@@ -112,6 +119,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
                 ),
                 _EventsTab(overview: overview, service: _events),
                 _VolunteersTab(overview: overview),
+                AwardsAdminTab(service: _awards),
                 _IntegrationsTab(overview: overview),
               ],
             );

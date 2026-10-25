@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
+import 'package:npo_community/features/awards/award_widgets.dart';
+import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/profile_service.dart';
@@ -19,12 +21,18 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Home: the website's quick-link tiles (the Events tile lights up when the
 /// member has something of her own this week), then her profile photo with
-/// the change-photo and Messages buttons beside it.
+/// the change-photo and Messages buttons beside it, then her awards.
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key, this.eventsService, this.now});
+  const DashboardScreen({
+    super.key,
+    this.eventsService,
+    this.awardsService,
+    this.now,
+  });
 
   /// Injected in tests.
   final EventsService? eventsService;
+  final AwardsService? awardsService;
 
   /// Clock override for tests.
   final DateTime Function()? now;
@@ -234,6 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _buildProfileRow(),
             const SizedBox(height: 16),
             TourAnchor(name: 'Edit Profile', child: _buildEditProfileButton()),
+            const SizedBox(height: 24),
+            MyAwardsPanel(service: widget.awardsService),
           ],
         ),
       ),

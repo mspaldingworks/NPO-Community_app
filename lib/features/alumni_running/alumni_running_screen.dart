@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/features/alumni_running/alumni_candidates.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
+import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 typedef CampaignLinkOpener = Future<bool> Function(Uri uri);
@@ -19,8 +20,9 @@ Future<bool> _defaultOpenLink(Uri uri) async {
 }
 
 /// The Ballot page: Emerge Kentucky alumnae on the ballot this year, one card
-/// per candidate with their photo, race, campaign and Ballotpedia links, and
-/// upcoming volunteer opportunities.
+/// per candidate with their photo, race, campaign and Ballotpedia links,
+/// upcoming volunteer opportunities, and a way for members to say how they
+/// are helping (which counts toward awards).
 class AlumniRunningScreen extends StatelessWidget {
   const AlumniRunningScreen({
     super.key,
@@ -28,6 +30,7 @@ class AlumniRunningScreen extends StatelessWidget {
     this.openLink,
     this.showPhotos,
     this.now,
+    this.awardsService,
   });
 
   /// Optional injected list (used in tests). Defaults to the curated list.
@@ -43,6 +46,9 @@ class AlumniRunningScreen extends StatelessWidget {
   /// Optional clock (used in tests) for deciding which events are upcoming.
   final DateTime Function()? now;
 
+  /// Candidate support; injected in tests. Off in demo builds.
+  final AwardsService? awardsService;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,6 +58,7 @@ class AlumniRunningScreen extends StatelessWidget {
         openLink: openLink,
         showPhotos: showPhotos,
         now: now,
+        awardsService: awardsService,
       ),
     );
   }
@@ -60,23 +67,72 @@ class AlumniRunningScreen extends StatelessWidget {
 /// The Ballot page's body: an intro line and one card per alumna on the
 /// ballot, or the empty state. Also the "Who's running" tab of the
 /// Candidates Running group.
-class AlumniRunningList extends StatelessWidget {
+class AlumniRunningList extends StatefulWidget {
   const AlumniRunningList({
     super.key,
     this.candidates,
     this.openLink,
     this.showPhotos,
     this.now,
+    this.awardsService,
   });
 
   final List<AlumniCandidate>? candidates;
   final CampaignLinkOpener? openLink;
   final bool? showPhotos;
   final DateTime Function()? now;
+  final AwardsService? awardsService;
+
+  @override
+  State<AlumniRunningList> createState() => _AlumniRunningListState();
+}
+
+class _AlumniRunningListState extends State<AlumniRunningList> {
+  late final AwardsService? _service =
+      widget.awardsService ??
+      (AppConfig.current.networkEnabled ? AwardsService() : null);
+
+  /// Support per candidate seed id; empty until loaded, or if it fails
+  /// (the cards then show no support row).
+  Map<String, CandidateSupport> _support = const {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSupport();
+  }
+
+  Future<void> _loadSupport() async {
+    final service = _service;
+    if (service == null) return;
+    try {
+      final support = await service.fetchCandidateSupport();
+      if (mounted) setState(() => _support = support);
+    } catch (_) {}
+  }
+
+  Future<void> _setSupport(String seedId, SupportKind kind, bool active) async {
+    final service = _service;
+    if (service == null) return;
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    try {
+      final updated = await service.setCandidateSupport(
+        seedId,
+        kind,
+        active: active,
+      );
+      if (mounted) setState(() => _support = {..._support, seedId: updated});
+    } catch (e) {
+      messenger?.showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final today = (now ?? DateTime.now)();
+    final candidates = widget.candidates;
+    final openLink = widget.openLink;
+    final showPhotos = widget.showPhotos;
+    final today = (widget.now ?? DateTime.now)();
     // The 2026 candidacies are hidden once Election Day is over.
     final electionOver = !today.isBefore(alumniCandidatesHideAfter);
     final list = electionOver
@@ -107,16 +163,23 @@ class AlumniRunningList extends StatelessWidget {
         if (index == 0) {
           return Text(
             'Emerge Kentucky alumnae on the ballot in '
-            '$alumniCandidatesElection. Visit their campaigns and '
-            'sign up to volunteer.',
+            '$alumniCandidatesElection. Visit their campaigns, '
+            'sign up to volunteer, and mark how you are helping: '
+            'backing alumnae on the ballot earns awards.',
             style: Theme.of(context).textTheme.bodyMedium,
           );
         }
+        final candidate = list[index - 1];
+        final seedId = candidate.seedId;
         return AlumniCandidateCard(
-          candidate: list[index - 1],
+          candidate: candidate,
           openLink: openLink ?? _defaultOpenLink,
           showPhoto: photos,
           now: today,
+          support: seedId == null ? null : _support[seedId],
+          onSupport: seedId == null
+              ? null
+              : (kind, active) => _setSupport(seedId, kind, active),
         );
       },
     );
@@ -130,12 +193,20 @@ class AlumniCandidateCard extends StatelessWidget {
     required this.openLink,
     required this.showPhoto,
     required this.now,
+    this.support,
+    this.onSupport,
   });
 
   final AlumniCandidate candidate;
   final CampaignLinkOpener openLink;
   final bool showPhoto;
   final DateTime now;
+
+  /// Members backing this candidate, and what the viewer marked. The row
+  /// is hidden when null (not loaded, demo builds, or the viewer's own race
+  /// where the server has no entry to toggle).
+  final CandidateSupport? support;
+  final void Function(SupportKind kind, bool active)? onSupport;
 
   Future<void> _open(BuildContext context, Uri uri) async {
     final messenger = ScaffoldMessenger.maybeOf(context);
@@ -273,6 +344,10 @@ class AlumniCandidateCard extends StatelessWidget {
                   label: const Text('Volunteer with the campaign'),
                 ),
               ),
+            if (support != null && onSupport != null) ...[
+              const Divider(height: 28),
+              _SupportRow(support: support!, onSupport: onSupport!),
+            ],
           ],
         ),
       ),
@@ -284,6 +359,55 @@ class AlumniCandidateCard extends StatelessWidget {
     return DateFormat(
       hasTime ? 'EEE, MMM d · h:mm a' : 'EEE, MMM d',
     ).format(when);
+  }
+}
+
+/// "How are you helping?" chips, and how many members back the campaign.
+class _SupportRow extends StatelessWidget {
+  const _SupportRow({required this.support, required this.onSupport});
+
+  final CandidateSupport support;
+  final void Function(SupportKind kind, bool active) onSupport;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final n = support.supporters;
+    return Column(
+      key: Key('support-${support.seedId}'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'How are you helping?',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final kind in SupportKind.values)
+              FilterChip(
+                key: Key('support-${support.seedId}-${kind.key}'),
+                avatar: Icon(kind.icon, size: 18),
+                label: Text(kind.label),
+                selected: support.marked(kind),
+                onSelected: (on) => onSupport(kind, on),
+              ),
+          ],
+        ),
+        if (n > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              '$n ${n == 1 ? 'member is' : 'members are'} backing this campaign',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+      ],
+    );
   }
 }
 

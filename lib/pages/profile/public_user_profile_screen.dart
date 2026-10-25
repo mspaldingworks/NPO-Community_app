@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/utils/flair_utils.dart';
+import 'package:npo_community/features/awards/award_widgets.dart';
+import 'package:npo_community/features/awards/awards_service.dart';
 import 'package:npo_community/models/user.dart';
 import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/report_service.dart';
@@ -12,12 +14,19 @@ import 'package:npo_community/core/utils/time_ago.dart';
 import 'package:npo_community/pages/settings/blocked_members_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Another member's profile: photo and name, her status, then her details
-/// and links. A private profile shows only the name.
+/// Another member's profile: photo and name, their status, then their
+/// details, awards and links. A private profile shows only the name.
 class PublicUserProfileScreen extends StatefulWidget {
   final int userId;
 
-  const PublicUserProfileScreen({super.key, required this.userId});
+  /// Injected in tests.
+  final AwardsService? awardsService;
+
+  const PublicUserProfileScreen({
+    super.key,
+    required this.userId,
+    this.awardsService,
+  });
 
   @override
   State<PublicUserProfileScreen> createState() =>
@@ -211,6 +220,10 @@ class _PublicUserProfileScreenState extends State<PublicUserProfileScreen> {
                     Text(user.city!.trim()),
                     const SizedBox(height: 16),
                   ],
+                  MemberAwardsSection(
+                    userId: user.id,
+                    service: widget.awardsService,
+                  ),
                   if (user.links.isNotEmpty) ...[
                     Text(
                       'Links',
