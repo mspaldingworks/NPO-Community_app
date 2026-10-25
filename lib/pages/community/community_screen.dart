@@ -63,16 +63,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
       return;
     }
     if (GoRouter.maybeOf(context) != null) {
-      context.push(
-        '/community/group/${entry.group.id}',
-        extra: entry.group.name,
-      );
+      context.push('/community/group/${entry.group.id}', extra: entry.group);
     } else {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => PostListScreen(
             groupId: entry.group.id,
             groupName: entry.group.name,
+            group: entry.group,
             service: _service,
           ),
         ),

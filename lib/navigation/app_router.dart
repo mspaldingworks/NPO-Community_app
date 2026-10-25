@@ -26,6 +26,7 @@ import 'package:npo_community/pages/dashboard/dashboard_screen.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_screen.dart';
 import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
 import 'package:npo_community/features/awards/awards_screen.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_view.dart';
 import 'package:npo_community/pages/profile/profile_screen.dart';
 import 'package:npo_community/pages/profile/public_user_profile_screen.dart';
 import 'package:npo_community/pages/settings/app_info_screen.dart';
@@ -255,6 +256,11 @@ class AppRouter {
         path: '/awards',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const AwardsScreen(),
+      ),
+      GoRoute(
+        path: '/class-fundraising',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ClassFundraisingScreen(),
       ),
       GoRoute(
         path: '/alumni/running',

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_service.dart';
 import 'package:npo_community/features/community/group_feed.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
@@ -425,6 +426,42 @@ void main() {
     expect(find.byTooltip('Group info, events and polls'), findsOneWidget);
   });
 
+  testWidgets('only the current class gets a Fundraising tab', (tester) async {
+    Group cohort(int year) =>
+        Group(id: 1, name: 'Class of $year', kind: 'cohort', programYear: year);
+    final service = _FakeCommunity(
+      groups: [cohort(2026)],
+      posts: [_post(1, 'Hello class', t0)],
+    );
+    await _pump(
+      tester,
+      PostListScreen(
+        groupId: 1,
+        groupName: 'Class of 2026',
+        group: cohort(2026),
+        service: service,
+        now: () => DateTime(2026, 10, 25),
+        classFundraising: _NoFundraising(),
+      ),
+    );
+    expect(find.byKey(const Key('tab-fundraising')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('tab-chat')));
+    await tester.pumpAndSettle();
+    expect(find.text('Hello class'), findsOneWidget);
+
+    await _pump(
+      tester,
+      PostListScreen(
+        groupId: 1,
+        groupName: 'Class of 2019',
+        group: cohort(2019),
+        service: service,
+        now: () => DateTime(2026, 10, 25),
+      ),
+    );
+    expect(find.byKey(const Key('tab-fundraising')), findsNothing);
+  });
+
   testWidgets('an empty feed invites the first post', (tester) async {
     final service = _FakeCommunity(groups: [_statewide], posts: const []);
     await _pump(
@@ -433,4 +470,10 @@ void main() {
     );
     expect(find.text('Be the first to post!'), findsOneWidget);
   });
+}
+
+class _NoFundraising extends ClassFundraisingService {
+  @override
+  Future<ClassFundraising> fetch() async =>
+      const ClassFundraising(year: 2026, goalCents: 100000);
 }

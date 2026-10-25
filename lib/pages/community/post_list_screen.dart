@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:npo_community/core/services/community_service.dart';
 import 'package:npo_community/features/alumni_running/alumni_running_screen.dart';
 import 'package:npo_community/features/alumni_running/models/alumni_candidate.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_service.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_view.dart';
 import 'package:npo_community/features/community/group_feed.dart';
 import 'package:npo_community/features/group_console/group_console_service.dart';
 import 'package:npo_community/models/group.dart';
@@ -11,7 +13,8 @@ import 'package:npo_community/models/group.dart';
 ///
 /// The Candidates Running group gets two tabs: "Who's running", the same
 /// cards as the Ballot page (race, campaign, donate, volunteer events), and
-/// the group's chat.
+/// the group's chat. The current year's class group gets "Fundraising", one
+/// bar per member toward their goal, and the chat.
 class PostListScreen extends StatelessWidget {
   const PostListScreen({
     super.key,
@@ -24,6 +27,7 @@ class PostListScreen extends StatelessWidget {
     this.openLink,
     this.showPhotos,
     this.now,
+    this.classFundraising,
   });
 
   final int groupId;
@@ -42,7 +46,14 @@ class PostListScreen extends StatelessWidget {
   final bool? showPhotos;
   final DateTime Function()? now;
 
+  /// Injected in tests.
+  final ClassFundraisingService? classFundraising;
+
   bool get _isCandidates => group?.isCandidates ?? false;
+
+  bool get _isCurrentClass =>
+      (group?.isCohort ?? false) &&
+      group?.programYear == (now ?? DateTime.now)().year;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +69,30 @@ class PostListScreen extends StatelessWidget {
       service: service,
       console: console,
     );
+
+    if (_isCurrentClass) {
+      return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(groupName),
+            actions: [consoleButton],
+            bottom: const TabBar(
+              tabs: [
+                Tab(key: Key('tab-fundraising'), text: 'Fundraising'),
+                Tab(key: Key('tab-chat'), text: 'Chat'),
+              ],
+            ),
+          ),
+          body: TabBarView(
+            children: [
+              ClassFundraisingList(service: classFundraising),
+              feed,
+            ],
+          ),
+        ),
+      );
+    }
 
     if (!_isCandidates) {
       return Scaffold(

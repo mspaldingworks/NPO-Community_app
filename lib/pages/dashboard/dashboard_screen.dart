@@ -6,6 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/features/awards/award_widgets.dart';
 import 'package:npo_community/features/awards/awards_service.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_service.dart';
+import 'package:npo_community/features/class_fundraising/class_fundraising_view.dart';
 import 'package:npo_community/features/events/events_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/profile_service.dart';
@@ -20,18 +22,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 /// Home: the website's quick-link tiles (the Events tile lights up when the
 /// member has something of her own this week), then her profile photo with
-/// the change-photo and Messages buttons beside it, then her awards.
+/// the change-photo and Messages buttons beside it, then (for the newest
+/// class) their fundraising bar, then their awards.
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
     super.key,
     this.eventsService,
     this.awardsService,
+    this.classFundraisingService,
     this.now,
   });
 
   /// Injected in tests.
   final EventsService? eventsService;
   final AwardsService? awardsService;
+  final ClassFundraisingService? classFundraisingService;
 
   /// Clock override for tests.
   final DateTime Function()? now;
@@ -52,6 +57,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _updatingProfilePic = false;
 
   DateTime get _now => widget.now?.call() ?? DateTime.now();
+
+  bool get _inCurrentClass =>
+      Provider.of<AuthService>(
+        context,
+        listen: false,
+      ).currentUser?.programYear ==
+      _now.year;
 
   @override
   void initState() {
@@ -242,6 +254,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             TourAnchor(name: 'Edit Profile', child: _buildEditProfileButton()),
             const SizedBox(height: 24),
+            if (_inCurrentClass) ...[
+              MyClassFundraisingCard(service: widget.classFundraisingService),
+              const SizedBox(height: 16),
+            ],
             MyAwardsPanel(service: widget.awardsService),
           ],
         ),

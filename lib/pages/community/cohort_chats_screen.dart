@@ -101,9 +101,11 @@ class _CohortChatsScreenState extends State<CohortChatsScreen> {
                   title: Text(group.name),
                   subtitle: isMine ? const Text('Your class') : null,
                   trailing: const Icon(Icons.chevron_right),
+                  // The Group (not just its name), so the current class gets
+                  // its Fundraising tab.
                   onTap: () => context.push(
                     '/community/group/${group.id}',
-                    extra: group.name,
+                    extra: group,
                   ),
                 );
               },
