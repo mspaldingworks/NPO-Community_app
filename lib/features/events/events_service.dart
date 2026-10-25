@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:intl/intl.dart';
+import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 
@@ -174,24 +178,166 @@ class RosterRow {
     required this.status,
     required this.attended,
     this.shifts = const [],
+    this.checkedInAt,
+    this.checkedInBy,
+    this.method = '',
+    this.walkIn = false,
   });
 
   final int id;
   final String username;
   final String displayName;
-  final String status;
+
+  /// going, maybe or declined; null when they never RSVPed (search rows).
+  final String? status;
   final bool attended;
   final List<String> shifts;
+  final DateTime? checkedInAt;
 
-  factory RosterRow.fromJson(Map<String, dynamic> json) => RosterRow(
-    id: json['id'] as int,
-    username: json['username'] as String? ?? '',
-    displayName:
-        json['display_name'] as String? ?? json['username'] as String? ?? '',
-    status: json['status'] as String? ?? 'going',
-    attended: json['attended'] == true,
-    shifts: (json['shifts'] as List? ?? const []).cast<String>(),
+  /// Display name of whoever checked them in.
+  final String? checkedInBy;
+
+  /// scan or manual.
+  final String method;
+
+  /// Checked in without having RSVPed.
+  final bool walkIn;
+
+  /// "Checked in 6:42 PM · scanned by Dana".
+  String get checkInLine {
+    if (!attended) return '';
+    final when = checkedInAt == null
+        ? ''
+        : ' ${DateFormat.jm().format(checkedInAt!)}';
+    final how = method == 'scan' ? 'scanned' : 'by hand';
+    final who = checkedInBy == null ? '' : ' by $checkedInBy';
+    return 'Checked in$when · $how$who${walkIn ? ' · walk-in' : ''}';
+  }
+
+  factory RosterRow.fromJson(Map<String, dynamic> json) {
+    final by = json['checked_in_by'];
+    return RosterRow(
+      id: json['id'] as int,
+      username: json['username'] as String? ?? '',
+      displayName:
+          json['display_name'] as String? ?? json['username'] as String? ?? '',
+      status: (json['status'] ?? json['rsvp_status']) as String?,
+      attended: json['attended'] == true,
+      shifts: (json['shifts'] as List? ?? const []).cast<String>(),
+      checkedInAt: _date(json['checked_in_at']),
+      checkedInBy: by is Map ? by['display_name'] as String? : by as String?,
+      method: json['check_in_method'] as String? ?? '',
+      walkIn: json['walk_in'] == true,
+    );
+  }
+}
+
+/// Who a scanned code belonged to, so the door can match face to name.
+class ScanResult {
+  const ScanResult({
+    required this.attendeeId,
+    required this.displayName,
+    this.profilePic,
+    this.programYear,
+    this.alreadyCheckedIn = false,
+    this.walkIn = false,
+    this.attendedCount = 0,
+  });
+
+  final int attendeeId;
+  final String displayName;
+  final String? profilePic;
+  final int? programYear;
+  final bool alreadyCheckedIn;
+  final bool walkIn;
+  final int attendedCount;
+
+  factory ScanResult.fromJson(Map<String, dynamic> json) {
+    final attendee = json['attendee'] as Map<String, dynamic>;
+    return ScanResult(
+      attendeeId: attendee['id'] as int,
+      displayName: attendee['display_name'] as String? ?? '',
+      profilePic: attendee['profile_pic'] as String?,
+      programYear: attendee['program_year'] as int?,
+      alreadyCheckedIn: json['already_checked_in'] == true,
+      walkIn: json['walk_in'] == true,
+      attendedCount: json['attended'] as int? ?? 0,
+    );
+  }
+}
+
+/// An event's CRM lists: registered, attended, no-shows, walk-ins, ...
+class EventLists {
+  const EventLists({
+    this.labels = const {},
+    this.counts = const {},
+    this.lists = const {},
+  });
+
+  /// list key → label, in the server's order.
+  final Map<String, String> labels;
+  final Map<String, int> counts;
+  final Map<String, List<AttendeeRow>> lists;
+
+  factory EventLists.fromJson(Map<String, dynamic> json) => EventLists(
+    labels: {
+      for (final e
+          in (json['labels'] as Map<String, dynamic>? ?? const {}).entries)
+        e.key: e.value as String,
+    },
+    counts: {
+      for (final e
+          in (json['counts'] as Map<String, dynamic>? ?? const {}).entries)
+        e.key: e.value as int? ?? 0,
+    },
+    lists: {
+      for (final e
+          in (json['lists'] as Map<String, dynamic>? ?? const {}).entries)
+        e.key: [
+          for (final row in (e.value as List? ?? const []))
+            AttendeeRow.fromJson(row as Map<String, dynamic>),
+        ],
+    },
   );
+}
+
+/// One person on an event list; email only for staff.
+class AttendeeRow extends RosterRow {
+  const AttendeeRow({
+    required super.id,
+    required super.username,
+    required super.displayName,
+    required super.status,
+    required super.attended,
+    super.shifts,
+    super.checkedInAt,
+    super.checkedInBy,
+    super.method,
+    super.walkIn,
+    this.programYear,
+    this.email,
+  });
+
+  final int? programYear;
+  final String? email;
+
+  factory AttendeeRow.fromJson(Map<String, dynamic> json) {
+    final row = RosterRow.fromJson(json);
+    return AttendeeRow(
+      id: row.id,
+      username: row.username,
+      displayName: row.displayName,
+      status: row.status,
+      attended: row.attended,
+      shifts: row.shifts,
+      checkedInAt: row.checkedInAt,
+      checkedInBy: row.checkedInBy,
+      method: row.method,
+      walkIn: row.walkIn,
+      programYear: json['program_year'] as int?,
+      email: json['email'] as String?,
+    );
+  }
 }
 
 class MyCommitments {
@@ -409,6 +555,61 @@ class EventsService extends ApiClient {
       for (final row in (data as List))
         RosterRow.fromJson(row as Map<String, dynamic>),
     ];
+  }
+
+  /// My check-in QR payload; [reset] replaces it, voiding the old one.
+  Future<String> fetchMyCode({bool reset = false}) async {
+    final data = reset
+        ? await post(
+            urlPath: '/api/events/my-code/',
+            jsonHeaders: authHeaders,
+            jsonPayload: const {},
+          )
+        : await read(urlPath: '/api/events/my-code/', jsonHeaders: authHeaders);
+    return (data as Map<String, dynamic>)['code'] as String;
+  }
+
+  /// Checks in whoever's code was scanned (organizers).
+  Future<ScanResult> scanCheckIn(int eventId, String code) async =>
+      ScanResult.fromJson(
+        await post(
+              urlPath: '/api/events/$eventId/check-in/scan/',
+              jsonHeaders: authHeaders,
+              jsonPayload: {'code': code},
+            )
+            as Map<String, dynamic>,
+      );
+
+  /// Members to check in by hand, walk-ins included (organizers).
+  Future<List<RosterRow>> searchMembers(int eventId, String query) async {
+    final data = await read(
+      urlPath:
+          '/api/events/$eventId/check-in/search/?q=${Uri.encodeQueryComponent(query)}',
+      jsonHeaders: authHeaders,
+    );
+    return [
+      for (final row in (data as List))
+        RosterRow.fromJson(row as Map<String, dynamic>),
+    ];
+  }
+
+  Future<EventLists> fetchLists(int eventId) async => EventLists.fromJson(
+    await read(urlPath: '/api/events/$eventId/lists/', jsonHeaders: authHeaders)
+        as Map<String, dynamic>,
+  );
+
+  /// One list as CSV text.
+  Future<String> exportList(int eventId, String list) async {
+    final response = await httpClient.get(
+      AppConfig.current.apiUri('/api/events/$eventId/lists/$list.csv'),
+      headers: authHeaders,
+    );
+    if (response.statusCode != 200) {
+      throw ApiClientException(
+        extractErrorMessage(tryDecodeJson(response.body), response.statusCode),
+      );
+    }
+    return utf8.decode(response.bodyBytes);
   }
 
   Future<MyCommitments> fetchMine() async => MyCommitments.fromJson(

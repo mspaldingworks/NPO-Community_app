@@ -16,6 +16,9 @@ class AlumniProfile {
     this.isMemorial = false,
     this.claimed = true,
     this.volunteerRoles = const [],
+    this.lastEventTitle,
+    this.lastEventAt,
+    this.eventsAttended = 0,
   });
 
   final int vanId;
@@ -42,6 +45,11 @@ class AlumniProfile {
 
   /// Ways she has said she can help (keys of the API's VOLUNTEER_ROLES).
   final List<String> volunteerRoles;
+
+  /// Attendance tags: the latest event checked in at, and how many in all.
+  final String? lastEventTitle;
+  final DateTime? lastEventAt;
+  final int eventsAttended;
 
   String get fullName {
     final name = [
@@ -99,6 +107,11 @@ class AlumniProfile {
         for (final role in (json['volunteer_roles'] as List? ?? const []))
           if (role is String) role,
       ],
+      lastEventTitle: (json['last_event'] as Map?)?['title'] as String?,
+      lastEventAt: DateTime.tryParse(
+        (json['last_event'] as Map?)?['starts_at'] as String? ?? '',
+      )?.toLocal(),
+      eventsAttended: asInt(json['events_attended']) ?? 0,
     );
   }
 }

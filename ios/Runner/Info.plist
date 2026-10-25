@@ -36,7 +36,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Allow Emerge KY Alumni to access your camera to take a profile picture.</string>
+	<string>Emerge KY Alumni uses your camera to scan members' check-in codes at events and to take your profile picture.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Allow Emerge KY Alumni to access your location to help you find nearby activities.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

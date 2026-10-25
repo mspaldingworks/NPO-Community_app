@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:npo_community/features/alumni_directory/alumni_directory_controller.dart';
 import 'package:npo_community/features/alumni_directory/models/alumni_profile.dart';
@@ -342,6 +343,15 @@ class _AlumniDetailSheet extends StatelessWidget {
               _DetailRow(icon: Icons.email_outlined, text: profile.email!),
             if (profile.phone != null)
               _DetailRow(icon: Icons.phone_outlined, text: profile.phone!),
+            _DetailRow(
+              icon: Icons.event_available_outlined,
+              text: profile.lastEventTitle == null
+                  ? 'No events attended yet'
+                  : 'Last event: ${profile.lastEventTitle}'
+                        '${profile.lastEventAt == null ? '' : ', ${DateFormat.yMMMd().format(profile.lastEventAt!)}'}'
+                        ' · ${profile.eventsAttended} '
+                        '${profile.eventsAttended == 1 ? 'event' : 'events'} attended',
+            ),
             if (messageable) ...[
               const SizedBox(height: 12),
               FilledButton.icon(

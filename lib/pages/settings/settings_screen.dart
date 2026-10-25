@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/view_mode_service.dart';
+import 'package:npo_community/features/events/check_in_screens.dart';
 import 'package:npo_community/features/onboarding_tour/controllers/onboarding_tour_controller.dart';
 import 'package:npo_community/features/onboarding_tour/services/onboarding_tour_storage.dart';
 import 'package:npo_community/features/onboarding_tour/widgets/tour_anchor.dart';
@@ -86,6 +87,27 @@ class SettingsScreen extends StatelessWidget {
                     await _startTourFromSettings(context);
                   }
                 },
+              ),
+            ),
+            Consumer<AuthService>(
+              builder: (context, auth, _) => ListTile(
+                key: const Key('my-check-in-code-tile'),
+                title: const Text('My check-in code'),
+                subtitle: const Text(
+                  'Show it at events to be checked in (counts toward awards)',
+                ),
+                leading: const Icon(Icons.qr_code_2),
+                trailing: const Icon(Icons.chevron_right),
+                minVerticalPadding: 16,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MyCheckInCodeScreen(
+                      name: auth.realUser?.fullName?.trim().isNotEmpty == true
+                          ? auth.realUser!.fullName!.trim()
+                          : auth.realUser?.username,
+                    ),
+                  ),
+                ),
               ),
             ),
             // Board view switch — only shown to accounts that may use it, so

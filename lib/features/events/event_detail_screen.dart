@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:npo_community/features/events/check_in_screens.dart';
 import 'package:npo_community/features/events/event_form.dart';
 import 'package:npo_community/features/events/events_screen.dart';
 import 'package:npo_community/features/events/events_service.dart';
@@ -137,11 +138,22 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
     );
   }
 
-  Future<void> _roster(CommunityEvent event) => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => _RosterSheet(event: event, service: _service),
+  Future<void> _roster(CommunityEvent event) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => EventCheckInScreen(event: event, service: _service),
+    ),
+  );
+
+  Future<void> _scan(CommunityEvent event) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => CheckInScannerScreen(event: event, service: _service),
+    ),
+  );
+
+  Future<void> _myCode() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => MyCheckInCodeScreen(service: _service),
+    ),
   );
 
   Future<void> _share(CommunityEvent event) async {
@@ -197,7 +209,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                 ),
                 const PopupMenuItem(
                   value: 'roster',
-                  child: Text('Roster & check-in'),
+                  child: Text('Check-in & lists'),
                 ),
                 if (!event.isCancelled)
                   const PopupMenuItem(
@@ -355,6 +367,13 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
               icon: const Icon(Icons.calendar_month_outlined),
               label: const Text('Add to calendar'),
             ),
+            if (!event.isCancelled && !closed)
+              OutlinedButton.icon(
+                key: const Key('my-check-in-code'),
+                onPressed: _myCode,
+                icon: const Icon(Icons.qr_code_2),
+                label: const Text('My check-in code'),
+              ),
           ],
         ),
         if (event.fundraiser != null) ...[
@@ -404,9 +423,16 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
             runSpacing: 8,
             children: [
               FilledButton.tonalIcon(
+                key: const Key('scan-check-in'),
+                onPressed: event.isCancelled ? null : () => _scan(event),
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Scan check-ins'),
+              ),
+              FilledButton.tonalIcon(
+                key: const Key('roster-check-in'),
                 onPressed: () => _roster(event),
                 icon: const Icon(Icons.fact_check_outlined),
-                label: const Text('Roster & check-in'),
+                label: const Text('Check-in & lists'),
               ),
               FilledButton.tonalIcon(
                 key: const Key('add-shift'),
@@ -739,101 +765,6 @@ class _ShiftFormState extends State<_ShiftForm> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Who said they're coming, which shifts they claimed, and a check-in box
-/// per person. Check-ins count toward their volunteer hours.
-class _RosterSheet extends StatefulWidget {
-  const _RosterSheet({required this.event, required this.service});
-
-  final CommunityEvent event;
-  final EventsService service;
-
-  @override
-  State<_RosterSheet> createState() => _RosterSheetState();
-}
-
-class _RosterSheetState extends State<_RosterSheet> {
-  late Future<List<RosterRow>> _rows = widget.service.fetchRoster(
-    widget.event.id,
-  );
-
-  Future<void> _toggle(RosterRow row, bool attended) async {
-    final updated = widget.service.checkIn(
-      widget.event.id,
-      row.id,
-      attended: attended,
-    );
-    setState(() {
-      _rows = updated;
-    });
-    try {
-      await updated;
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.maybeOf(
-          context,
-        )?.showSnackBar(SnackBar(content: Text('$e')));
-        setState(() {
-          _rows = widget.service.fetchRoster(widget.event.id);
-        });
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.7,
-      builder: (context, controller) => FutureBuilder<List<RosterRow>>(
-        future: _rows,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: snapshot.hasError
-                  ? Text('${snapshot.error}')
-                  : const CircularProgressIndicator(),
-            );
-          }
-          final rows = snapshot.data!;
-          final attended = rows.where((r) => r.attended).length;
-          return ListView(
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            children: [
-              Text('Roster', style: theme.textTheme.titleLarge),
-              Text(
-                '${rows.length} on the list · $attended checked in',
-                style: theme.textTheme.bodySmall,
-              ),
-              const SizedBox(height: 8),
-              if (rows.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Text('Nobody has RSVPed yet.'),
-                ),
-              for (final row in rows)
-                CheckboxListTile(
-                  key: Key('roster-${row.id}'),
-                  value: row.attended,
-                  onChanged: (value) => _toggle(row, value ?? false),
-                  title: Text(row.displayName),
-                  subtitle: Text(
-                    [
-                      row.status,
-                      if (row.shifts.isNotEmpty) row.shifts.join(', '),
-                    ].join(' · '),
-                  ),
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-            ],
-          );
-        },
       ),
     );
   }
