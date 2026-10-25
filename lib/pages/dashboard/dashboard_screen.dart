@@ -258,7 +258,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               MyClassFundraisingCard(service: widget.classFundraisingService),
               const SizedBox(height: 16),
             ],
-            MyAwardsPanel(service: widget.awardsService),
+            MyAwardsPanel(
+              service: widget.awardsService,
+              inCurrentClass: _inCurrentClass,
+            ),
           ],
         ),
       ),

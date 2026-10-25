@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +22,8 @@ Map<String, dynamic> _award(
   int earned = 0,
   Map<String, dynamic>? progress,
   String category = 'showing_up',
+  String audience = 'everyone',
+  bool eligible = true,
 }) => {
   'id': id,
   'key': key,
@@ -38,6 +41,13 @@ Map<String, dynamic> _award(
   'unit': automatic ? 'events' : null,
   'earned': earned,
   'progress': ?progress,
+  'how_to_earn': automatic
+      ? 'Check in at 5 Emerge Kentucky events.'
+      : 'Given by Emerge Kentucky staff.',
+  'audience': audience,
+  'audience_label': audience,
+  'image': null,
+  'eligible': eligible,
 };
 
 Map<String, dynamic> _grant(
@@ -185,10 +195,36 @@ void main() {
       });
       expect(support.marked(SupportKind.volunteered), isTrue);
     });
+
+    test('uploads artwork as multipart', () async {
+      final requests = <http.BaseRequest>[];
+      ApiClient.debugHttpClientOverride = MockClient.streaming((
+        request,
+        body,
+      ) async {
+        requests.add(request);
+        await body.drain<void>();
+        final award = _award('mentor', automatic: false)
+          ..['image'] = '/media/award_art/mentor.png';
+        return http.StreamedResponse(
+          Stream.value(utf8.encode(jsonEncode(award))),
+          200,
+        );
+      });
+      final file = File('${Directory.systemTemp.path}/award-art-test.png')
+        ..writeAsBytesSync([137, 80, 78, 71]);
+      addTearDown(() => file.deleteSync());
+
+      final award = await AwardsService().uploadImage(4, file.path);
+      expect(requests.single.url.path, '/api/awards/4/image/');
+      expect(requests.single.headers['Authorization'], 'Token test-token');
+      expect(award.image, '/media/award_art/mentor.png');
+      expect(award.imageUrl, endsWith('/media/award_art/mentor.png'));
+    });
   });
 
   group('members', () {
-    testWidgets('Awards screen shows what I earned and what is next', (
+    testWidgets('the gallery splits alumni awards from class achievements', (
       tester,
     ) async {
       final mentor = _award(
@@ -197,28 +233,94 @@ void main() {
         automatic: false,
         earned: 1,
         category: 'special',
+        audience: 'alumni',
       );
       final service = _FakeAwards(
         catalog: {
           'awards': [
             _award('regular', progress: {'value': 3, 'target': 5}),
             mentor,
+            _award(
+              'hello-class',
+              id: 3,
+              audience: 'current_class',
+              eligible: false,
+            ),
           ],
           'mine': [_grant(mentor, citation: 'For mentoring the Class of 2026')],
         },
       );
       await tester.pumpWidget(
-        MaterialApp(home: AwardsScreen(service: service)),
+        MaterialApp(
+          home: AwardsScreen(
+            service: service,
+            now: () => DateTime(2026, 10, 25),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Earned'), findsOneWidget);
-      expect(find.text('3 of 5 events'), findsOneWidget);
-      expect(find.text('Given to you once'), findsOneWidget);
+      // Alumni tab: alumni awards and shared ones, earned first.
+      expect(find.byKey(const Key('gallery-mentor')), findsOneWidget);
+      expect(find.byKey(const Key('gallery-regular')), findsOneWidget);
+      expect(find.byKey(const Key('gallery-hello-class')), findsNothing);
+      expect(find.text('1 of 2 earned'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('gallery-mentor'))).dx,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('gallery-regular'))).dx,
+        ),
+      );
 
-      await tester.tap(find.byKey(const Key('award-mentor')));
+      // A tile opens the award's page with how to earn it.
+      await tester.tap(find.byKey(const Key('gallery-regular')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('award-detail-regular')), findsOneWidget);
+      expect(
+        find.text('Check in at 5 Emerge Kentucky events.'),
+        findsOneWidget,
+      );
+      expect(find.text('3 of 5 events'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('gallery-mentor')));
       await tester.pumpAndSettle();
       expect(find.text('“For mentoring the Class of 2026”'), findsOneWidget);
+      expect(find.text('You earned this'), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      // Class tab: class achievements and shared ones.
+      await tester.tap(find.byKey(const Key('tab-class-achievements')));
+      await tester.pumpAndSettle();
+      expect(find.text('Class of 2026'), findsOneWidget);
+      expect(find.byKey(const Key('gallery-hello-class')), findsOneWidget);
+      expect(find.byKey(const Key('gallery-mentor')), findsNothing);
+      await tester.tap(find.byKey(const Key('gallery-hello-class')));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('This one is for members of the current class.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the class opens on its own tab', (tester) async {
+      final service = _FakeAwards(
+        catalog: {
+          'awards': [
+            _award('hello-class', audience: 'current_class'),
+            _award('mentor', id: 2, audience: 'alumni'),
+          ],
+          'mine': [],
+        },
+      );
+      await tester.pumpWidget(
+        MaterialApp(home: AwardsScreen(service: service, inCurrentClass: true)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('gallery-hello-class')), findsOneWidget);
+      expect(find.byKey(const Key('gallery-mentor')), findsNothing);
     });
 
     testWidgets('a member profile hides the section when they hold none', (
@@ -264,7 +366,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Earn your first award'), findsOneWidget);
-      expect(find.text('Regular: About regular'), findsOneWidget);
+      expect(
+        find.text('Regular: Check in at 5 Emerge Kentucky events.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Ballot cards record how I am helping', (tester) async {
@@ -334,8 +439,10 @@ void main() {
         'icon': 'trophy',
         'color': '#197278',
         'category': 'special',
+        'audience': 'everyone',
         'rule': 'events_attended',
         'threshold': 1,
+        'how_to_earn': '',
       });
     });
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:npo_community/core/constants/api_endpoints.dart';
 import 'package:npo_community/theme/app_theme.dart';
 
 DateTime? _date(dynamic value) => value is String && value.isNotEmpty
@@ -26,7 +27,17 @@ const Map<String, IconData> awardIcons = {
   'rocket': Icons.rocket_launch_outlined,
   'flag': Icons.flag_outlined,
   'lightbulb': Icons.lightbulb_outline,
+  'wave': Icons.waving_hand_outlined,
+  'hub': Icons.hub_outlined,
+  'target': Icons.track_changes,
 };
+
+/// Who can earn an award (Award.Audience in the API).
+abstract final class AwardAudience {
+  static const everyone = 'everyone';
+  static const alumni = 'alumni';
+  static const currentClass = 'current_class';
+}
 
 IconData iconForAward(String key) => awardIcons[key] ?? Icons.star_outline;
 
@@ -80,7 +91,13 @@ class Award {
     this.unit,
     this.earned = 0,
     this.progress,
+    this.howToEarn = '',
+    this.audience = AwardAudience.everyone,
+    this.audienceLabel = '',
+    this.image,
+    this.eligible = true,
     this.rule = '',
+    this.customHowToEarn = '',
     this.isActive = true,
     this.holders = 0,
   });
@@ -108,12 +125,45 @@ class Award {
   /// The viewer's progress toward an automatic award not yet earned.
   final AwardProgress? progress;
 
+  /// "Check in at 5 Emerge Kentucky events. ..." or "Given by staff."
+  final String howToEarn;
+
+  /// [AwardAudience]: alumni awards, current-class achievements, or both.
+  final String audience;
+  final String audienceLabel;
+
+  /// Artwork path (under /media/), or a full URL; null draws the icon.
+  final String? image;
+
+  /// Whether the viewer is in the audience (can earn it).
+  final bool eligible;
+
   // Administrators only.
   final String rule;
+
+  /// The administrator's own "how to earn it" text; empty uses the rule's.
+  final String customHowToEarn;
   final bool isActive;
   final int holders;
 
   IconData get iconData => iconForAward(icon);
+
+  String? get imageUrl {
+    final path = image;
+    if (path == null || path.isEmpty) return null;
+    return path.startsWith('http') ? path : ApiEndpoints.host + path;
+  }
+
+  bool get isClassAchievement => audience == AwardAudience.currentClass;
+  bool get isAlumniAward => audience == AwardAudience.alumni;
+  bool get isShared => audience == AwardAudience.everyone;
+
+  /// "Class achievement", "Alumni award" or "Shared award".
+  String get kindLabel => isClassAchievement
+      ? 'Class achievement'
+      : isAlumniAward
+      ? 'Alumni award'
+      : 'Alumni and class award';
   Color get colorValue => colorFromHex(color);
 
   /// "5 events" for an automatic award, null for a hand-given one.
@@ -137,7 +187,13 @@ class Award {
     progress: json['progress'] is Map<String, dynamic>
         ? AwardProgress.fromJson(json['progress'] as Map<String, dynamic>)
         : null,
+    howToEarn: json['how_to_earn'] as String? ?? '',
+    audience: json['audience'] as String? ?? AwardAudience.everyone,
+    audienceLabel: json['audience_label'] as String? ?? '',
+    image: json['image'] as String?,
+    eligible: json['eligible'] as bool? ?? true,
     rule: json['rule'] as String? ?? '',
+    customHowToEarn: json['custom_how_to_earn'] as String? ?? '',
     isActive: json['is_active'] as bool? ?? true,
     holders: json['holders'] as int? ?? 0,
   );
@@ -261,6 +317,7 @@ class AwardOptions {
     this.rules = const [],
     this.icons = const [],
     this.categories = const {},
+    this.audiences = const {},
     this.currentClassYear,
   });
 
@@ -269,6 +326,9 @@ class AwardOptions {
 
   /// key → label, in the server's order.
   final Map<String, String> categories;
+
+  /// key → label: everyone, alumni, current_class.
+  final Map<String, String> audiences;
   final int? currentClassYear;
 
   factory AwardOptions.fromJson(Map<String, dynamic> json) => AwardOptions(
@@ -281,6 +341,11 @@ class AwardOptions {
     ],
     categories: {
       for (final row in (json['categories'] as List? ?? const []))
+        (row as Map<String, dynamic>)['key'] as String:
+            row['label'] as String? ?? '',
+    },
+    audiences: {
+      for (final row in (json['audiences'] as List? ?? const []))
         (row as Map<String, dynamic>)['key'] as String:
             row['label'] as String? ?? '',
     },

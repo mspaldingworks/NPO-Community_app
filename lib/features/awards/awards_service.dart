@@ -1,3 +1,5 @@
+import 'package:http/http.dart' as http;
+import 'package:npo_community/core/config/app_config.dart';
 import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/features/awards/models/award.dart';
 
@@ -119,10 +121,13 @@ class AwardsService extends ApiClient {
     );
   }
 
-  /// Members to choose from when giving an award.
-  Future<List<AwardMember>> searchMembers(String query) async {
+  /// Members to choose from when giving an award: only those it can go to
+  /// (alumni for alumni awards, the class for class achievements).
+  Future<List<AwardMember>> searchMembers(String query, {int? awardId}) async {
     final data = await read(
-      urlPath: '/api/awards/members/?search=${Uri.encodeQueryComponent(query)}',
+      urlPath:
+          '/api/awards/members/?search=${Uri.encodeQueryComponent(query)}'
+          '${awardId == null ? '' : '&award=$awardId'}',
       jsonHeaders: authHeaders,
     );
     return [
@@ -130,4 +135,34 @@ class AwardsService extends ApiClient {
         AwardMember.fromJson(row as Map<String, dynamic>),
     ];
   }
+
+  /// Replaces an award's artwork with the image at [path].
+  Future<Award> uploadImage(int awardId, String path) async {
+    final request =
+        http.MultipartRequest(
+            'POST',
+            AppConfig.current.apiUri('/api/awards/$awardId/image/'),
+          )
+          ..headers['Authorization'] = authHeaders['Authorization'] ?? ''
+          ..files.add(await http.MultipartFile.fromPath('image', path));
+    final response = await http.Response.fromStream(
+      await httpClient.send(request),
+    );
+    if (response.statusCode != 200) {
+      throw ApiClientException(
+        extractErrorMessage(tryDecodeJson(response.body), response.statusCode),
+      );
+    }
+    return Award.fromJson(tryDecodeJson(response.body) as Map<String, dynamic>);
+  }
+
+  /// Removes custom artwork; the app draws the icon instead.
+  Future<Award> removeImage(int awardId) async => Award.fromJson(
+    await delete(
+          urlPath: '/api/awards/$awardId/image/',
+          jsonHeaders: authHeaders,
+          expectedStatusCode: 200,
+        )
+        as Map<String, dynamic>,
+  );
 }

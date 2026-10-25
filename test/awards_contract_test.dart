@@ -19,6 +19,10 @@ const awardKeys = <String>{
   'threshold',
   'rule_label',
   'unit',
+  'how_to_earn',
+  'audience',
+  'audience_label',
+  'image',
 };
 
 /// Must match GRANT_KEYS in the API's test_awards.py.
@@ -44,6 +48,10 @@ Map<String, dynamic> _award() => {
   'threshold': 5,
   'rule_label': 'Events attended',
   'unit': 'events',
+  'how_to_earn': 'Check in at 5 Emerge Kentucky events.',
+  'audience': 'everyone',
+  'audience_label': 'Alumni and the current class',
+  'image': '/media/award_art/regular.png',
 };
 
 void main() {
@@ -86,6 +94,9 @@ void main() {
       'rocket',
       'flag',
       'lightbulb',
+      'wave',
+      'hub',
+      'target',
     ];
     expect(awardIcons.keys.toSet(), apiIcons.toSet());
   });

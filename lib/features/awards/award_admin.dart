@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:npo_community/core/services/api_client.dart';
 import 'package:npo_community/features/awards/award_widgets.dart';
 import 'package:npo_community/features/awards/awards_service.dart';
@@ -143,9 +146,10 @@ class _AwardsAdminTabState extends State<AwardsAdminTab>
                       children: [
                         Row(
                           children: [
-                            AwardBadge(
+                            AwardArt(
                               award: award,
-                              size: 44,
+                              size: 56,
+                              radius: 8,
                               locked: !award.isActive,
                             ),
                             const SizedBox(width: 12),
@@ -163,6 +167,7 @@ class _AwardsAdminTabState extends State<AwardsAdminTab>
                                   ),
                                   Text(
                                     [
+                                      award.kindLabel,
                                       award.automatic
                                           ? 'Automatic: ${award.goal}'
                                           : 'Given by hand',
@@ -236,9 +241,17 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
   late String _icon = widget.award?.icon ?? 'star';
   late String _color = widget.award?.color ?? hexFromColor(awardColors.first);
   late String _category = widget.award?.category ?? 'special';
+  late final TextEditingController _howToEarn = TextEditingController(
+    text: widget.award?.customHowToEarn ?? '',
+  );
   late String _rule = widget.award?.rule ?? '';
+  late String _audience = widget.award?.audience ?? AwardAudience.everyone;
   late bool _active = widget.award?.isActive ?? true;
   bool _saving = false;
+
+  /// Artwork chosen on this device, uploaded after the award saves.
+  String? _pickedImage;
+  late String? _image = widget.award?.image;
 
   bool get _creating => widget.award == null;
 
@@ -247,11 +260,84 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
     _name.dispose();
     _description.dispose();
     _threshold.dispose();
+    _howToEarn.dispose();
     super.dispose();
   }
 
-  Award get _preview =>
-      Award(id: 0, key: '', name: _name.text, icon: _icon, color: _color);
+  Award get _preview => Award(
+    id: 0,
+    key: '',
+    name: _name.text,
+    icon: _icon,
+    color: _color,
+    image: _image,
+  );
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+    );
+    if (picked != null && mounted) setState(() => _pickedImage = picked.path);
+  }
+
+  Future<void> _removeImage() async {
+    final award = widget.award;
+    setState(() => _pickedImage = null);
+    if (award == null || _image == null) return;
+    try {
+      await widget.service.removeImage(award.id);
+      if (mounted) setState(() => _image = null);
+    } catch (e) {
+      if (mounted) _say(context, _error(e));
+    }
+  }
+
+  Widget _artwork() {
+    final picked = _pickedImage;
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: picked != null
+              ? Image.file(
+                  File(picked),
+                  width: 160,
+                  height: 160,
+                  fit: BoxFit.cover,
+                )
+              : AwardArt(award: _preview, size: 160, radius: 16),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('pick-award-art'),
+              onPressed: _saving ? null : _pickImage,
+              icon: const Icon(Icons.image_outlined, size: 18),
+              label: Text(
+                picked != null || _image != null
+                    ? 'Change artwork'
+                    : 'Add artwork',
+              ),
+            ),
+            if (picked != null || _image != null)
+              TextButton(
+                onPressed: _saving ? null : _removeImage,
+                child: const Text('Use the icon instead'),
+              ),
+          ],
+        ),
+        Text(
+          'Square images work best (PNG or JPEG, under 2 MB).',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
 
   Future<void> _save() async {
     final threshold = int.tryParse(_threshold.text.trim());
@@ -269,15 +355,21 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
       'icon': _icon,
       'color': _color,
       'category': _category,
+      'audience': _audience,
       'rule': _rule,
       'threshold': _rule.isEmpty ? null : threshold,
+      'how_to_earn': _howToEarn.text.trim(),
       if (!_creating) 'is_active': _active,
     };
     setState(() => _saving = true);
     try {
-      final award = _creating
+      var award = _creating
           ? await widget.service.createAward(fields)
           : await widget.service.updateAward(widget.award!.id, fields);
+      final picked = _pickedImage;
+      if (picked != null) {
+        award = await widget.service.uploadImage(award.id, picked);
+      }
       if (mounted) Navigator.of(context).pop(award);
     } catch (e) {
       if (mounted) {
@@ -316,7 +408,7 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Center(child: AwardBadge(award: _preview, size: 88)),
+              Center(child: _artwork()),
               const SizedBox(height: 16),
               TextField(
                 key: const Key('award-name'),
@@ -390,6 +482,42 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              Text('Who can earn it', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              SegmentedButton<String>(
+                key: const Key('award-audience'),
+                segments: [
+                  const ButtonSegment(
+                    value: AwardAudience.alumni,
+                    label: Text('Alumni'),
+                  ),
+                  ButtonSegment(
+                    value: AwardAudience.currentClass,
+                    label: Text(
+                      options.currentClassYear == null
+                          ? 'Current class'
+                          : 'Class of ${options.currentClassYear}',
+                    ),
+                  ),
+                  const ButtonSegment(
+                    value: AwardAudience.everyone,
+                    label: Text('Both'),
+                  ),
+                ],
+                selected: {_audience},
+                onSelectionChanged: (choice) =>
+                    setState(() => _audience = choice.first),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _audience == AwardAudience.currentClass
+                    ? 'A class achievement: only the current class earns it.'
+                    : _audience == AwardAudience.alumni
+                    ? 'An alumni award: the current class does not earn it.'
+                    : 'Shared: alumni and the current class both earn it.',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: 20),
               Text('How it is earned', style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
               SegmentedButton<bool>(
@@ -443,6 +571,21 @@ class _AwardEditorScreenState extends State<AwardEditorScreen> {
                   ),
                 ),
               ],
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('award-how-to-earn'),
+                controller: _howToEarn,
+                maxLength: 300,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'How to earn it (optional)',
+                  helperText: _rule.isEmpty
+                      ? 'Shown on the award. Blank says "Given by Emerge '
+                            'Kentucky staff."'
+                      : 'Shown on the award. Blank describes the goal for you.',
+                  helperMaxLines: 2,
+                ),
+              ),
               if (!_creating) ...[
                 const SizedBox(height: 12),
                 SwitchListTile(
@@ -498,7 +641,10 @@ class _GrantAwardScreenState extends State<GrantAwardScreen> {
   Future<void> _find() async {
     setState(() => _searching = true);
     try {
-      final results = await widget.service.searchMembers(_search.text.trim());
+      final results = await widget.service.searchMembers(
+        _search.text.trim(),
+        awardId: widget.award.id,
+      );
       if (mounted) setState(() => _results = results);
     } catch (e) {
       if (mounted) _say(context, _error(e));

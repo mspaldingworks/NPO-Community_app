@@ -255,7 +255,10 @@ class AppRouter {
       GoRoute(
         path: '/awards',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const AwardsScreen(),
+        builder: (context, state) => AwardsScreen(
+          inCurrentClass:
+              authService.currentUser?.programYear == DateTime.now().year,
+        ),
       ),
       GoRoute(
         path: '/class-fundraising',
