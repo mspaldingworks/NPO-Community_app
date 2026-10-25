@@ -279,6 +279,21 @@ class _ReportsTabState extends State<_ReportsTab>
     );
   }
 
+  Future<void> _remove(ModerationReport report) async {
+    final input = await _askReason(
+      context,
+      title:
+          'Remove this ${(_targetLabels[report.targetType] ?? 'content').toLowerCase()}',
+      reasonRequired: false,
+    );
+    if (input == null) return;
+    await _run(
+      () =>
+          widget.service.removeReportedContent(report.id, notes: input.reason),
+      'Content removed and report resolved.',
+    );
+  }
+
   Future<void> _escalate(ModerationReport report) async {
     final action = await _pickAction(context);
     if (action == null || !mounted) return;
@@ -349,6 +364,7 @@ class _ReportsTabState extends State<_ReportsTab>
                     onResolve: () => _close(reports[index], 'resolved'),
                     onDismiss: () => _close(reports[index], 'dismissed'),
                     onEscalate: () => _escalate(reports[index]),
+                    onRemove: () => _remove(reports[index]),
                   ),
                 );
               },
@@ -367,13 +383,24 @@ class _ReportCard extends StatelessWidget {
     required this.onResolve,
     required this.onDismiss,
     required this.onEscalate,
+    required this.onRemove,
   });
+
+  /// What the server can take down (moderation.remove_reported_content).
+  static const _removable = {
+    'post',
+    'comment',
+    'message',
+    'chatMessage',
+    'photo',
+  };
 
   final ModerationReport report;
   final VoidCallback onReview;
   final VoidCallback onResolve;
   final VoidCallback onDismiss;
   final VoidCallback onEscalate;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -446,6 +473,12 @@ class _ReportCard extends StatelessWidget {
                     onPressed: onResolve,
                     child: const Text('Resolve'),
                   ),
+                  if (_removable.contains(report.targetType))
+                    FilledButton.tonal(
+                      key: Key('remove-content-${report.id}'),
+                      onPressed: onRemove,
+                      child: const Text('Remove content'),
+                    ),
                   if (target != null)
                     FilledButton.tonal(
                       onPressed: onEscalate,
@@ -1140,8 +1173,14 @@ class _MemberSheetState extends State<_MemberSheet> {
     );
   }
 
+  static const _roleLabels = {
+    'moderator': 'moderator',
+    'staff': 'Emerge staff member',
+    'admin': 'admin',
+  };
+
   Future<void> _role(String role, bool grant) async {
-    final label = role == 'admin' ? 'admin' : 'moderator';
+    final label = _roleLabels[role] ?? role;
     final input = await _askReason(
       context,
       title: grant
@@ -1234,18 +1273,26 @@ class _MemberSheetState extends State<_MemberSheet> {
             if (widget.isSuperuser && !widget.isSelf) ...[
               const Divider(height: 28),
               Text('Roles', style: theme.textTheme.titleSmall),
+              Text(
+                'Emerge staff get every moderator power, the control console '
+                'and the graduation tracker. Making someone a moderator, staff '
+                'or admin confirms they have had the background check and '
+                'training the role needs.',
+                style: theme.textTheme.bodySmall,
+              ),
               Wrap(
                 spacing: 8,
                 children: [
-                  for (final role in const ['moderator', 'admin'])
+                  for (final role in const ['moderator', 'staff', 'admin'])
                     TextButton(
+                      key: Key('role-$role'),
                       onPressed: _busy
                           ? null
                           : () => _role(role, !member.hasRole(role)),
                       child: Text(
                         member.hasRole(role)
-                            ? 'Remove ${role == 'admin' ? 'admin' : 'moderator'}'
-                            : 'Make ${role == 'admin' ? 'admin' : 'moderator'}',
+                            ? 'Remove ${role == 'staff' ? 'staff' : _roleLabels[role]}'
+                            : 'Make ${role == 'staff' ? 'Emerge staff' : _roleLabels[role]}',
                       ),
                     ),
                 ],

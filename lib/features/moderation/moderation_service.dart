@@ -338,7 +338,7 @@ class ModerationService extends ApiClient {
     );
   }
 
-  /// Superusers only: [role] is moderator or admin.
+  /// Superusers only: [role] is moderator, staff or admin.
   Future<void> setRole(
     int memberId, {
     required String role,
@@ -371,6 +371,16 @@ class ModerationService extends ApiClient {
       urlPath: '/api/moderation/reports/$reportId/resolve/',
       jsonHeaders: authHeaders,
       jsonPayload: {'status': status, 'notes': notes},
+    );
+  }
+
+  /// Takes down the reported post, comment, message or photo and resolves
+  /// the report.
+  Future<void> removeReportedContent(int reportId, {String notes = ''}) async {
+    await post(
+      urlPath: '/api/moderation/reports/$reportId/remove/',
+      jsonHeaders: authHeaders,
+      jsonPayload: {'notes': notes},
     );
   }
 

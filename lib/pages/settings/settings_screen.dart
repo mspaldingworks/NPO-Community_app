@@ -163,12 +163,21 @@ class SettingsScreen extends StatelessWidget {
             Consumer<AuthService>(
               builder: (context, auth, _) {
                 if (!auth.canModerate) return const SizedBox.shrink();
+                final waiting = auth.openReports;
                 return ListTile(
+                  key: const Key('moderation-tile'),
                   title: const Text('Moderation'),
-                  subtitle: const Text(
-                    'Reports, member actions and the audit log',
+                  subtitle: Text(
+                    waiting > 0
+                        ? '$waiting ${waiting == 1 ? 'report' : 'reports'} '
+                              'waiting · member actions and the audit log'
+                        : 'Reports, member actions and the audit log',
                   ),
-                  leading: const Icon(Icons.shield_outlined),
+                  leading: Badge(
+                    isLabelVisible: waiting > 0,
+                    label: Text('$waiting'),
+                    child: const Icon(Icons.shield_outlined),
+                  ),
                   trailing: const Icon(Icons.chevron_right),
                   minVerticalPadding: 16,
                   onTap: () => context.push('/admin/moderation'),

@@ -61,6 +61,9 @@ class User {
   /// Emerge staff and administrators: opens the graduation tracker.
   final bool canTrackGraduation;
 
+  /// Reports waiting for review; set for moderators only.
+  final int? openReports;
+
   /// The server's verification tier key, e.g. 'unverified' or 'verified'.
   final String? verificationTier;
   final int? programYear;
@@ -88,6 +91,7 @@ class User {
     this.canModerate = false,
     this.canAdmin = false,
     this.canTrackGraduation = false,
+    this.openReports,
     this.verificationTier,
     this.programYear,
     this.fullName,
@@ -152,6 +156,7 @@ class User {
       canAdmin:
           json['can_admin'] as bool? ??
           (json['is_superuser'] as bool? ?? false),
+      openReports: json['open_reports'] as int?,
       canTrackGraduation:
           json['can_track_graduation'] as bool? ??
           ((json['is_staff'] as bool? ?? false) ||

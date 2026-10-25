@@ -57,6 +57,7 @@ class AuthService extends ApiClient with ChangeNotifier {
   bool get canModerate => realUser?.canModerate ?? false;
   bool get canAdmin => realUser?.canAdmin ?? false;
   bool get canTrackGraduation => realUser?.canTrackGraduation ?? false;
+  int get openReports => realUser?.openReports ?? 0;
 
   /// Seeds the signed-in account without a network round trip. Tests only.
   @visibleForTesting

@@ -85,6 +85,18 @@ class _FakeModerationService extends ModerationService {
   }) async => calls.add('escalate $reportId $action $reason');
 
   @override
+  Future<void> removeReportedContent(int reportId, {String notes = ''}) async =>
+      calls.add('remove $reportId $notes'.trim());
+
+  @override
+  Future<void> setRole(
+    int memberId, {
+    required String role,
+    required bool grant,
+    required String reason,
+  }) async => calls.add('role $memberId $role $grant $reason');
+
+  @override
   Future<void> memberAction(
     int memberId,
     String action, {
@@ -230,6 +242,35 @@ void main() {
     expect(find.text('Lift restriction'), findsOneWidget);
     expect(find.text('Remove moderator'), findsOneWidget);
     expect(find.text('Make admin'), findsOneWidget);
+
+    await tester.tap(find.text('Make Emerge staff'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('moderation-reason')),
+      'Hired as program director',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(service.calls, ['role 2 staff true Hired as program director']);
+  });
+
+  testWidgets('moderators take reported content down', (tester) async {
+    final service = _FakeModerationService(reports: [_report()]);
+    await _pump(tester, ModerationScreen(service: service));
+    await tester.tap(find.byKey(const Key('remove-content-7')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove this post'), findsOneWidget);
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(service.calls, ['remove 7']);
+  });
+
+  test('moderators carry the count of reports waiting', () {
+    User user(Map<String, dynamic> extra) =>
+        User.fromJson({'id': 1, 'username': 'u', ...extra});
+    expect(user({'open_reports': 3}).openReports, 3);
+    expect(user({'open_reports': null}).openReports, isNull);
   });
 
   testWidgets('signups link to a suggested roster match', (tester) async {

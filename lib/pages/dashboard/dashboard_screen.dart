@@ -239,6 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16.0),
           children: [
             const EmergencyAlertBanner(),
+            const _ReportsWaiting(),
             _buildEmergeTouts(context),
             if (!_isLoading && _myEventsSoon.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -322,6 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   canModerate: me.canModerate,
                   canAdmin: me.canAdmin,
                   canTrackGraduation: me.canTrackGraduation,
+                  openReports: me.openReports,
                   verificationTier: me.verificationTier,
                   programYear: me.programYear,
                   fullName: me.fullName,
@@ -550,6 +552,31 @@ class _RoundAction extends StatelessWidget {
           ).textTheme.labelSmall?.copyWith(color: AppColors.textMuted),
         ),
       ],
+    );
+  }
+}
+
+/// For moderators: how many reports are waiting, opening the queue.
+class _ReportsWaiting extends StatelessWidget {
+  const _ReportsWaiting();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final waiting = auth.openReports;
+    if (!auth.canModerate || waiting == 0) return const SizedBox.shrink();
+    return Card(
+      key: const Key('home-reports-waiting'),
+      color: AppColors.alertBackground,
+      child: ListTile(
+        leading: const Icon(Icons.flag_outlined, color: AppColors.alertAccent),
+        title: Text(
+          '$waiting ${waiting == 1 ? 'report is' : 'reports are'} waiting '
+          'for review',
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => context.push('/admin/moderation'),
+      ),
     );
   }
 }
