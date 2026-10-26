@@ -85,13 +85,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } catch (_) {
       // The highlight is a nicety; the Events page reports the real error.
     }
-    final imagePath = await _profileService.getImagePath();
+    await _profileService.forgetLocalImagePath();
     final mine = myEventsSoon(allEvents, _now);
 
     if (!mounted) return;
     setState(() {
       _myEventsSoon = mine;
-      if (imagePath != null) _profileImage = File(imagePath);
       _isLoading = false;
     });
     _updateDashboardAlerts();
@@ -120,7 +119,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     if (picked == null) return;
 
-    setState(() => _updatingProfilePic = true);
+    // Show the picked photo while it uploads, then the server's copy.
+    setState(() {
+      _updatingProfilePic = true;
+      _profileImage = File(picked!.path);
+    });
     try {
       await _profileService.saveProfile(
         (me.statusMessage ?? '').trim(),
@@ -128,11 +131,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
       await auth.getProfile();
       if (!mounted) return;
-      setState(() => _profileImage = File(picked!.path));
+      setState(() => _profileImage = null);
       messenger.showSnackBar(
         const SnackBar(content: Text('Profile picture updated.')),
       );
     } catch (e) {
+      if (mounted) setState(() => _profileImage = null);
       messenger.showSnackBar(
         SnackBar(content: Text('Failed to update profile picture: $e')),
       );
@@ -434,10 +438,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  /// Her photo (tap for the quick-edit sheet), then the change-photo button
+  /// Her photo from the server (tap for the quick-edit sheet; a photo just
+  /// picked shows only while it uploads), then the change-photo button
   /// just to its right and the Messages button beside that.
   Widget _buildProfileRow() {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    // Watch, so the photo appears as soon as the profile loads or changes.
+    final authService = context.watch<AuthService>();
     final imageUrl = authService.currentUser?.fullProfilePicUrl;
 
     return Row(

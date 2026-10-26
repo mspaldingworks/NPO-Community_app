@@ -43,7 +43,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadProfileData() async {
     final status = await _profileService.getStatus();
-    final imagePath = await _profileService.getImagePath();
     if (!mounted) return;
     User? user;
     try {
@@ -60,9 +59,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _statusController.text = serverStatus;
       } else if (status != null) {
         _statusController.text = status;
-      }
-      if (imagePath != null) {
-        _profileImage = File(imagePath);
       }
       if (user != null) {
         _fullNameController.text = user.fullName ?? '';

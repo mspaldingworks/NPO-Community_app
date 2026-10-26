@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:npo_community/widgets/display_profile_pic.dart';
 import 'package:npo_community/core/services/auth_service.dart';
 import 'package:npo_community/core/services/home_alert_service.dart';
 import 'package:npo_community/core/services/shared_preferences_service.dart';
@@ -47,15 +48,17 @@ class _FakeEvents extends EventsService {
 
 Future<HomeAlertService> _pump(
   WidgetTester tester,
-  List<CommunityEvent> events,
-) async {
+  List<CommunityEvent> events, {
+  Map<String, Object> prefs = const {},
+  String? profilePic,
+}) async {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues(prefs);
   await SharedPreferencesService().init();
   AuthService().debugSetCurrentUser(
-    User(id: 1, username: 'ava', email: 'ava@test.dev'),
+    User(id: 1, username: 'ava', email: 'ava@test.dev', profilePic: profilePic),
   );
   final alerts = HomeAlertService();
   await tester.pumpWidget(
@@ -72,7 +75,12 @@ Future<HomeAlertService> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (profilePic == null) {
+    await tester.pumpAndSettle();
+  } else {
+    // The photo's loading spinner never settles in tests.
+    await tester.pump(const Duration(milliseconds: 500));
+  }
   return alerts;
 }
 
@@ -148,6 +156,44 @@ void main() {
       expect(messages.left, greaterThan(photo.right));
       expect(find.text('Messages'), findsOneWidget);
       expect(find.text('Photo'), findsOneWidget);
+    });
+  });
+
+  group('profile photo', () {
+    DisplayProfilePic avatar(WidgetTester tester) => tester.widget(
+      find.descendant(
+        of: find.byKey(const Key('home-avatar')),
+        matching: find.byType(DisplayProfilePic),
+      ),
+    );
+
+    testWidgets('shows the server photo, not a stale local file', (
+      tester,
+    ) async {
+      // Older builds saved the picker's temporary path, which iOS deletes.
+      await _pump(
+        tester,
+        const [],
+        prefs: {'profile_image_path': '/private/var/tmp/gone.jpg'},
+        profilePic: '/media/post_images/ava.jpg',
+      );
+      expect(avatar(tester).imageUrl, endsWith('/media/post_images/ava.jpg'));
+      expect(SharedPreferencesService().getData('profile_image_path'), isNull);
+    });
+
+    testWidgets('appears when the profile loads after Home', (tester) async {
+      await _pump(tester, const []);
+      expect(avatar(tester).imageUrl, isNull);
+      AuthService().debugSetCurrentUser(
+        User(
+          id: 1,
+          username: 'ava',
+          email: 'ava@test.dev',
+          profilePic: '/media/post_images/ava.jpg',
+        ),
+      );
+      await tester.pump();
+      expect(avatar(tester).imageUrl, endsWith('/media/post_images/ava.jpg'));
     });
   });
 }

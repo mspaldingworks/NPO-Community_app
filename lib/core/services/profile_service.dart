@@ -85,16 +85,17 @@ class ProfileService {
 
     // Optionally persist local hints for quick access/offline
     await _prefsService.saveData(_statusKey, status);
-    if (imagePath != null && imagePath.isNotEmpty) {
-      await _prefsService.saveData(_imagePathKey, imagePath);
-    }
+    await forgetLocalImagePath();
   }
+
+  /// Older builds kept the picked photo's file path and showed that file
+  /// in place of the uploaded one. iOS deletes the picker's copies and
+  /// moves the app's files on reinstall, so the path went stale and the
+  /// photo went blank. The server's photo is the only one shown now; this
+  /// clears the old hint.
+  Future<void> forgetLocalImagePath() => _prefsService.clearData(_imagePathKey);
 
   Future<String?> getStatus() async {
     return _prefsService.getData(_statusKey);
-  }
-
-  Future<String?> getImagePath() async {
-    return _prefsService.getData(_imagePathKey);
   }
 }
