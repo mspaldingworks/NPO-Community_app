@@ -49,4 +49,38 @@ class ProgramService extends ApiClient {
     final now = DateTime.now().year;
     return [for (var y = now; y >= fallbackStartYear; y--) y];
   }
+
+  /// Whether an invite code from Emerge Kentucky staff is good, with the
+  /// name and class year it was made for (`/api/invites/<code>/`).
+  Future<InviteCheck> checkInvite(String code) async {
+    final clean = code.replaceAll(RegExp('[^A-Za-z0-9]'), '');
+    final data = await read(
+      urlPath: '/api/invites/$clean/',
+      jsonHeaders: const {'Content-Type': 'application/json'},
+    );
+    final json = data as Map<String, dynamic>;
+    return InviteCheck(
+      valid: json['valid'] == true,
+      name: json['name'] as String? ?? '',
+      programYear: json['program_year'] as int?,
+      detail: json['detail'] as String? ?? '',
+    );
+  }
+}
+
+/// The answer to [ProgramService.checkInvite].
+class InviteCheck {
+  const InviteCheck({
+    required this.valid,
+    this.name = '',
+    this.programYear,
+    this.detail = '',
+  });
+
+  final bool valid;
+  final String name;
+  final int? programYear;
+
+  /// Why a code can't be used.
+  final String detail;
 }

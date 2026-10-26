@@ -31,6 +31,7 @@ void main() {
                 required bool adultAttestation,
                 required bool conductPolicyAccepted,
                 profileImage,
+                inviteCode,
               }) async {
                 throw SignUpException(
                   errors: {

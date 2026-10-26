@@ -11,6 +11,8 @@ import 'package:npo_community/features/fundraisers/fundraiser_widgets.dart';
 import 'package:npo_community/features/fundraisers/fundraisers_service.dart';
 import 'package:npo_community/features/graduation/graduation_screen.dart';
 import 'package:npo_community/features/moderation/moderation_screen.dart';
+import 'package:npo_community/features/people/people_service.dart';
+import 'package:npo_community/features/people/people_tab.dart';
 
 /// The administrators' control console: the state of the platform at a
 /// glance, every fundraiser, upcoming events, volunteers, the awards
@@ -24,6 +26,7 @@ class AdminConsoleScreen extends StatefulWidget {
     this.events,
     this.awards,
     this.canModerate = true,
+    this.people,
   });
 
   /// Injected in tests.
@@ -32,8 +35,10 @@ class AdminConsoleScreen extends StatefulWidget {
   final EventsService? events;
   final AwardsService? awards;
 
-  /// Board members open the console but not the moderation panel.
+  /// Board members open the console but not the moderation panel, and
+  /// don't manage people (roles and invites are for staff and admins).
   final bool canModerate;
+  final PeopleService? people;
 
   @override
   State<AdminConsoleScreen> createState() => _AdminConsoleScreenState();
@@ -46,6 +51,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
       widget.fundraisers ?? FundraisersService();
   late final EventsService _events = widget.events ?? EventsService();
   late final AwardsService _awards = widget.awards ?? AwardsService();
+  late final PeopleService _people = widget.people ?? PeopleService();
   late Future<AdminOverview> _overview = _service.fetchOverview();
 
   Future<void> _refresh() async {
@@ -73,7 +79,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 6,
+      length: widget.canModerate ? 7 : 6,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Control console'),
@@ -101,15 +107,17 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
               onPressed: _refresh,
             ),
           ],
-          bottom: const TabBar(
+          bottom: TabBar(
             isScrollable: true,
             tabs: [
-              Tab(text: 'Overview'),
-              Tab(text: 'Fundraising'),
-              Tab(text: 'Events'),
-              Tab(text: 'Volunteers'),
-              Tab(text: 'Awards'),
-              Tab(text: 'Integrations'),
+              const Tab(text: 'Overview'),
+              if (widget.canModerate)
+                const Tab(key: Key('tab-people'), text: 'People'),
+              const Tab(text: 'Fundraising'),
+              const Tab(text: 'Events'),
+              const Tab(text: 'Volunteers'),
+              const Tab(text: 'Awards'),
+              const Tab(text: 'Integrations'),
             ],
           ),
         ),
@@ -129,6 +137,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
                   onRefresh: _refresh,
                   onModeration: _openModeration,
                 ),
+                if (widget.canModerate) PeopleTab(service: _people),
                 _FundraisingTab(
                   overview: overview,
                   service: _fundraisers,

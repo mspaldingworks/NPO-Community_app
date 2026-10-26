@@ -214,8 +214,10 @@ class AuthService extends ApiClient with ChangeNotifier {
     required bool adultAttestation,
     required bool conductPolicyAccepted,
     File? profileImage,
+    String? inviteCode,
   }) async {
     final uri = AppConfig.current.apiUri('/api/signup/');
+    final invite = (inviteCode ?? '').trim();
     // The API takes a plain YYYY-MM-DD date, and requires both attestations.
     String two(int v) => v.toString().padLeft(2, '0');
     final dateOfBirthValue =
@@ -232,6 +234,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         ..fields['date_of_birth'] = dateOfBirthValue
         ..fields['adult_attestation'] = adultAttestation.toString()
         ..fields['conduct_policy_accepted'] = conductPolicyAccepted.toString();
+      if (invite.isNotEmpty) request.fields['invite_code'] = invite;
 
       request.files.add(
         await http.MultipartFile.fromPath('profile_pic', imageFile.path),
@@ -252,6 +255,7 @@ class AuthService extends ApiClient with ChangeNotifier {
         'date_of_birth': dateOfBirthValue,
         'adult_attestation': adultAttestation,
         'conduct_policy_accepted': conductPolicyAccepted,
+        if (invite.isNotEmpty) 'invite_code': invite,
       });
 
       return httpClient.post(

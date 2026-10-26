@@ -19,6 +19,7 @@ typedef SignUpHandler =
       required bool adultAttestation,
       required bool conductPolicyAccepted,
       File? profileImage,
+      String? inviteCode,
     });
 
 class RegisterScreen extends StatefulWidget {
@@ -106,6 +107,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
   final _zipCodeController = TextEditingController();
+
+  /// An invite from Emerge Kentucky staff: verifies the account at once.
+  final _inviteController = TextEditingController();
+  String? _inviteError;
+  String? _inviteNote;
+  bool _checkingInvite = false;
   final _authService = AuthService();
   final ImagePicker _picker = ImagePicker();
   File? _profileImage;
@@ -139,6 +146,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  Future<void> _checkInvite() async {
+    final code = _inviteController.text.trim();
+    if (code.isEmpty) return;
+    setState(() {
+      _checkingInvite = true;
+      _inviteError = null;
+      _inviteNote = null;
+    });
+    try {
+      final check = await ProgramService().checkInvite(code);
+      if (!mounted) return;
+      setState(() {
+        if (check.valid) {
+          _inviteNote = [
+            'Invite found',
+            if (check.name.isNotEmpty) 'for ${check.name}',
+            if (check.programYear != null) '· Class of ${check.programYear}',
+          ].join(' ');
+          if (check.programYear != null &&
+              _programYears.contains(check.programYear)) {
+            _programYear = check.programYear;
+            _programYearError = null;
+          }
+        } else {
+          _inviteError = check.detail;
+        }
+      });
+    } catch (e) {
+      if (mounted) setState(() => _inviteError = 'Could not check the code.');
+    } finally {
+      if (mounted) setState(() => _checkingInvite = false);
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -146,6 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _confirmPasswordController.dispose();
     _usernameController.dispose();
     _zipCodeController.dispose();
+    _inviteController.dispose();
     super.dispose();
   }
 
@@ -346,6 +388,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         adultAttestation: _adultAttestation,
         conductPolicyAccepted: _conductPolicyAccepted,
         profileImage: _profileImage,
+        inviteCode: _inviteController.text.trim(),
       );
 
       if (mounted) {
@@ -364,6 +407,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _cityError = e.errors['city']?.join(' ');
           _dateOfBirthError = e.errors['date_of_birth']?.join(' ');
           _programYearError = e.errors['program_year']?.join(' ');
+          _inviteError = e.errors['invite_code']?.join(' ');
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -623,6 +667,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           return 'Please enter your city';
                         }
                         return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Invite code from Emerge Kentucky staff (optional).
+                    TextFormField(
+                      key: const Key('invite-code'),
+                      controller: _inviteController,
+                      textCapitalization: TextCapitalization.characters,
+                      style: const TextStyle(color: Colors.white, fontSize: 18),
+                      decoration:
+                          themedInput(
+                            label: 'Invite code (optional)',
+                            icon: Icons.mail_outline,
+                          ).copyWith(
+                            errorText: _inviteError,
+                            helperText:
+                                _inviteNote ??
+                                'From an Emerge Kentucky invitation. With '
+                                    'one, you can start right away.',
+                            helperMaxLines: 2,
+                            helperStyle: const TextStyle(color: Colors.white70),
+                            suffixIcon: TextButton(
+                              key: const Key('check-invite'),
+                              onPressed: _checkingInvite || _isLoading
+                                  ? null
+                                  : _checkInvite,
+                              child: const Text('Check'),
+                            ),
+                          ),
+                      onChanged: (_) {
+                        if (_inviteError != null || _inviteNote != null) {
+                          setState(() {
+                            _inviteError = null;
+                            _inviteNote = null;
+                          });
+                        }
                       },
                     ),
                     const SizedBox(height: 16),
